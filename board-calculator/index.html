@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Board Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=STIX+Two+Text:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --page:#e3e8ee; --panel:#ffffff; --ink:#172230; --muted:#56637a; --line:#c9d1dc;
+  --body:#243349; --body-edge:#16202f;
+  --lcd:#d6e2d0; --lcd-ink:#15211a; --lcd-dim:#6f8272; --lcd-edge:#aebca8;
+  --k-num:#f4f6f9; --k-num-ink:#18222e; --k-fn:#3a4b63; --k-fn-ink:#f1f4f8;
+  --k-op:#dde3ea; --warn:#c2415a; --exe:#2b72b5; --amber:#e3a02b; --amber-ink:#3b2503;
+  --ui:'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --mathf:'STIX Two Text', 'Cambria Math', Cambria, 'Times New Roman', serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#0f151d; --panel:#18212c; --ink:#e6ebf2; --muted:#9aa7b8; --line:#2c3847;
+    --body:#1b2636; --body-edge:#0d131c;
+    --lcd:#16241c; --lcd-ink:#d6f0da; --lcd-dim:#7fa087; --lcd-edge:#0b130e;
+    --k-num:#e7ebf0; --k-op:#c8d0da;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0f151d; --panel:#18212c; --ink:#e6ebf2; --muted:#9aa7b8; --line:#2c3847;
+  --body:#1b2636; --body-edge:#0d131c;
+  --lcd:#16241c; --lcd-ink:#d6f0da; --lcd-dim:#7fa087; --lcd-edge:#0b130e;
+  --k-num:#e7ebf0; --k-op:#c8d0da;
+}
+html{ scroll-padding-top:env(safe-area-inset-top,0px); height:100%; }
+*,*::before,*::after{ box-sizing:border-box; }
+[hidden]{ display:none !important; }
+body{ margin:0; height:100%; background:var(--page); color:var(--ink); font-family:var(--ui); display:flex; flex-direction:column; overflow:hidden; }
+button{ font-family:inherit; }
+:focus-visible{ outline:3px solid var(--exe); outline-offset:2px; }
+
+/* top bar */
+.bar{ display:flex; align-items:center; gap:.75rem; padding:.6rem 1rem; }
+.brand{ font-weight:700; font-size:1.05rem; margin-right:auto; letter-spacing:.01em; }
+.brand small{ font-weight:400; color:var(--muted); margin-left:.5rem; font-size:.9rem; }
+.tb{ background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:999px; padding:.38rem .9rem; font-size:.92rem; cursor:pointer; }
+.tb:hover{ border-color:var(--muted); }
+.tb[aria-expanded="true"]{ background:var(--ink); color:var(--page); border-color:var(--ink); }
+
+/* stage */
+.stage{ flex:1; min-height:0; display:flex; gap:1rem; padding:0 1rem 1rem; }
+.left{ flex:1; min-width:0; display:flex; flex-direction:column; gap:.8rem; }
+
+/* the screen */
+.screen{ flex:1; min-height:0; position:relative; background:var(--lcd); color:var(--lcd-ink); border-radius:18px;
+  border:10px solid var(--body); box-shadow: inset 0 3px 10px rgba(0,0,0,.18), 0 0 0 1px var(--body-edge);
+  display:flex; flex-direction:column; padding:.6rem 1.4rem 1.2rem; overflow:hidden; }
+.ind{ display:flex; gap:.6rem; align-items:center; height:1.6rem; font-size:1rem; font-weight:700; }
+.ind span{ padding:0 .45rem; border-radius:4px; }
+#ind-s{ visibility:hidden; background:var(--lcd-ink); color:var(--lcd); }
+#ind-s.on{ visibility:visible; }
+#ind-fmt{ color:var(--lcd-dim); font-weight:400; }
+.ind .math-tag{ margin-left:auto; color:var(--lcd-dim); font-weight:400; }
+.math{ font-family:var(--mathf); line-height:1.15; }
+#input{ flex:1; min-height:0; overflow:auto; white-space:nowrap; font-size:clamp(28px, min(4.3vw, 8vh), 92px); padding:.25em .1em .3em; scrollbar-width:thin; }
+#output{ text-align:right; white-space:nowrap; overflow-x:auto; font-size:clamp(34px, min(5.6vw, 11vh), 124px); min-height:1.3em; font-weight:500; }
+
+.op{ margin:0 .18em; }
+.ans{ font-family:var(--ui); font-size:.82em; }
+.frac{ display:inline-flex; flex-direction:column; vertical-align:middle; margin:0 .1em; text-align:center; }
+.frac > span{ display:block; text-align:center; }
+.fn{ padding:0 .12em .06em; border-bottom:.055em solid currentColor; }
+.fd{ padding:.06em .12em 0; }
+.slot{ display:inline-block; }
+.slot.empty{ width:.6em; height:.82em; border:.05em dashed currentColor; opacity:.45; vertical-align:-0.08em; border-radius:.06em; position:relative; }
+.slot.empty.active{ opacity:1; border-style:solid; border-color:color-mix(in srgb, currentColor 55%, transparent); }
+.sup{ display:inline-block; font-size:.6em; vertical-align:.9em; margin-left:.04em; }
+.sup .sup{ vertical-align:.7em; }
+.sqrt{ display:inline-block; position:relative; padding-left:.6em; margin:0 .05em; }
+.sqrt > svg{ position:absolute; left:0; top:0; width:.62em; height:100%; overflow:visible; }
+.sqrt > svg path{ fill:none; stroke:currentColor; stroke-width:.055em; vector-effect:non-scaling-stroke; stroke-linejoin:round; }
+.sqb{ display:inline-block; border-top:.055em solid currentColor; padding:.1em .1em 0 .06em; }
+.root{ display:inline-block; }
+.ridx{ display:inline-block; font-size:.55em; vertical-align:.95em; margin-right:-.55em; position:relative; z-index:1; min-width:.8em; text-align:right; }
+.cur{ display:inline-block; width:0; position:relative; vertical-align:baseline; }
+.cur::after{ content:""; position:absolute; left:-.03em; bottom:-.18em; width:.07em; height:1.05em; background:currentColor; animation:blink 1.05s steps(1) infinite; }
+.slot.empty .cur::after{ left:.06em; bottom:.04em; height:.7em; }
+@keyframes blink{ 50%{ opacity:0; } }
+
+.err{ position:absolute; inset:2.2rem 1.4rem 1.2rem; display:flex; flex-direction:column; justify-content:center; gap:.5rem; background:var(--lcd); }
+.err strong{ font-size:clamp(30px, 4.6vw, 84px); }
+.err p{ margin:0; font-size:clamp(16px, 1.8vw, 30px); color:var(--lcd-dim); }
+.err kbd{ font-family:var(--ui); border:1.5px solid currentColor; border-radius:5px; padding:0 .3em; }
+
+/* key strip */
+.strip{ display:flex; align-items:center; gap:.8rem; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:.55rem .7rem .55rem 1rem; }
+.strip-label{ color:var(--muted); font-size:.95rem; white-space:nowrap; }
+#chips{ flex:1; min-width:0; display:flex; gap:.4rem; overflow-x:auto; align-items:center; min-height:2.6rem; scrollbar-width:thin; }
+.chips-empty{ color:var(--muted); font-size:.95rem; }
+.chip{ flex:none; display:inline-flex; align-items:center; justify-content:center; min-width:2.4rem; height:2.3rem; padding:0 .6rem; border-radius:8px; background:var(--k-fn); color:var(--k-fn-ink); font-weight:700; font-size:1.05rem; }
+.chip.op{ background:var(--k-op); color:var(--k-num-ink); }
+.chip.num{ background:var(--k-num); color:var(--k-num-ink); border:1.5px solid var(--line); }
+.chip.shift{ background:var(--amber); color:var(--amber-ink); }
+.chip.warn{ background:var(--warn); color:#fff; }
+.chip.exe{ background:var(--exe); color:#fff; }
+.chip sup{ font-size:.65em; }
+.sb{ flex:none; border:none; border-radius:10px; padding:.55rem .9rem; font-size:.95rem; font-weight:700; cursor:pointer; background:var(--k-op); color:var(--k-num-ink); }
+.sb.primary{ background:var(--exe); color:#fff; }
+.sb:disabled{ opacity:.4; cursor:default; }
+
+/* keypad */
+.pad{ width:clamp(300px, 31vw, 470px); flex:none; justify-content:center; background:var(--body); border-radius:22px; padding:1rem 1rem 1.1rem; display:flex; flex-direction:column; gap:.7rem; box-shadow:0 0 0 1px var(--body-edge); overflow:auto; }
+.pad-top{ display:grid; grid-template-columns:1fr 1.5fr 1fr; align-items:end; gap:.5rem; }
+#dpad{ position:relative; justify-self:center; width:min(100%, 9.5rem); aspect-ratio:1.55; }
+.dp{ position:absolute; border:none; background:var(--k-fn); color:var(--k-fn-ink); font-size:.95rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.dp-up{ left:32%; right:32%; top:0; height:34%; border-radius:10px 10px 4px 4px; }
+.dp-down{ left:32%; right:32%; bottom:0; height:34%; border-radius:4px 4px 10px 10px; }
+.dp-left{ left:0; top:30%; bottom:30%; width:33%; border-radius:10px 4px 4px 10px; }
+.dp-right{ right:0; top:30%; bottom:30%; width:33%; border-radius:4px 10px 10px 4px; }
+.dp-hub{ position:absolute; left:38%; right:38%; top:38%; bottom:38%; border-radius:50%; background:var(--body-edge); }
+.grid{ display:grid; grid-template-columns:repeat(5, 1fr); gap:.3rem .45rem; }
+#fn{ grid-template-columns:repeat(4, 1fr); }
+.kc{ display:flex; flex-direction:column; align-items:stretch; min-width:0; }
+.kl{ height:1.25rem; font-size:.78rem; color:var(--amber); text-align:center; white-space:nowrap; overflow:visible; line-height:1.25rem; }
+.kl sup,.kl sub{ font-size:.7em; line-height:0; }
+.key{ border:none; cursor:pointer; border-radius:9px; font-weight:700; height:clamp(38px, 7.6vh, 78px); font-size:clamp(15px, 1.35vw, 22px); display:flex; align-items:center; justify-content:center; padding:0 .2rem; box-shadow:0 3px 0 rgba(0,0,0,.35); transition:transform .06s, box-shadow .06s, filter .06s; white-space:nowrap; }
+.key sup{ font-size:.6em; }
+.key:active,.key.pressed,.dp.pressed,.dp:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.35); filter:brightness(1.18); }
+.is-replaying .key.pressed,.is-replaying .dp.pressed{ outline:4px solid var(--amber); outline-offset:2px; }
+.k-fn{ background:var(--k-fn); color:var(--k-fn-ink); height:clamp(34px, 6.2vh, 60px); font-size:clamp(14px, 1.25vw, 20px); }
+.k-format{ font-size:clamp(11px, .95vw, 15px); letter-spacing:.02em; }
+.k-shift{ background:var(--amber); color:var(--amber-ink); font-size:clamp(11px, .95vw, 15px); height:clamp(32px, 5.2vh, 52px); }
+.k-num{ background:var(--k-num); color:var(--k-num-ink); font-size:clamp(18px, 1.7vw, 28px); }
+.k-op{ background:var(--k-op); color:var(--k-num-ink); font-size:clamp(18px, 1.6vw, 26px); }
+.k-warn{ background:var(--warn); color:#fff; }
+.k-exe{ background:var(--exe); color:#fff; }
+.kfrac{ display:inline-flex; flex-direction:column; line-height:.95; font-size:.8em; vertical-align:middle; }
+.kfrac span:first-child{ border-bottom:2px solid currentColor; }
+.sep{ height:1px; background:rgba(255,255,255,.12); margin:.1rem 0; }
+
+/* panels */
+.panel{ position:fixed; top:calc(env(safe-area-inset-top,0px) + 3.4rem); right:1rem; width:min(420px, calc(100vw - 2rem)); max-height:calc(100% - 4.6rem - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); overflow:auto; background:var(--panel); color:var(--ink); border:1px solid var(--line); border-radius:16px; padding:1rem 1.1rem; box-shadow:0 16px 40px rgba(0,0,0,.22); z-index:10; }
+.panel h2{ font-size:1.1rem; margin:0 0 .6rem; display:flex; align-items:center; justify-content:space-between; }
+.panel-close{ background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1; }
+#hist-list{ list-style:none; margin:0 0 .6rem; padding:0; display:flex; flex-direction:column; gap:.4rem; }
+.hist-item{ width:100%; text-align:left; background:transparent; color:inherit; border:1px solid var(--line); border-radius:10px; padding:.5rem .8rem; cursor:pointer; display:flex; flex-direction:column; gap:.2rem; }
+.hist-item:hover{ border-color:var(--muted); }
+.hi-in{ font-size:1.25rem; overflow-x:auto; white-space:nowrap; }
+.hi-out{ font-size:1.45rem; text-align:right; font-weight:500; white-space:nowrap; overflow-x:auto; }
+.hist-empty{ color:var(--muted); margin:0; line-height:1.45; }
+table.sc{ width:100%; border-collapse:collapse; font-size:.95rem; }
+.sc td{ padding:.32rem .2rem; border-bottom:1px solid var(--line); }
+.sc td:first-child{ width:7.5rem; }
+.sc kbd{ font-family:var(--ui); font-weight:700; border:1.5px solid var(--line); border-bottom-width:3px; border-radius:6px; padding:.05rem .45rem; background:var(--page); }
+.note{ color:var(--muted); font-size:.9rem; line-height:1.45; margin:.8rem 0 0; }
+
+@media (max-width: 860px){
+  body{ overflow:auto; height:auto; }
+  .stage{ flex-direction:column; }
+  .screen{ min-height:46vh; }
+  .pad{ width:100%; }
+  .key{ font-size:18px; }
+}
+@media (prefers-reduced-motion: reduce){ .cur::after{ animation:none; } .key{ transition:none; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">Board Calculator<small>natural display</small></div>
+  <button class="tb" data-panel="history" aria-expanded="false">History</button>
+  <button class="tb" data-panel="keys" aria-expanded="false">Keyboard shortcuts</button>
+  <button class="tb" id="theme">Dark screen</button>
+  <button class="tb" id="fullscreen">Full screen</button>
+</header>
+<main class="stage">
+  <section class="left">
+    <div class="screen" aria-live="polite">
+      <div class="ind"><span id="ind-s">S</span><span id="ind-fmt"></span><span class="math-tag">Math</span></div>
+      <div id="input" class="math"></div>
+      <div id="output" class="math"></div>
+      <div id="error" class="err" hidden>
+        <strong id="err-kind">Math ERROR</strong>
+        <p><kbd>AC</kbd> Cancel</p>
+        <p><kbd>◀</kbd> <kbd>▶</kbd> Go back to the calculation</p>
+      </div>
+    </div>
+    <div class="strip">
+      <span class="strip-label">Keys pressed</span>
+      <div id="chips"></div>
+      <button class="sb primary" id="replay">Replay</button>
+      <button class="sb" id="clearstrip">Clear</button>
+    </div>
+  </section>
+  <aside class="pad" aria-label="Calculator keys">
+    <div class="pad-top">
+      <div id="k-shift"></div>
+      <div id="dpad"></div>
+      <div id="k-format"></div>
+    </div>
+    <div class="grid" id="fn"></div>
+    <div class="sep"></div>
+    <div class="grid" id="num"></div>
+  </aside>
+</main>
+
+<div class="panel" id="panel-history" hidden>
+  <h2>History <button class="panel-close" aria-label="Close">×</button></h2>
+  <ul id="hist-list"></ul>
+  <button class="sb" id="hist-clear">Clear history</button>
+</div>
+<div class="panel" id="panel-keys" hidden>
+  <h2>Keyboard shortcuts <button class="panel-close" aria-label="Close">×</button></h2>
+  <table class="sc">
+    <tr><td><kbd>0</kbd>–<kbd>9</kbd> <kbd>.</kbd></td><td>Numbers</td></tr>
+    <tr><td><kbd>+</kbd> <kbd>-</kbd> <kbd>*</kbd> <kbd>/</kbd></td><td>Add, subtract, multiply, divide</td></tr>
+    <tr><td><kbd>(</kbd> <kbd>)</kbd></td><td>Brackets</td></tr>
+    <tr><td><kbd>Enter</kbd> or <kbd>=</kbd></td><td>EXE</td></tr>
+    <tr><td><kbd>Backspace</kbd></td><td>DEL</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>AC</td></tr>
+    <tr><td>Arrow keys</td><td>Move the cursor (▲▼ jump between numerator and denominator)</td></tr>
+    <tr><td><kbd>f</kbd></td><td>Fraction</td></tr>
+    <tr><td><kbd>m</kbd></td><td>Mixed number (SHIFT + fraction)</td></tr>
+    <tr><td><kbd>r</kbd></td><td>Square root</td></tr>
+    <tr><td><kbd>q</kbd></td><td>Square</td></tr>
+    <tr><td><kbd>^</kbd></td><td>Power</td></tr>
+    <tr><td><kbd>n</kbd></td><td>Negative (−)</td></tr>
+    <tr><td><kbd>p</kbd></td><td>π (SHIFT + ×10<sup>x</sup>)</td></tr>
+    <tr><td><kbd>a</kbd></td><td>Ans</td></tr>
+    <tr><td><kbd>d</kbd></td><td>FORMAT (switch to decimal)</td></tr>
+    <tr><td><kbd>s</kbd></td><td>SHIFT</td></tr>
+  </table>
+  <p class="note">Keyboard presses show up in the key strip exactly as the matching calculator buttons, so the class sees the real sequence.</p>
+</div>
+<script>
+// ENGINE START
+class CalcError extends Error { constructor(kind){ super(kind); this.kind = kind; } }
+class Overflow extends Error {}
+const MATH = () => new CalcError('Math');
+const SYN = () => new CalcError('Syntax');
+
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a; }
+function safe(x){ if(!Number.isSafeInteger(x)) throw new Overflow(); return x; }
+function rat(n,d=1){ if(d===0) throw MATH(); safe(n); safe(d); if(d<0){ n=-n; d=-d; } const g=gcd(n,d)||1; return { n:n/g, d:d/g }; }
+function rMul(a,b){ const g1=gcd(a.n,b.d)||1, g2=gcd(b.n,a.d)||1; return rat(safe((a.n/g1)*(b.n/g2)), safe((a.d/g2)*(b.d/g1))); }
+function rAdd(a,b){ const g=gcd(a.d,b.d); const d=safe((a.d/g)*b.d); return rat(safe(safe(a.n*(d/a.d)) + safe(b.n*(d/b.d))), d); }
+
+const EX = t => ({ ex:true, t });
+const FL = f => ({ ex:false, f });
+const ZERO = EX([]);
+const ONE = EX([{ c:{n:1,d:1}, r:1, p:0 }]);
+const PI_V = EX([{ c:{n:1,d:1}, r:1, p:1 }]);
+function fromRat(r){ return r.n===0 ? ZERO : EX([{ c:r, r:1, p:0 }]); }
+
+function norm(terms){
+  const m = new Map();
+  for(const t of terms){ const k=t.r+'|'+t.p; const e=m.get(k); m.set(k, e ? { c:rAdd(e.c,t.c), r:t.r, p:t.p } : t); }
+  return EX([...m.values()].filter(t => t.c.n!==0).sort((a,b) => a.p-b.p || a.r-b.r));
+}
+function toF(v){ if(!v.ex) return v.f; let s=0; for(const t of v.t) s += t.c.n/t.c.d*Math.sqrt(t.r)*Math.pow(Math.PI,t.p); return s; }
+function chkF(x){ if(!isFinite(x) || Math.abs(x) >= 1e100) throw MATH(); return FL(x); }
+function guard(fEx, fF){ try { return fEx(); } catch(e){ if(e instanceof Overflow) return chkF(fF()); throw e; } }
+function isZero(v){ return v.ex ? v.t.length===0 : v.f===0; }
+
+function sqExtract(n){ if(n > 1e12) throw new Overflow(); let s=1, m=n; for(let i=2; i*i<=m; i++){ while(m % (i*i) === 0){ s*=i; m/=i*i; } } return { s, m }; }
+
+function add(a,b){ if(!a.ex || !b.ex) return chkF(toF(a)+toF(b)); return guard(() => norm([...a.t, ...b.t]), () => toF(a)+toF(b)); }
+function neg(a){ return a.ex ? EX(a.t.map(t => ({ ...t, c:{ n:-t.c.n, d:t.c.d } }))) : FL(-a.f); }
+function sub(a,b){ return add(a, neg(b)); }
+function mulTerm(x,y){ const { s, m } = sqExtract(safe(x.r*y.r)); return { c:rMul(rMul(x.c,y.c), rat(s)), r:m, p:x.p+y.p }; }
+function mul(a,b){
+  if(!a.ex || !b.ex) return chkF(toF(a)*toF(b));
+  return guard(() => { const out=[]; for(const x of a.t) for(const y of b.t) out.push(mulTerm(x,y)); if(out.length>64) throw new Overflow(); return norm(out); }, () => toF(a)*toF(b));
+}
+function div(a,b){
+  if(isZero(b)) throw MATH();
+  if(!a.ex || !b.ex) return chkF(toF(a)/toF(b));
+  return guard(() => {
+    if(b.t.length===1){ const t=b.t[0]; return mul(a, EX([{ c:rat(t.c.d, safe(t.c.n*t.r)), r:t.r, p:-t.p }])); }
+    if(b.t.length===2){
+      const conj = EX([ b.t[0], { ...b.t[1], c:{ n:-b.t[1].c.n, d:b.t[1].c.d } } ]);
+      const den = mul(b, conj);
+      if(den.ex && den.t.length===1) return div(mul(a, conj), den);
+    }
+    throw new Overflow();
+  }, () => toF(a)/toF(b));
+}
+function iroot(x,k){ const r=Math.round(Math.pow(x,1/k)); for(const c of [r-1,r,r+1]) if(c>=0 && Math.pow(c,k)===x) return c; return null; }
+function isRational(v){ return v.ex && (v.t.length===0 || (v.t.length===1 && v.t[0].r===1 && v.t[0].p===0)); }
+function sqrtV(v){
+  if(v.ex && v.t.length===0) return ZERO;
+  if(isRational(v)){
+    const c=v.t[0].c; if(c.n<0) throw MATH();
+    try { const { s, m } = sqExtract(safe(c.n*c.d)); return EX([{ c:rat(s,c.d), r:m, p:0 }]); }
+    catch(e){ if(!(e instanceof Overflow)) throw e; }
+  }
+  const x=toF(v); if(x < -1e-12) throw MATH(); return chkF(Math.sqrt(Math.max(0,x)));
+}
+function nroot(kV, v){
+  const k = toF(kV);
+  if(k===0) throw MATH();
+  if(k===2) return sqrtV(v);
+  if(Number.isInteger(k) && k>=1 && k<=1000 && isRational(v)){
+    if(k===1 || v.t.length===0) return v;
+    const c=v.t[0].c, ng=c.n<0;
+    if(ng && k%2===0) throw MATH();
+    const rn=iroot(Math.abs(c.n),k), rd=iroot(c.d,k);
+    if(rn!==null && rd!==null) return fromRat(rat(ng ? -rn : rn, rd));
+  }
+  const x=toF(v);
+  if(x<0){ if(Number.isInteger(k) && Math.abs(k)%2===1) return chkF(-Math.pow(-x,1/k)); throw MATH(); }
+  return chkF(Math.pow(x,1/k));
+}
+function intPow(b,k){
+  if(Math.abs(k)>1024) throw new Overflow();
+  if(k<0) return div(ONE, intPow(b,-k));
+  let r=ONE, x=b;
+  while(k){ if(k&1) r=mul(r,x); k=Math.floor(k/2); if(k) x=mul(x,x); }
+  return r;
+}
+function power(b,e){
+  if(isRational(e)){
+    const q = e.t.length ? e.t[0].c : { n:0, d:1 };
+    if(q.n===0){ if(isZero(b)) throw MATH(); return ONE; }
+    if(q.d===1 && isZero(b) && q.n<0) throw MATH();
+    try {
+      if(q.d===1) return intPow(b, q.n);
+      if(b.ex && q.d<=12) return intPow(nroot(fromRat(rat(q.d)), b), q.n);
+    } catch(err){ if(!(err instanceof Overflow)) throw err; }
+  }
+  const bf=toF(b), ef=toF(e);
+  if(bf===0 && ef<=0) throw MATH();
+  if(bf<0 && !Number.isInteger(ef)) throw MATH();
+  return chkF(Math.pow(bf,ef));
+}
+
+// ---- parsing ----
+function tokenize(L){
+  const out=[]; let num='';
+  const flush = () => { if(num){ out.push({ k:'num', s:num }); num=''; } };
+  for(const nd of L){
+    if(nd.t==='c'){ if(/^[0-9.]$/.test(nd.v)){ num+=nd.v; continue; } flush(); out.push({ k:nd.v }); }
+    else { flush(); out.push({ k:nd.t, node:nd }); }
+  }
+  flush(); return out;
+}
+function parseNum(s){
+  if(s==='.' || (s.match(/\./g)||[]).length>1) throw SYN();
+  const [ip, fp=''] = s.split('.');
+  if((ip+fp).replace(/^0+/,'').length > 15 || fp.length > 15) return chkF(parseFloat(s));
+  return fromRat(rat(parseInt((ip+fp)||'0',10), Math.pow(10, fp.length)));
+}
+const PRIMARY = ['num','pi','ans','(','frac','mixed','sqrt','root'];
+class Parser {
+  constructor(toks, ctx){ this.toks=toks; this.i=0; this.ctx=ctx; }
+  peek(){ return this.toks[this.i]; }
+  next(){ return this.toks[this.i++]; }
+  is(...ks){ const t=this.peek(); return !!t && ks.includes(t.k); }
+  expr(){ let v=this.term(); while(this.is('+','-')){ const op=this.next().k; const r=this.term(); v = op==='+' ? add(v,r) : sub(v,r); } return v; }
+  term(){
+    let v=this.unary();
+    for(;;){
+      if(this.is('*','/')){ const op=this.next().k; const r=this.unary(); v = op==='*' ? mul(v,r) : div(v,r); }
+      else if(this.is('e10')){ v = this.postfix(mul(v, this.tenPow(this.next()))); }
+      else if(this.is(...PRIMARY)){ v = mul(v, this.postfix(this.primary())); }
+      else break;
+    }
+    return v;
+  }
+  unary(){
+    if(this.is('-','neg')){ this.next(); return neg(this.unary()); }
+    if(this.is('+')){ this.next(); return this.unary(); }
+    return this.postfix(this.primary());
+  }
+  postfix(v){ while(this.is('pow')){ const t=this.next(); v = power(v, evalList(t.node.s[0], this.ctx)); } return v; }
+  tenPow(t){ return power(fromRat(rat(10)), evalList(t.node.s[0], this.ctx)); }
+  primary(){
+    const t=this.next(); if(!t) throw SYN();
+    const E = L => evalList(L, this.ctx);
+    switch(t.k){
+      case 'num': return parseNum(t.s);
+      case 'pi': return PI_V;
+      case 'ans': return this.ctx.ans || ZERO;
+      case '(': { const v=this.expr(); if(this.is(')')) this.next(); else if(this.i < this.toks.length) throw SYN(); return v; }
+      case 'frac': return div(E(t.node.s[0]), E(t.node.s[1]));
+      case 'mixed': { const w=E(t.node.s[0]), f=div(E(t.node.s[1]), E(t.node.s[2])); return toF(w)<0 ? sub(w,f) : add(w,f); }
+      case 'sqrt': return sqrtV(E(t.node.s[0]));
+      case 'root': return nroot(E(t.node.s[0]), E(t.node.s[1]));
+      case 'e10': return this.tenPow(t);
+      default: throw SYN();
+    }
+  }
+}
+function evalList(L, ctx){
+  if(!L.length) throw SYN();
+  const P = new Parser(tokenize(L), ctx);
+  const v = P.expr();
+  if(P.i < P.toks.length) throw SYN();
+  return v;
+}
+function evaluate(L, ctx){
+  const v = evalList(L, ctx);
+  const f = toF(v);
+  if(!isFinite(f) || Math.abs(f) >= 1e100) throw MATH();
+  return v;
+}
+
+// ---- result formatting ----
+const H = {
+  frac: (a,b) => `<span class="frac"><span class="fn">${a}</span><span class="fd">${b}</span></span>`,
+  sqrt: x => `<span class="sqrt"><svg viewBox="0 0 10 20" preserveAspectRatio="none" aria-hidden="true"><path d="M0.6 12.2 L2.8 10.8 L5.6 19.2 L9.6 0.8 L10 0.8" /></svg><span class="sqb">${x}</span></span>`,
+  sup: x => `<span class="sup">${x}</span>`,
+  op: x => `<span class="op">${x}</span>`,
+};
+function lcm(a,b){ return a/gcd(a,b)*b; }
+function exactOK(v){
+  if(!v.ex) return false;
+  const t=v.t;
+  if(t.length>2) return false;
+  if(t.some(x => x.p!==0 && x.p!==1)) return false;
+  if(t.some(x => x.p===1) && (t.length>1 || t[0].r!==1)) return false;
+  const big = x => Math.abs(x) >= 1e10;
+  if(t.some(x => big(x.c.n) || big(x.c.d) || big(x.r))) return false;
+  if(t.length===2){ const D=lcm(t[0].c.d, t[1].c.d); if(big(D) || t.some(x => big(x.c.n*(D/x.c.d)))) return false; }
+  return true;
+}
+function coreStr(a, r, p){ return (a===1 && (r>1 || p) ? '' : String(a)) + (r>1 ? H.sqrt(r) : '') + (p ? 'π' : ''); }
+function fmtDecimal(x){
+  if(x===0) return '0';
+  const sgn = x<0 ? '−' : ''; const ax=Math.abs(x);
+  if(ax >= 1e10 || ax < 0.01){
+    let [m, e] = ax.toExponential(9).split('e');
+    m = m.replace(/\.?0+$/,''); e = parseInt(e,10);
+    if(Math.abs(parseFloat(m)) >= 10){ m='1'; e+=1; }
+    return sgn + m + H.op('×') + '10' + H.sup(e<0 ? '−'+(-e) : String(e));
+  }
+  return sgn + String(Number(ax.toPrecision(10)));
+}
+function resultHTML(v, opt={}){
+  if(opt.dec || !exactOK(v)) return fmtDecimal(toF(v));
+  const t=v.t;
+  if(t.length===0) return '0';
+  if(t.length===1){
+    const { c, r, p } = t[0]; const sgn = c.n<0 ? '−' : ''; const a=Math.abs(c.n);
+    if(c.d===1) return sgn + coreStr(a, r, p);
+    if(opt.mixed && r===1 && p===0 && a > c.d) return sgn + String(Math.floor(a/c.d)) + H.frac(a % c.d, c.d);
+    return sgn + H.frac(coreStr(a, r, p), c.d);
+  }
+  const D = lcm(t[0].c.d, t[1].c.d);
+  const [x, y] = t.map(q => ({ a:q.c.n*(D/q.c.d), r:q.r, p:q.p }));
+  const numer = (x.a<0 ? '−' : '') + coreStr(Math.abs(x.a), x.r, x.p) + H.op(y.a<0 ? '−' : '+') + coreStr(Math.abs(y.a), y.r, y.p);
+  return D===1 ? numer : H.frac(numer, D);
+}
+function isNonIntFraction(v){ return exactOK(v) && isRational(v) && v.t.length===1 && v.t[0].c.d!==1; }
+// ENGINE END
+
+// ===== Editor state =====
+const C = v => ({ t:'c', v });
+const mk = { frac:()=>({t:'frac',s:[[],[]]}), mixed:()=>({t:'mixed',s:[[],[],[]]}), sqrt:()=>({t:'sqrt',s:[[]]}),
+  root:()=>({t:'root',s:[[],[]]}), pow:()=>({t:'pow',s:[[]]}), e10:()=>({t:'e10',s:[[]]}) };
+let root = [], cur = { L:root, i:0 }, mode = 'edit', shift = false, ans = null, res = null, errKind = null;
+let showDec = false, showMixed = false;
+let strip = [], stripAns = null, replaying = false;
+const history = [];
+
+function positions(L, out=[]){ for(let k=0;k<=L.length;k++){ out.push({L,i:k}); if(k<L.length && L[k].s) for(const s of L[k].s) positions(s,out); } return out; }
+function curIndex(ps){ return ps.findIndex(p => p.L===cur.L && p.i===cur.i); }
+function findParent(target, L=root){ for(let k=0;k<L.length;k++){ const n=L[k]; if(!n.s) continue; for(let j=0;j<n.s.length;j++){ if(n.s[j]===target) return { node:n, slot:j, list:L, index:k }; const f=findParent(target, n.s[j]); if(f) return f; } } return null; }
+
+function insertChar(v){ cur.L.splice(cur.i,0,C(v)); cur.i++; }
+function insertStruct(n, enterSlot=0, after=false){
+  cur.L.splice(cur.i,0,n);
+  if(after){ cur.i++; } else { cur = { L:n.s[enterSlot], i:n.s[enterSlot].length }; }
+}
+function move(dir){
+  const ps = positions(root); const i = curIndex(ps);
+  if(dir==='left' && i>0) cur = ps[i-1];
+  if(dir==='right' && i<ps.length-1) cur = ps[i+1];
+  if(dir==='up' || dir==='down'){
+    const p = findParent(cur.L); if(!p) return;
+    const pairs = { frac:[0,1], mixed:[1,2] }[p.node.t]; if(!pairs) return;
+    const target = dir==='down' && p.slot===pairs[0] ? pairs[1] : dir==='up' && p.slot===pairs[1] ? pairs[0] : null;
+    if(target!==null){ const L=p.node.s[target]; cur = { L, i:L.length }; }
+  }
+}
+function del(){
+  if(cur.i>0){ cur.L.splice(cur.i-1,1); cur.i--; return; }
+  const p = findParent(cur.L); if(!p) return;
+  const n = p.node;
+  if(n.s.every(s => s.length===0)){ p.list.splice(p.index,1); cur = { L:p.list, i:p.index }; }
+  else if(n.s.length===1){ const inner=n.s[0]; p.list.splice(p.index,1,...inner); cur = { L:p.list, i:p.index }; }
+  else move('left');
+}
+
+// ===== Keys =====
+const IC = {
+  frac:'<span class="kfrac"><span>□</span><span>□</span></span>',
+  box:'□',
+};
+const KEYS = {
+  shift:{a:'shift', l:'SHIFT', name:'Shift'},
+  left:{a:'left', l:'◀', name:'Left'}, right:{a:'right', l:'▶', name:'Right'}, up:{a:'up', l:'▲', name:'Up'}, down:{a:'down', l:'▼', name:'Down'},
+  frac:{a:'frac', l:IC.frac, s:'mixed', sl:'□'+IC.frac, name:'Fraction'},
+  sqrt:{a:'sqrt', l:'√□', s:'cbrt', sl:'∛□', name:'Square root'},
+  sq:{a:'sq', l:'x²', s:'cube', sl:'x³', name:'Square'},
+  pow:{a:'pow', l:'x<sup>□</sup>', s:'nroot', sl:'<sup>□</sup>√□', name:'Power'},
+  recip:{a:'recip', l:'x⁻¹', name:'Reciprocal'},
+  neg:{a:'neg', l:'(−)', name:'Negative'},
+  lp:{a:'lp', l:'(', name:'Open bracket'}, rp:{a:'rp', l:')', name:'Close bracket'},
+  format:{a:'format', l:'FORMAT', s:'mixtog', sl:'a<sup>b</sup>/<sub>c</sub> ⇔ <sup>d</sup>/<sub>c</sub>', name:'Format'},
+  del:{a:'del', l:'DEL', name:'Delete'}, ac:{a:'ac', l:'AC', name:'All clear'},
+  mul:{a:'mul', l:'×', name:'Multiply'}, div:{a:'div', l:'÷', name:'Divide'}, add:{a:'add', l:'+', name:'Add'}, sub:{a:'sub', l:'−', name:'Subtract'},
+  dot:{a:'dot', l:'.', name:'Decimal point'}, e10:{a:'e10', l:'×10<sup>x</sup>', s:'pi', sl:'π', name:'Times ten to the power'},
+  ans:{a:'ans', l:'Ans', name:'Answer'}, exe:{a:'exe', l:'EXE', name:'Execute'},
+};
+for(let d=0; d<10; d++) KEYS['d'+d] = { a:'d'+d, l:String(d), name:String(d) };
+
+const CONTINUE = ['format','mixtog','left','right','exe','del'];
+const FROM_ANS = ['add','sub','mul','div','sq','cube','pow','recip'];
+
+function press(id, fromReplay=false){
+  if(replaying && !fromReplay) return;
+  const def = KEYS[id]; if(!def) return;
+  flash(id, fromReplay);
+  if(id==='shift'){ if(mode==='result' || mode==='edit') strip.push(id); shift=!shift; render(); return; }
+  const sh = shift; shift = false;
+  const act = sh && def.s ? def.s : def.a;
+
+  if(act==='ac'){ strip=[]; stripAns=ans; root=[]; cur={L:root,i:0}; mode='edit'; res=null; errKind=null; render(); return; }
+
+  if(mode==='error'){
+    if(act==='left' || act==='right'){ strip.push(id); mode='edit'; cur = act==='left' ? {L:root,i:root.length} : {L:root,i:0}; }
+    render(); return;
+  }
+  if(mode==='result'){
+    if(CONTINUE.includes(act)){
+      strip.push(id);
+      if(act==='format'){ if(isNonIntFraction(res) || !isRational(res)) showDec=!showDec; render(); return; }
+      if(act==='mixtog'){ showMixed=!showMixed; showDec=false; render(); return; }
+      if(act==='exe'){ doEval(); render(); return; }
+      mode='edit'; cur = act==='right' ? {L:root,i:0} : {L:root,i:root.length};
+      render(); return;
+    }
+    strip = sh ? ['shift'] : []; stripAns = ans;
+    root = FROM_ANS.includes(act) ? [C('ans')] : [];
+    cur = { L:root, i:root.length }; mode='edit'; res=null;
+  }
+  strip.push(id);
+  switch(act){
+    case 'add': insertChar('+'); break; case 'sub': insertChar('-'); break;
+    case 'mul': insertChar('*'); break; case 'div': insertChar('/'); break;
+    case 'lp': insertChar('('); break; case 'rp': insertChar(')'); break;
+    case 'neg': insertChar('neg'); break; case 'dot': insertChar('.'); break;
+    case 'ans': insertChar('ans'); break; case 'pi': insertChar('pi'); break;
+    case 'frac': insertStruct(mk.frac()); break;
+    case 'mixed': insertStruct(mk.mixed()); break;
+    case 'sqrt': insertStruct(mk.sqrt()); break;
+    case 'cbrt': { const n=mk.root(); n.s[0].push(C('3')); insertStruct(n,1); break; }
+    case 'nroot': insertStruct(mk.root()); break;
+    case 'pow': insertStruct(mk.pow()); break;
+    case 'sq': { const n=mk.pow(); n.s[0].push(C('2')); insertStruct(n,0,true); break; }
+    case 'cube': { const n=mk.pow(); n.s[0].push(C('3')); insertStruct(n,0,true); break; }
+    case 'recip': { const n=mk.pow(); n.s[0].push(C('neg'),C('1')); insertStruct(n,0,true); break; }
+    case 'e10': insertStruct(mk.e10()); break;
+    case 'left': case 'right': case 'up': case 'down': move(act); break;
+    case 'del': del(); break;
+    case 'exe': doEval(); break;
+    case 'format': doEval(); if(mode==='result') showDec = true; break;
+    case 'mixtog': doEval(); if(mode==='result') showMixed = true; break;
+    default: if(/^d\d$/.test(act)) insertChar(act[1]);
+  }
+  render();
+}
+
+function doEval(){
+  if(!root.length) return;
+  try {
+    const v = evaluate(root, { ans });
+    ans = v; res = v; mode='result'; showDec=false; showMixed=false; errKind=null;
+    if(!replaying) addHistory();
+  } catch(e){
+    if(!(e instanceof CalcError)) console.error(e);
+    mode='error'; errKind = e instanceof CalcError ? e.kind : 'Math';
+  }
+}
+
+// ===== Rendering =====
+const CUR = '<span class="cur" aria-hidden="true"></span>';
+const CHARS = { '+':H.op('+'), '-':H.op('−'), '*':H.op('×'), '/':H.op('÷'), 'neg':'<span class="ng">−</span>', 'pi':'π', 'ans':'<span class="ans">Ans</span>', '(':'(', ')':')' };
+function renderList(L, isRoot, showCur){
+  const here = showCur && cur.L===L;
+  if(!L.length){ if(isRoot) return here ? CUR : ''; return `<span class="slot empty${here?' active':''}">${here?CUR:''}</span>`; }
+  let h='';
+  for(let k=0;k<L.length;k++){ if(here && cur.i===k) h+=CUR; h+=renderNode(L[k], showCur); }
+  if(here && cur.i===L.length) h+=CUR;
+  return isRoot ? h : `<span class="slot">${h}</span>`;
+}
+function renderNode(n, sc){
+  const r = L => renderList(L, false, sc);
+  switch(n.t){
+    case 'c': return CHARS[n.v] ?? n.v;
+    case 'frac': return H.frac(r(n.s[0]), r(n.s[1]));
+    case 'mixed': return `<span class="mixed">${r(n.s[0])}${H.frac(r(n.s[1]), r(n.s[2]))}</span>`;
+    case 'sqrt': return H.sqrt(r(n.s[0]));
+    case 'root': return `<span class="root"><span class="ridx">${r(n.s[0])}</span>${H.sqrt(r(n.s[1]))}</span>`;
+    case 'pow': return H.sup(r(n.s[0]));
+    case 'e10': return H.op('×') + '10' + H.sup(r(n.s[0]));
+  }
+  return '';
+}
+const $ = s => document.querySelector(s);
+function render(){
+  $('#ind-s').classList.toggle('on', shift);
+  $('#ind-fmt').textContent = mode==='result' && showDec ? 'Decimal' : '';
+  const inEl = $('#input'), outEl = $('#output'), errEl = $('#error');
+  inEl.innerHTML = renderList(root, true, mode==='edit');
+  errEl.hidden = mode!=='error';
+  if(mode==='error') $('#err-kind').textContent = errKind + ' ERROR';
+  outEl.innerHTML = mode==='result' ? resultHTML(res, { dec:showDec, mixed:showMixed }) : '';
+  const c = inEl.querySelector('.cur'); if(c) c.scrollIntoView({ block:'nearest', inline:'nearest' });
+  document.body.classList.toggle('is-replaying', replaying);
+  renderStrip();
+}
+function chipHTML(id){ const d=KEYS[id]; const cls = id==='shift' ? 'chip shift' : ['ac','del'].includes(id) ? 'chip warn' : id==='exe' ? 'chip exe' : /^d\d$|^dot$/.test(id) ? 'chip num' : ['add','sub','mul','div','e10','ans'].includes(id) ? 'chip op' : 'chip'; return `<span class="${cls}">${d.l}</span>`; }
+function renderStrip(){
+  const el = $('#chips');
+  el.innerHTML = strip.length ? strip.map(chipHTML).join('') : '<span class="chips-empty">Key presses for the current calculation appear here.</span>';
+  $('#replay').disabled = !strip.length || replaying;
+  $('#clearstrip').disabled = !strip.length || replaying;
+  el.scrollLeft = el.scrollWidth;
+}
+function flash(id, slow){
+  const b = document.querySelector(`[data-k="${id}"]`); if(!b) return;
+  b.classList.remove('pressed'); void b.offsetWidth; b.classList.add('pressed');
+  clearTimeout(b._t); b._t = setTimeout(() => b.classList.remove('pressed'), slow ? 420 : 160);
+}
+
+// ===== History =====
+function addHistory(){
+  history.unshift({ tree: JSON.parse(JSON.stringify(root)), v: res });
+  if(history.length > 30) history.pop();
+  renderHistory();
+}
+function renderHistory(){
+  const el = $('#hist-list');
+  if(!history.length){ el.innerHTML = '<p class="hist-empty">Calculations you run will be listed here. Select one to load it back onto the screen.</p>'; return; }
+  el.innerHTML = history.map((h,i) => `<li><button class="hist-item" data-i="${i}"><span class="math hi-in">${renderList(h.tree,true,false)}</span><span class="math hi-out">${resultHTML(h.v)}</span></button></li>`).join('');
+}
+function loadHistory(i){
+  const h = history[i]; if(!h || replaying) return;
+  root = JSON.parse(JSON.stringify(h.tree)); cur = { L:root, i:root.length }; mode='edit'; res=null; shift=false;
+  strip=[]; stripAns=ans; render(); togglePanel('history', false);
+}
+
+// ===== Replay =====
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function replay(){
+  if(!strip.length || replaying) return;
+  const seq = strip.slice();
+  replaying = true; ans = stripAns; root=[]; cur={L:root,i:0}; mode='edit'; res=null; shift=false; strip=[];
+  render(); await sleep(450);
+  for(const id of seq){ press(id, true); await sleep(750); }
+  replaying = false; render();
+}
+
+// ===== Build keypad =====
+function keyHTML(id, cls='', span=1){
+  const d = KEYS[id];
+  return `<div class="kc${span>1?' span'+span:''}"><span class="kl">${d.sl || ''}</span><button type="button" class="key ${cls}" data-k="${id}" aria-label="${d.name}">${d.l}</button></div>`;
+}
+function buildKeypad(){
+  $('#k-shift').innerHTML = keyHTML('shift','k-shift');
+  $('#dpad').innerHTML = ['up','left','right','down'].map(id => `<button type="button" class="dp dp-${id}" data-k="${id}" aria-label="${KEYS[id].name}">${KEYS[id].l}</button>`).join('') + '<span class="dp-hub" aria-hidden="true"></span>';
+  $('#k-format').innerHTML = keyHTML('format','k-fn k-format');
+  $('#fn').innerHTML = ['frac','sqrt','sq','pow','recip','neg','lp','rp'].map(id => keyHTML(id,'k-fn')).join('');
+  const rows = [['d7','d8','d9','del','ac'],['d4','d5','d6','mul','div'],['d1','d2','d3','add','sub'],['d0','dot','e10','ans','exe']];
+  $('#num').innerHTML = rows.flat().map(id => {
+    const cls = ['del','ac'].includes(id) ? 'k-warn' : id==='exe' ? 'k-exe' : /^d\d$|^dot$/.test(id) ? 'k-num' : 'k-op';
+    return keyHTML(id, cls);
+  }).join('');
+}
+
+// ===== Panels, theme, fullscreen =====
+function togglePanel(name, force){
+  const p = document.getElementById('panel-'+name);
+  const open = force ?? p.hidden;
+  document.querySelectorAll('.panel').forEach(x => x.hidden = true);
+  p.hidden = !open;
+  document.querySelectorAll('[data-panel]').forEach(b => b.setAttribute('aria-expanded', String(!document.getElementById('panel-'+b.dataset.panel).hidden)));
+}
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  $('#theme').textContent = t==='dark' ? 'Light screen' : 'Dark screen';
+  try { localStorage.setItem('calc-theme', t); } catch(e){}
+}
+
+// ===== Keyboard =====
+const KB = { '.':'dot', '+':'add', '-':'sub', '*':'mul', 'x':'mul', 'X':'mul', '/':'div', '(':'lp', ')':'rp', '^':'pow',
+  'f':'frac', 'r':'sqrt', 'q':'sq', 'a':'ans', 'n':'neg', 'd':'format', 's':'shift',
+  'Enter':'exe', '=':'exe', 'Backspace':'del', 'Escape':'ac', 'Delete':'ac',
+  'ArrowLeft':'left', 'ArrowRight':'right', 'ArrowUp':'up', 'ArrowDown':'down' };
+for(let d=0; d<10; d++) KB[String(d)] = 'd'+d;
+document.addEventListener('keydown', e => {
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  if(e.key==='Escape' && document.querySelector('.panel:not([hidden])')){ togglePanel('history', false); e.preventDefault(); return; }
+  if(e.key==='Enter' && e.target.closest && e.target.closest('button') && !e.target.closest('.key,.dp')) return;
+  if(e.key==='p'){ e.preventDefault(); if(!shift) press('shift'); press('e10'); return; }
+  if(e.key==='m'){ e.preventDefault(); if(!shift) press('shift'); press('frac'); return; }
+  const id = KB[e.key]; if(!id) return;
+  e.preventDefault(); press(id);
+});
+
+// ===== Init =====
+buildKeypad();
+document.addEventListener('click', e => {
+  const k = e.target.closest('[data-k]'); if(k){ press(k.dataset.k); k.blur(); return; }
+  const hi = e.target.closest('.hist-item'); if(hi){ loadHistory(+hi.dataset.i); return; }
+  const pb = e.target.closest('[data-panel]'); if(pb){ togglePanel(pb.dataset.panel); return; }
+  if(e.target.closest('.panel-close')){ togglePanel('history', false); return; }
+});
+$('#replay').addEventListener('click', replay);
+$('#clearstrip').addEventListener('click', () => { if(!replaying){ strip=[]; stripAns=ans; renderStrip(); } });
+$('#hist-clear').addEventListener('click', () => { history.length=0; renderHistory(); });
+$('#theme').addEventListener('click', () => setTheme(document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark'));
+let saved=null; try { saved = localStorage.getItem('calc-theme'); } catch(e){}
+setTheme(saved || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+const fsBtn = $('#fullscreen');
+if(!document.fullscreenEnabled) fsBtn.hidden = true;
+fsBtn.addEventListener('click', async () => { try { if(document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch(e){ fsBtn.hidden = true; } });
+document.addEventListener('fullscreenchange', () => { fsBtn.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen'; });
+renderHistory(); render();
+
+</script>
+</body>
+</html>

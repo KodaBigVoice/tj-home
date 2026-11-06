@@ -1,0 +1,3651 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PDF Switchyard</title>
+<script>
+/* ============ PDF Switchyard settings: edit these, then re-upload the site ============ */
+window.SY_CONFIG = {
+  supportUrl: '',               // your Ko-fi / Buy Me a Coffee page, e.g. 'https://ko-fi.com/yourname'
+  supportService: '',           // its name, used in the privacy notice, e.g. 'Ko-fi'
+  contactEmail: '',             // optional: shown in About & privacy
+  cloudflareAnalyticsToken: '', // optional: Cloudflare Web Analytics token (cookie-free visit counts)
+};
+</script>
+<meta name="description" content="Arrange your PDFs your way. Merge, reorder, split and organise PDF pages in one private workspace.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='7' fill='%231E5B4A'/%3E%3Cpath d='M5.5 19h6.5c4.2 0 4.8-9.5 10.5-9.5' stroke='%23fff' stroke-width='2.1' fill='none' stroke-linecap='round'/%3E%3Cpath d='M12 19h10.5' stroke='%23fff' stroke-width='2.1' stroke-linecap='round' opacity='.5'/%3E%3Ccircle cx='12' cy='19' r='2.3' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #F1F0EC;
+  --bg-sunk: #E8E6E0;
+  --panel: #FAF9F6;
+  --card: #FFFFFF;
+  --ink: #1C2226;
+  --ink-2: #3A4247;
+  --muted: #6E7479;
+  --faint: #A2A6A9;
+  --line: #E2E0DA;
+  --line-2: #D2CFC7;
+  --accent: #1E5B4A;
+  --accent-hi: #237058;
+  --accent-ink: #15443A;
+  --accent-soft: rgba(30, 91, 74, 0.10);
+  --accent-ring: rgba(30, 91, 74, 0.20);
+  --danger: #A33B31;
+  --night: #1F272B;
+  --night-2: #2B3439;
+  --shadow-card: 0 0 0 1px rgba(28, 34, 38, 0.06), 0 1px 2px rgba(28, 34, 38, 0.06), 0 3px 8px rgba(28, 34, 38, 0.05);
+  --shadow-hover: 0 0 0 1px rgba(28, 34, 38, 0.07), 0 2px 4px rgba(28, 34, 38, 0.07), 0 8px 18px rgba(28, 34, 38, 0.08);
+  --shadow-lift: 0 0 0 1px rgba(28, 34, 38, 0.06), 0 14px 34px rgba(28, 34, 38, 0.22), 0 4px 10px rgba(28, 34, 38, 0.12);
+  --shadow-pop: 0 0 0 1px rgba(28, 34, 38, 0.07), 0 14px 36px rgba(28, 34, 38, 0.16), 0 2px 6px rgba(28, 34, 38, 0.07);
+  --serif: 'Newsreader', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --sans: 'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --ease: cubic-bezier(0.2, 0.75, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { height: 100%; scroll-padding-top: env(safe-area-inset-top, 0px); background: var(--bg); }
+body {
+  height: 100%; margin: 0; overflow: hidden;
+  background: var(--bg); color: var(--ink);
+  font: 14px/1.45 var(--sans);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'ss01' on;
+}
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.mono { font-family: var(--mono); font-feature-settings: 'zero' 0; letter-spacing: -0.01em; }
+svg.i { width: 18px; height: 18px; flex: none; display: block; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+#app { height: 100%; position: relative; }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 32px; padding: 0 12px; border-radius: 8px;
+  border: 1px solid transparent; background: transparent; color: var(--ink-2);
+  font-size: 13.5px; font-weight: 550; letter-spacing: -0.005em; white-space: nowrap;
+  cursor: pointer; user-select: none; transition: background-color 120ms, border-color 120ms, color 120ms, opacity 120ms;
+}
+.btn:hover { background: rgba(28, 34, 38, 0.06); color: var(--ink); }
+.btn:active { background: rgba(28, 34, 38, 0.1); }
+.btn[disabled] { opacity: 0.38; pointer-events: none; }
+.btn.outline { background: var(--card); border-color: var(--line-2); box-shadow: 0 1px 1px rgba(28,34,38,.04); }
+.btn.outline:hover { border-color: #C4C0B7; background: #fff; }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent-hi); border-color: var(--accent-hi); color: #fff; }
+.btn.primary:active { background: var(--accent-ink); }
+.btn.lg { height: 42px; padding: 0 20px; font-size: 15px; border-radius: 10px; }
+.btn.danger { color: var(--danger); }
+.ibtn { width: 32px; padding: 0; justify-content: center; }
+.split { display: inline-flex; align-items: stretch; }
+.split > .btn:first-child { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.split > .btn.caret { border-top-left-radius: 0; border-bottom-left-radius: 0; padding: 0 7px; margin-left: -1px; }
+.split > .btn.primary.caret { border-left-color: rgba(255,255,255,.22); margin-left: 0; }
+.split > .btn.caret svg.i { width: 15px; height: 15px; }
+.btn.open { background: rgba(28, 34, 38, 0.08); }
+.btn.primary.open { background: var(--accent-ink); }
+
+/* ---------- landing ---------- */
+.landing { position: absolute; inset: 0; overflow: auto; display: flex; flex-direction: column; }
+.landing.leaving { opacity: 0; transform: scale(0.99); transition: opacity 260ms ease, transform 260ms ease; pointer-events: none; }
+.land-top { display: flex; align-items: center; justify-content: space-between; padding: 22px 32px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.brand .mark { width: 26px; height: 26px; flex: none; }
+.brand .word { font-family: var(--serif); font-size: 20px; font-weight: 500; letter-spacing: -0.01em; font-variation-settings: 'opsz' 24; }
+.land-top .note { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+.land-top .note svg.i { width: 15px; height: 15px; }
+.land-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 24px 56px; }
+.land-title {
+  font-family: var(--serif); font-weight: 400; font-size: clamp(38px, 5.2vw, 64px); line-height: 1.02;
+  letter-spacing: -0.025em; margin: 0 0 16px; text-align: center; font-variation-settings: 'opsz' 72; color: var(--ink);
+}
+.land-sub { max-width: 34em; text-align: center; color: var(--ink-2); font-size: 17px; line-height: 1.5; margin: 0 0 30px; }
+.land-sub span { display: block; color: var(--muted); font-size: 15.5px; margin-top: 4px; }
+
+.restore {
+  width: min(680px, 100%); display: flex; align-items: center; gap: 16px;
+  background: var(--card); border-radius: 12px; padding: 14px 14px 14px 18px; margin-bottom: 16px;
+  box-shadow: var(--shadow-card); animation: rise 360ms var(--ease-out) both;
+}
+.restore .rtext { flex: 1; min-width: 0; }
+.restore .rtitle { font-weight: 650; font-size: 14.5px; }
+.restore .rmeta { font-family: var(--mono); font-size: 12.5px; color: var(--muted); margin-top: 1px; }
+.restore .rdot { width: 34px; height: 34px; border-radius: 9px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex: none; }
+
+.dropzone {
+  position: relative; width: min(680px, 100%); min-height: 300px; border-radius: 18px;
+  background: var(--card); box-shadow: var(--shadow-card);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 34px 24px 32px;
+  transition: box-shadow 160ms, transform 200ms var(--ease);
+}
+.dropzone::after {
+  content: ''; position: absolute; inset: 10px; border-radius: 12px; border: 1.5px dashed var(--line-2); pointer-events: none;
+  transition: border-color 160ms, background-color 160ms;
+}
+.dropzone.over { box-shadow: 0 0 0 3px var(--accent-ring), var(--shadow-pop); transform: scale(1.005); }
+.dropzone.over::after { border-color: var(--accent); background: rgba(30,91,74,.035); }
+.dz-art { width: 300px; max-width: 80%; height: auto; margin-bottom: 14px; overflow: visible; }
+.dz-art .track { fill: none; stroke: var(--line-2); stroke-width: 2; stroke-linecap: round; }
+.dz-art .track.main { stroke: #C9C5BB; }
+.dz-art .tie { stroke: var(--line); stroke-width: 2; }
+.dz-art .car { stroke: rgba(28,34,38,.08); stroke-width: 1; }
+.dz-title { font-family: var(--serif); font-size: 26px; font-weight: 450; letter-spacing: -0.015em; font-variation-settings: 'opsz' 36; }
+.dz-or { color: var(--muted); font-size: 13.5px; margin: 2px 0 10px; }
+.dz-busy { display: none; align-items: center; gap: 10px; color: var(--ink-2); font-size: 14px; }
+.dropzone.busy .dz-idle { display: none; }
+.dropzone.busy .dz-busy { display: flex; }
+.dz-idle { display: flex; flex-direction: column; align-items: center; }
+.features { margin-top: 22px; color: var(--muted); font-size: 13.5px; letter-spacing: 0.01em; }
+.privacy { margin-top: 10px; display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--accent-ink); font-weight: 600; }
+.privacy svg.i { width: 16px; height: 16px; }
+.privacy-detail { color: var(--muted); font-size: 13px; margin-top: 3px; text-align: center; max-width: 36em; }
+@media (prefers-reduced-motion: no-preference) {
+  .dz-art .draw { stroke-dasharray: 400; stroke-dashoffset: 400; animation: draw 1100ms 120ms var(--ease-out) forwards; }
+  .dz-art .car { opacity: 0; animation: carIn 700ms var(--ease-out) forwards; }
+  .dz-art .car.c1 { animation-delay: 520ms; } .dz-art .car.c2 { animation-delay: 620ms; } .dz-art .car.c3 { animation-delay: 720ms; } .dz-art .car.c4 { animation-delay: 950ms; }
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes carIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin 700ms linear infinite; opacity: 0.8; flex: none; }
+
+/* ---------- workspace shell ---------- */
+.workspace { position: absolute; inset: 0; display: grid; grid-template-rows: auto 1fr; }
+.workspace.entering { animation: fadeIn 280ms ease both; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.toolbar {
+  height: 54px; display: grid; grid-template-columns: minmax(min-content, 1fr) auto minmax(max-content, 1fr); align-items: center; gap: 12px;
+  padding: 0 12px 0 14px; background: var(--panel); border-bottom: 1px solid var(--line); position: relative; z-index: 20;
+}
+.tb-left, .tb-center, .tb-right { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.tb-right { justify-content: flex-end; gap: 8px; }
+.tb-left .brand { margin-right: 8px; flex: none; }
+.tb-left .brand .word { font-size: 18px; }
+.tb-left .brand .mark { width: 24px; height: 24px; }
+.tb-sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 6px; flex: none; }
+.tb-center .btn { color: var(--ink-2); }
+.zoom { display: inline-flex; align-items: center; border-radius: 8px; }
+.zoom .zv {
+  width: 52px; height: 32px; border: 0; border-radius: 6px; background: transparent; text-align: center;
+  font: 500 12.5px var(--mono); color: var(--ink-2); cursor: text; padding: 0;
+}
+.zoom .zv:hover { background: rgba(28,34,38,.06); }
+.zoom input.zv { background: #fff; box-shadow: inset 0 0 0 1px var(--accent); outline: none; }
+.selrange { position: relative; display: flex; align-items: center; margin-left: 4px; }
+.selrange input {
+  width: 150px; height: 32px; border-radius: 8px; border: 1px solid var(--line-2); background: #fff;
+  padding: 0 10px 0 30px; font: 500 12.5px var(--mono); color: var(--ink); outline: none; transition: border-color 120ms, box-shadow 120ms, width 180ms var(--ease);
+}
+.selrange input::placeholder { font-family: var(--sans); font-size: 13px; color: var(--faint); font-weight: 450; }
+.selrange input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); width: 190px; }
+.selrange input.bad { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(163,59,49,.16); animation: shake 260ms; }
+.selrange svg.i { position: absolute; left: 9px; width: 15px; height: 15px; color: var(--faint); pointer-events: none; }
+@keyframes shake { 20%, 60% { transform: translateX(-3px); } 40%, 80% { transform: translateX(3px); } }
+.hint-pop {
+  position: absolute; top: calc(100% + 8px); left: 0; white-space: nowrap; background: var(--night); color: #F1F0EC;
+  font-size: 12.5px; padding: 6px 9px; border-radius: 7px; box-shadow: var(--shadow-pop); pointer-events: none; z-index: 30;
+}
+
+.wbody { position: relative; display: flex; min-height: 0; }
+
+/* ---------- sidebar ---------- */
+.sidebar {
+  width: 252px; flex: none; background: var(--panel); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+}
+.sidebar[hidden] { display: none; }
+.sb-head { padding: 16px 16px 8px; display: flex; align-items: baseline; justify-content: space-between; }
+.sb-title { font-family: var(--serif); font-size: 17px; font-weight: 500; letter-spacing: -0.01em; }
+.sb-sum { font: 12px var(--mono); color: var(--muted); }
+.sb-list { flex: 1; overflow: auto; padding: 2px 8px 12px; }
+.src-row {
+  position: relative; display: grid; grid-template-columns: 12px 1fr auto; align-items: center; column-gap: 10px;
+  padding: 8px 8px 8px 10px; border-radius: 9px; cursor: pointer; user-select: none; transition: background-color 120ms;
+}
+.src-row:hover { background: rgba(28,34,38,.05); }
+.src-row.on { background: color-mix(in srgb, var(--c) 10%, #fff); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 35%, transparent); }
+.src-row .sdot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.src-row .sname { font-size: 13.5px; font-weight: 550; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.src-row .scount { grid-column: 2; font: 12px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.src-row.empty .sname, .src-row.empty .scount { color: var(--faint); }
+.src-row .sact {
+  grid-row: 1 / span 2; grid-column: 3; opacity: 0; height: 26px; padding: 0 8px; font-size: 12.5px; border-radius: 7px;
+  border: 1px solid var(--line-2); background: #fff; cursor: pointer; color: var(--ink-2); transition: opacity 120ms;
+}
+.src-row:hover .sact, .src-row .sact:focus-visible { opacity: 1; }
+.src-row .sact:hover { border-color: var(--accent); color: var(--accent); }
+.sb-foot { border-top: 1px solid var(--line); padding: 12px 16px 14px; font-size: 12.5px; color: var(--muted); display: flex; gap: 8px; align-items: flex-start; }
+.sb-foot svg.i { width: 15px; height: 15px; margin-top: 1px; color: var(--accent); }
+.sb-blank { padding: 6px 10px 0 32px; font: 12px var(--mono); color: var(--muted); }
+
+/* ---------- page workspace ---------- */
+.ws { position: relative; flex: 1; min-width: 0; overflow-y: auto; overflow-x: hidden; outline: none; scrollbar-gutter: stable; }
+.ws.filedrag { box-shadow: inset 0 0 0 2px var(--accent-ring); }
+.canvas { position: relative; width: 100%; min-height: 100%; }
+body.dragging, body.dragging * { cursor: grabbing !important; }
+body.marqueeing { user-select: none; }
+
+.card {
+  position: absolute; left: 0; top: 0; width: var(--cw); height: var(--ch);
+  transition: transform 260ms var(--ease), opacity 200ms ease;
+  user-select: none; -webkit-user-select: none; cursor: default; touch-action: pan-y;
+}
+.card.noanim, .divider.noanim, .slot.noanim { transition: none; }
+.card .box { position: absolute; left: 0; top: 0; width: var(--cw); height: var(--th); }
+.card .sheet {
+  position: absolute; background: #fff; border-radius: 2px; overflow: hidden; box-shadow: var(--shadow-card);
+  transition: transform 280ms var(--ease), width 280ms var(--ease), height 280ms var(--ease), left 280ms var(--ease), top 280ms var(--ease), box-shadow 160ms;
+}
+.card .sheet img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity 200ms ease; pointer-events: none; -webkit-user-drag: none; }
+.card .sheet img.ok { opacity: 1; }
+.card .sheet .blank-label {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #B9B6AE; font-size: 11.5px; font-weight: 500; letter-spacing: 0.02em;
+}
+.card:hover .sheet { box-shadow: var(--shadow-hover); }
+.card .ring {
+  position: absolute; border-radius: 4px; pointer-events: none; opacity: 0;
+  box-shadow: 0 0 0 2px var(--accent), 0 0 0 6px var(--accent-soft);
+  transition: opacity 140ms, left 280ms var(--ease), top 280ms var(--ease), width 280ms var(--ease), height 280ms var(--ease);
+}
+.card.sel .ring { opacity: 1; }
+.card .chk {
+  position: absolute; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff;
+  display: grid; place-items: center; box-shadow: 0 0 0 2px #fff, 0 2px 5px rgba(28,34,38,.2);
+  opacity: 0; transform: scale(0.4); transition: opacity 140ms, transform 200ms var(--ease-out), left 280ms var(--ease), top 280ms var(--ease);
+  pointer-events: none;
+}
+.card .chk svg { width: 12px; height: 12px; stroke-width: 2.6; }
+.card.sel .chk { opacity: 1; transform: scale(1); }
+.card .cap {
+  position: absolute; left: 0; top: calc(var(--th) + 9px); width: var(--cw); height: 18px;
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+}
+.card .pn { font: 500 12px var(--mono); color: var(--muted); letter-spacing: -0.01em; transition: color 140ms; }
+.card.sel .pn { color: var(--accent); }
+.card .src { position: absolute; left: 3px; display: flex; align-items: center; gap: 5px; font: 11px var(--mono); color: var(--faint); }
+.card .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.card .dot.hollow { background: transparent; box-shadow: inset 0 0 0 1.5px #BDB9B0; }
+.card .on { display: none; }
+.canvas.orig .card .on { display: inline; }
+.card.out { opacity: 0 !important; }
+.card.gone { opacity: 0; pointer-events: none; }
+.card.lifted { transition: none; z-index: 40; }
+.card.lifted .sheet { box-shadow: var(--shadow-lift); }
+.card.lifted .cap { opacity: 0; }
+.card.landing { z-index: 35; }
+.canvas.hl .card:not(.hl-on) { opacity: 0.32; }
+.canvas.hl .card.hl-on .sheet { box-shadow: 0 0 0 2px var(--hlc), var(--shadow-hover); }
+.card.flash .sheet { animation: flash 900ms ease; }
+@keyframes flash { 0%, 100% { box-shadow: var(--shadow-card); } 30% { box-shadow: 0 0 0 3px var(--accent-ring), var(--shadow-hover); } }
+
+.divider {
+  position: absolute; left: 0; top: 0; height: 34px;
+  transition: transform 260ms var(--ease), opacity 220ms ease;
+  display: flex; align-items: center; gap: 10px; padding: 0 12px 0 0;
+  border-radius: 8px; background: color-mix(in srgb, var(--c) 9%, var(--bg)); overflow: hidden;
+  user-select: none; pointer-events: none;
+}
+.divider::before { content: ''; align-self: stretch; width: 4px; background: var(--c); flex: none; }
+.divider .dv-name { font-size: 13.5px; font-weight: 650; color: color-mix(in srgb, var(--c) 72%, #111); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.divider .dv-meta { font: 12px var(--mono); color: color-mix(in srgb, var(--c) 55%, #444); white-space: nowrap; }
+.divider .dv-rail { flex: 1; height: 2px; border-radius: 2px; background: color-mix(in srgb, var(--c) 30%, transparent); min-width: 12px; }
+.divider.out { opacity: 0; }
+
+.slot { position: absolute; left: 0; top: 0; width: var(--cw); height: var(--th); transition: transform 200ms var(--ease), opacity 160ms; pointer-events: none; }
+.slot .sb {
+  position: absolute; inset: 4px; border-radius: 6px; border: 2px dashed color-mix(in srgb, var(--accent) 70%, transparent);
+  background: var(--accent-soft); display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px;
+  color: var(--accent-ink); font-size: 12.5px; font-weight: 600; line-height: 1.25;
+}
+.slot { z-index: 6; }
+.slot .slab {
+  position: absolute; left: 50%; top: calc(var(--th) + 5px); transform: translateX(-50%); white-space: nowrap;
+  height: 22px; padding: 0 10px; border-radius: 11px; background: var(--accent); color: #fff; display: flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600; box-shadow: 0 0 0 2px var(--bg), 0 3px 8px rgba(30, 91, 74, .25); animation: rise 180ms var(--ease-out) both;
+}
+.slot .slab:empty { display: none; }
+.slot .slab b { font-family: var(--mono); font-weight: 500; }
+.slot .bar { position: absolute; top: 4px; bottom: 4px; left: calc(var(--gap) / -2 - 1.5px); width: 3px; border-radius: 3px; background: var(--accent); opacity: 0.9; }
+
+.proxy { position: absolute; left: 0; top: 0; width: var(--cw); height: var(--th); z-index: 45; pointer-events: none; transition: none; will-change: transform; }
+.proxy .pl { position: absolute; background: #fff; border-radius: 2px; box-shadow: 0 0 0 1px rgba(28,34,38,.09), 0 3px 8px rgba(28,34,38,.1); }
+.proxy .pt { position: absolute; background: #fff; border-radius: 2px; box-shadow: var(--shadow-lift); overflow: hidden; }
+.proxy .pt .sheet { position: absolute; background: #fff; }
+.proxy .pt img { position: absolute; inset: 0; width: 100%; height: 100%; }
+.proxy .badge {
+  position: absolute; height: 24px; padding: 0 9px; border-radius: 12px; background: var(--accent); color: #fff;
+  display: flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; white-space: nowrap;
+  box-shadow: 0 0 0 2px #fff, 0 3px 8px rgba(28,34,38,.25);
+}
+.proxy .badge b { font-family: var(--mono); font-weight: 500; }
+.proxy.settle { transition: transform 150ms var(--ease), opacity 140ms ease; }
+
+.gapplus {
+  position: absolute; left: 0; top: 0; width: 28px; z-index: 12; opacity: 0; pointer-events: none;
+  transition: opacity 120ms ease; display: flex; align-items: center; justify-content: center;
+}
+.gapplus.show { opacity: 1; pointer-events: auto; }
+.gapplus .gl { position: absolute; top: 6px; bottom: 6px; left: 50%; width: 2px; margin-left: -1px; border-radius: 2px; background: var(--accent); opacity: 0; transition: opacity 120ms; }
+.gapplus:hover .gl, .gapplus.active .gl { opacity: 0.55; }
+.gapplus button {
+  position: relative; width: 26px; height: 26px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  background: #fff; color: var(--accent); box-shadow: 0 0 0 1px var(--line-2), 0 2px 6px rgba(28,34,38,.12);
+  display: grid; place-items: center; transform: scale(0.85); transition: transform 140ms var(--ease-out), background-color 120ms, color 120ms;
+}
+.gapplus.show button { transform: scale(1); }
+.gapplus button:hover, .gapplus.active button { background: var(--accent); color: #fff; box-shadow: 0 0 0 1px var(--accent), 0 3px 10px rgba(30,91,74,.3); }
+.gapplus button svg.i { width: 15px; height: 15px; stroke-width: 2.2; }
+
+.dropbar { position: absolute; left: 0; top: 0; width: 4px; border-radius: 4px; background: var(--accent); z-index: 14; pointer-events: none; box-shadow: 0 0 0 4px var(--accent-ring); transition: transform 120ms var(--ease); }
+.dropbar span {
+  position: absolute; top: -30px; left: 50%; transform: translateX(-50%); white-space: nowrap; background: var(--accent); color: #fff;
+  font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 6px;
+}
+
+.marquee { position: absolute; border: 1px solid var(--accent); background: rgba(30, 91, 74, 0.08); border-radius: 3px; z-index: 30; pointer-events: none; }
+
+.ws > .empty {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: var(--muted); text-align: center; padding: 24px; pointer-events: none;
+}
+.ws > .empty h2 { font-family: var(--serif); font-weight: 450; font-size: 26px; color: var(--ink); margin: 0; letter-spacing: -0.015em; }
+.ws > .empty .row { display: flex; gap: 8px; margin-top: 10px; pointer-events: auto; }
+
+/* ---------- selection toolbar ---------- */
+.selbar {
+  position: absolute; left: 50%; bottom: 22px; z-index: 25; transform: translate(-50%, 16px); opacity: 0; pointer-events: none;
+  display: flex; align-items: center; gap: 2px; padding: 6px; border-radius: 14px; background: var(--night); color: #EDECE8;
+  box-shadow: 0 16px 40px rgba(20, 26, 29, 0.28), 0 2px 6px rgba(20, 26, 29, 0.2);
+  transition: transform 220ms var(--ease-out), opacity 160ms ease;
+}
+.selbar.show { transform: translate(-50%, 0); opacity: 1; pointer-events: auto; }
+.selbar .count { padding: 0 12px 0 10px; font-size: 13.5px; font-weight: 550; white-space: nowrap; }
+.selbar .count b { font: 500 13px var(--mono); }
+.selbar .btn { color: #DDDCD7; height: 34px; }
+.selbar .btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+.selbar .btn.open { background: rgba(255,255,255,.14); }
+.selbar .btn.danger { color: #F2A89F; }
+.selbar .btn.danger:hover { background: rgba(242, 168, 159, .14); color: #FFC3BB; }
+.selbar .sep { width: 1px; height: 20px; background: rgba(255,255,255,.14); margin: 0 4px; }
+.selbar .btn svg.i { width: 17px; height: 17px; }
+
+/* ---------- menus ---------- */
+.menu {
+  position: fixed; z-index: 200; min-width: 200px; padding: 5px; border-radius: 11px; background: #fff; box-shadow: var(--shadow-pop);
+  animation: menuIn 140ms var(--ease-out) both; transform-origin: top left;
+}
+.menu.dark { background: var(--night-2); color: #EDECE8; box-shadow: 0 16px 40px rgba(20,26,29,.3); }
+@keyframes menuIn { from { opacity: 0; transform: translateY(-3px) scale(0.98); } to { opacity: 1; transform: none; } }
+.menu .mh { padding: 7px 10px 5px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.menu.dark .mh { color: #9DA3A6; }
+.menu .mi {
+  width: 100%; display: flex; align-items: center; gap: 10px; min-height: 34px; padding: 6px 10px; border: 0; background: transparent;
+  border-radius: 7px; cursor: pointer; text-align: left; font-size: 13.5px; font-weight: 500; color: inherit;
+}
+.menu .mi:hover, .menu .mi:focus-visible { background: rgba(28,34,38,.06); outline: none; }
+.menu.dark .mi:hover { background: rgba(255,255,255,.09); }
+.menu .mi svg.i { width: 17px; height: 17px; color: var(--muted); }
+.menu.dark .mi svg.i { color: #A9AEB1; }
+.menu .mi .mlabel { flex: 1; }
+.menu .mi .msub { display: block; font-size: 12px; color: var(--muted); font-weight: 450; }
+.menu .mi .kbd { font: 11.5px var(--mono); color: var(--faint); }
+.menu .mi.danger { color: var(--danger); }
+.menu .mi.danger svg.i { color: var(--danger); }
+.menu .mi[disabled] { opacity: 0.4; pointer-events: none; }
+.menu .msep { height: 1px; background: var(--line); margin: 5px 4px; }
+.switch { width: 30px; height: 18px; border-radius: 10px; background: #D6D3CC; position: relative; flex: none; transition: background-color 160ms; }
+.switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.2); transition: transform 180ms var(--ease-out); }
+.switch.on { background: var(--accent); }
+.switch.on::after { transform: translateX(12px); }
+
+/* ---------- toasts ---------- */
+.toasts { position: fixed; left: 20px; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 400; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; pointer-events: none; }
+.toast {
+  display: flex; align-items: center; gap: 12px; min-height: 42px; max-width: min(460px, calc(100vw - 40px)); padding: 8px 8px 8px 14px; border-radius: 11px;
+  background: var(--night); color: #EDECE8; font-size: 13.5px; box-shadow: 0 12px 30px rgba(20,26,29,.25); pointer-events: auto;
+  animation: toastIn 220ms var(--ease-out) both;
+}
+.toast.bye { animation: toastOut 180ms ease forwards; }
+.toast .tmsg { flex: 1; padding-right: 4px; }
+.toast .tact { border: 0; background: transparent; color: #9FD8C5; font-weight: 650; padding: 6px 10px; border-radius: 7px; cursor: pointer; }
+.toast .tact:hover { background: rgba(255,255,255,.08); }
+.toast .tx { border: 0; background: transparent; color: #8E9498; padding: 4px; border-radius: 6px; cursor: pointer; display: grid; place-items: center; }
+.toast .tx:hover { color: #fff; background: rgba(255,255,255,.08); }
+.toast .tx svg.i { width: 15px; height: 15px; }
+.toast.err { background: #3A2522; }
+.toast .spinner { width: 15px; height: 15px; }
+.toast .tmsg b { font-family: var(--mono); font-weight: 500; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes toastOut { to { opacity: 0; transform: translateY(6px); } }
+
+/* ---------- modals ---------- */
+.backdrop {
+  position: fixed; inset: 0; z-index: 500; background: rgba(28, 34, 38, 0.3); backdrop-filter: blur(2px);
+  display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn 160ms ease both;
+}
+.dialog {
+  width: min(420px, 100%); background: #fff; border-radius: 16px; box-shadow: var(--shadow-pop); padding: 22px 22px 18px;
+  animation: rise 220ms var(--ease-out) both;
+}
+.dialog h3 { margin: 0 0 6px; font-family: var(--serif); font-weight: 500; font-size: 22px; letter-spacing: -0.01em; }
+.dialog p { margin: 0 0 14px; color: var(--ink-2); }
+.dialog .fname { font-weight: 650; color: var(--ink); word-break: break-word; }
+.dialog input[type=password], .dialog input[type=text] {
+  width: 100%; height: 40px; border-radius: 9px; border: 1px solid var(--line-2); padding: 0 12px; font: 15px var(--sans); outline: none;
+}
+.dialog input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.dialog .err { color: var(--danger); font-size: 13px; margin-top: 8px; min-height: 18px; }
+.dialog .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.dialog .icon-head { width: 38px; height: 38px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin-bottom: 14px; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 7px 16px; font-size: 13.5px; margin: 6px 0 4px; }
+.keys kbd { font: 12px var(--mono); background: var(--bg); border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; white-space: nowrap; justify-self: start; }
+
+/* ---------- preview ---------- */
+.pv { position: fixed; inset: 0; z-index: 350; background: rgba(21, 26, 29, 0.96); display: grid; grid-template-rows: auto 1fr auto; animation: fadeIn 160ms ease both; color: #ECEBE7; }
+.pv-top { display: flex; align-items: center; gap: 14px; padding: 14px 16px 10px 22px; }
+.pv-num { font: 500 14px var(--mono); }
+.pv-num span { color: #8E9498; }
+.pv-src { display: flex; align-items: center; gap: 8px; color: #B9BDBF; font-size: 13.5px; min-width: 0; }
+.pv-src .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.pv-src .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-src .m { font: 12.5px var(--mono); color: #8E9498; white-space: nowrap; }
+.pv-top .grow { flex: 1; }
+.pv .btn { color: #D9DAD6; }
+.pv .btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+.pv .btn.danger { color: #F2A89F; }
+.pv-stage { position: relative; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 6px 76px; }
+.pv-page { position: relative; background: #fff; box-shadow: 0 20px 60px rgba(0,0,0,.4); transition: width 200ms var(--ease), height 200ms var(--ease); }
+.pv-page img, .pv-page canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pv-page .blank-label { position: absolute; inset: 0; display: grid; place-items: center; color: #B9B6AE; font-size: 14px; }
+.pv-nav {
+  position: absolute; top: 50%; width: 46px; height: 46px; margin-top: -23px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(255,255,255,.08); color: #fff; display: grid; place-items: center; transition: background-color 120ms, opacity 120ms;
+}
+.pv-nav:hover { background: rgba(255,255,255,.16); }
+.pv-nav[disabled] { opacity: 0.25; pointer-events: none; }
+.pv-nav.l { left: 18px; } .pv-nav.r { right: 18px; }
+.pv-nav svg.i { width: 22px; height: 22px; }
+.pv-bar { display: flex; justify-content: center; padding: 10px 16px 18px; }
+.pv-bar .inner { display: flex; gap: 2px; padding: 6px; border-radius: 14px; background: rgba(255,255,255,.07); }
+.pv-bar .sep { width: 1px; background: rgba(255,255,255,.14); margin: 7px 4px; }
+
+@media (max-width: 1340px) {
+  .selrange input { width: 138px; }
+  .selrange input:focus { width: 160px; }
+}
+@media (max-width: 1180px) {
+  .tb-right .btn#addBtn .lbl { display: none; }
+  .selbar .btn .lbl { display: none; }
+  .tb-right .btn .lbl-long { display: none; }
+}
+@media (max-width: 1000px) {
+  .selrange { display: none; }
+  .tb-left .brand .word { display: none; }
+}
+@media (max-width: 760px) {
+  .toolbar { grid-template-columns: auto 1fr auto; }
+  .tb-center .zoom, .tb-center .tb-sep { display: none; }
+  .tb-right .btn .lbl { display: none; }
+  .land-top .note { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+}
+
+/* ---------- additions ---------- */
+.canvas.instant .card, .canvas.instant .card .sheet, .canvas.instant .card .ring, .canvas.instant .card .chk, .canvas.instant .divider { transition: none !important; }
+.pv-sheet { position: absolute; background: #fff; overflow: hidden; transform-origin: center; }
+.pv-page canvas { z-index: 1; }
+.btn.danger-solid { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn.danger-solid:hover { background: #8E3129; }
+.dialog .icon-head.danger { background: rgba(163, 59, 49, 0.10); color: var(--danger); }
+.btn[aria-busy] { cursor: progress; }
+.btn[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+.dropzone { cursor: pointer; }
+.dropzone.busy { cursor: progress; }
+
+/* ---------- document name ---------- */
+.doctitle { position: relative; display: flex; align-items: center; min-width: 124px; max-width: 300px; flex: 0 1 104px; }
+.doctitle input {
+  flex: 1 1 auto; min-width: 0; width: 100%; height: 32px; padding: 0 28px 0 8px; margin: 0;
+  border: 1px solid transparent; border-radius: 8px; background: transparent; outline: none;
+  font: 500 16.5px/1.2 var(--serif); color: var(--ink); letter-spacing: -0.005em; text-overflow: ellipsis;
+  transition: background-color 120ms, border-color 120ms, box-shadow 120ms;
+}
+.doctitle input::placeholder { color: var(--faint); opacity: 1; font-weight: 400; }
+.doctitle:hover input { background: rgba(28, 34, 38, 0.05); }
+.doctitle input:focus { background: #fff; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-ring); }
+.doctitle svg.i { position: absolute; right: 9px; width: 14px; height: 14px; color: var(--faint); pointer-events: none; opacity: 0; transition: opacity 120ms; }
+.doctitle.untitled svg.i, .doctitle:hover svg.i { opacity: 1; }
+.doctitle input:focus ~ svg.i { opacity: 0; }
+@media (max-width: 1599px) { .tb-left .brand .word { display: none; } .tb-left .brand { margin-right: 4px; } }
+@media (max-width: 1100px) { .selrange { display: none; } }
+
+/* ---------- support, about ---------- */
+.land-right { display: flex; align-items: center; gap: 14px; }
+.btn.support { color: var(--ink-2); }
+.btn.support svg.i { color: #B4455E; }
+.btn.support:hover { background: rgba(180, 69, 94, 0.08); color: var(--ink); }
+.land-top .btn.support { height: 34px; padding: 0 12px; border-radius: 17px; box-shadow: inset 0 0 0 1px var(--line-2); background: var(--panel); font-size: 13px; font-weight: 600; gap: 7px; }
+.land-top .btn.support:hover { box-shadow: inset 0 0 0 1px rgba(180, 69, 94, 0.35); background: #fff; }
+.support-ibtn svg.i { color: #B4455E; }
+.support-ibtn:hover { background: rgba(180, 69, 94, 0.08); }
+.land-links { margin-top: 14px; display: flex; gap: 10px; align-items: center; }
+.linkbtn { border: 0; background: none; padding: 2px 0; font: 500 13px var(--sans); color: var(--muted); cursor: pointer; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+.linkbtn:hover { color: var(--ink); text-decoration-color: currentColor; }
+.dialog.about { width: min(560px, 100%); max-height: min(88vh, 760px); overflow-y: auto; }
+.about-body .lead { color: var(--ink-2); font-size: 15px; }
+.about-body h4 { margin: 18px 0 8px; font: 600 11.5px var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.about-body ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--ink-2); font-size: 13.5px; line-height: 1.5; }
+.about-body li::marker { color: var(--faint); }
+.about-body b { color: var(--ink); font-weight: 650; }
+.about-body .credits { font-size: 13.5px; line-height: 1.5; }
+.about-body a { color: var(--accent); text-underline-offset: 2px; }
+.about-body .meta { margin: 16px 0 0; font: 12px var(--mono); color: var(--muted); }
+.dialog .btn.support { color: #9A3A50; }
+@media (max-width: 760px) { .land-right .note { display: none; } .support-ibtn { display: none; } }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="landing" class="landing" aria-label="Start">
+    <header class="land-top">
+      <div class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#1E5B4A"/><path d="M5.5 19h6.5c4.2 0 4.8-9.5 10.5-9.5" stroke="#fff" stroke-width="2.1" fill="none" stroke-linecap="round"/><path d="M12 19h10.5" stroke="#fff" stroke-width="2.1" stroke-linecap="round" opacity=".5"/><circle cx="12" cy="19" r="2.3" fill="#fff"/></svg><span class="word">PDF Switchyard</span></div>
+      <div class="land-right"><div class="note"><span data-icon="lock"></span>Runs entirely in your browser</div><button class="btn support" id="supportLand"><span data-icon="heart"></span>Support this tool</button></div>
+    </header>
+    <main class="land-main">
+      <h1 class="land-title">Arrange your PDFs your way.</h1>
+      <p class="land-sub">Merge, reorder, split and organise PDF pages in one private workspace.<span>Drop in your files, drag the pages into the order you want, then export the whole set or just the pages you need.</span></p>
+      <div id="restore" class="restore" hidden>
+        <div class="rdot"><span data-icon="history"></span></div>
+        <div class="rtext"><div class="rtitle">Restore previous session?</div><div class="rmeta" id="restoreMeta"></div></div>
+        <button class="btn" id="discardBtn">Discard</button>
+        <button class="btn primary" id="restoreBtn">Restore</button>
+      </div>
+      <div id="dropzone" class="dropzone">
+        <svg class="dz-art" viewBox="0 0 300 96" aria-hidden="true">
+          <g class="ties"><path class="tie" d="M206 36v24M222 36v24M238 36v24M254 36v24M270 36v24M286 36v24"/></g>
+          <path class="track draw" d="M6 16 C 90 16, 120 48, 196 48"/>
+          <path class="track draw" d="M6 48 L 196 48"/>
+          <path class="track draw" d="M6 80 C 90 80, 120 48, 196 48"/>
+          <path class="track main draw" d="M196 48 L 296 48"/>
+          <rect class="car c1" x="40" y="4" width="18" height="24" rx="2" fill="#3867B7"/>
+          <rect class="car c2" x="58" y="36" width="18" height="24" rx="2" fill="#D08A2E"/>
+          <rect class="car c3" x="40" y="68" width="18" height="24" rx="2" fill="#B4455E"/>
+          <g class="car c4"><rect x="232" y="39" width="18" height="24" rx="2" fill="#fff" stroke="#D2CFC7"/><rect x="228" y="35" width="18" height="24" rx="2" fill="#fff" stroke="#D2CFC7"/><rect x="224" y="31" width="18" height="24" rx="2" fill="#1E5B4A"/></g>
+        </svg>
+        <div class="dz-idle">
+          <div class="dz-title">Drop PDFs here</div>
+          <div class="dz-or">or</div>
+          <button class="btn primary lg" id="chooseBtn">Choose files</button>
+        </div>
+        <div class="dz-busy"><span class="spinner"></span><span id="busyText">Opening…</span></div>
+      </div>
+      <div class="features">Merge · Reorder · Split · Rotate · Delete · Duplicate</div>
+      <div class="privacy"><span data-icon="lock"></span>Your documents stay on your device.</div>
+      <div class="privacy-detail">Pages are read, arranged and rebuilt inside this browser tab. Nothing is uploaded.</div>
+      <div class="land-links"><button class="linkbtn" id="aboutLand">About &amp; privacy</button></div>
+    </main>
+  </section>
+
+  <section id="workspace" class="workspace" hidden aria-label="Workspace">
+    <header class="toolbar">
+      <div class="tb-left">
+        <div class="brand"><svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="7" fill="#1E5B4A"/><path d="M5.5 19h6.5c4.2 0 4.8-9.5 10.5-9.5" stroke="#fff" stroke-width="2.1" fill="none" stroke-linecap="round"/><path d="M12 19h10.5" stroke="#fff" stroke-width="2.1" stroke-linecap="round" opacity=".5"/><circle cx="12" cy="19" r="2.3" fill="#fff"/></svg><span class="word">PDF Switchyard</span></div>
+        <button class="btn ibtn" id="sidebarBtn" title="Sources panel" aria-label="Toggle Sources panel" aria-pressed="false"><span data-icon="sidebar"></span></button>
+        <span class="tb-sep"></span>
+        <label class="doctitle untitled" title="Name this document. Exported files use this name.">
+          <input id="titleInput" type="text" placeholder="Untitled" maxlength="120" autocomplete="off" spellcheck="false" aria-label="Document name">
+          <span data-icon="pencil"></span>
+        </label>
+      </div>
+      <div class="tb-center">
+        <button class="btn ibtn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo"><span data-icon="undo"></span></button>
+        <button class="btn ibtn" id="redoBtn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"><span data-icon="redo"></span></button>
+        <span class="tb-sep"></span>
+        <button class="btn" id="viewBtn" aria-haspopup="menu">View<span data-icon="chevDown"></span></button>
+        <span class="tb-sep"></span>
+        <div class="zoom" role="group" aria-label="Thumbnail size">
+          <button class="btn ibtn" id="zoomOut" title="Smaller thumbnails" aria-label="Smaller thumbnails"><span data-icon="minus"></span></button>
+          <button class="zv" id="zoomVal" title="Type a thumbnail size">100%</button>
+          <button class="btn ibtn" id="zoomIn" title="Larger thumbnails" aria-label="Larger thumbnails"><span data-icon="plus"></span></button>
+        </div>
+        <span class="tb-sep"></span>
+        <label class="selrange" title="Select pages by number, e.g. 1-5, 8, 12-17">
+          <span data-icon="select"></span>
+          <input id="rangeInput" type="text" placeholder="Select pages…" autocomplete="off" spellcheck="false" aria-label="Select pages by number">
+        </label>
+      </div>
+      <div class="tb-right">
+        <button class="btn" id="addBtn" title="Append PDFs to the end"><span data-icon="filePlus"></span><span class="lbl">Add PDFs</span></button>
+        <div class="split" id="expSelWrap">
+          <button class="btn outline" id="expSelBtn"><span data-icon="download"></span><span class="lbl">Export <span class="lbl-long">selected</span></span></button>
+          <button class="btn outline caret" id="expSelMore" aria-label="More export options for selected pages" aria-haspopup="menu"><span data-icon="chevDown"></span></button>
+        </div>
+        <div class="split">
+          <button class="btn primary" id="expAllBtn"><span data-icon="download"></span><span class="lbl">Export all</span></button>
+          <button class="btn primary caret" id="expAllMore" aria-label="More export options for all pages" aria-haspopup="menu"><span data-icon="chevDown"></span></button>
+        </div>
+        <button class="btn ibtn support-ibtn" id="supportBtn" title="Support this tool" aria-label="Support this tool"><span data-icon="heart"></span></button>
+        <button class="btn ibtn" id="moreBtn" aria-label="More" title="More" aria-haspopup="menu"><span data-icon="more"></span></button>
+      </div>
+    </header>
+    <div class="wbody">
+      <aside id="sidebar" class="sidebar" hidden aria-label="Sources">
+        <div class="sb-head"><span class="sb-title">Sources</span><span class="sb-sum" id="sbSum"></span></div>
+        <div class="sb-list" id="sbList"></div>
+        <div class="sb-foot"><span data-icon="lock"></span><span>Files are kept in this browser only, so you can pick up after a refresh.</span></div>
+      </aside>
+      <div id="ws" class="ws" tabindex="-1">
+        <div id="canvas" class="canvas"></div>
+        <div id="empty" class="empty" hidden>
+          <h2>No pages left</h2>
+          <div>Add more PDFs, or undo to bring pages back.</div>
+          <div class="row"><button class="btn outline" id="emptyUndo"><span data-icon="undo"></span>Undo</button><button class="btn primary" id="emptyAdd"><span data-icon="filePlus"></span>Add PDFs</button></div>
+        </div>
+      </div>
+      <div id="selbar" class="selbar" role="toolbar" aria-label="Selected pages">
+        <span class="count" id="selCount"></span>
+        <span class="sep"></span>
+        <button class="btn" id="sbRotL" title="Rotate left (Shift+R)"><span data-icon="rotL"></span><span class="lbl">Rotate left</span></button>
+        <button class="btn" id="sbRotR" title="Rotate right (R)"><span data-icon="rotR"></span><span class="lbl">Rotate right</span></button>
+        <button class="btn" id="sbDup" title="Duplicate (Ctrl+D)"><span data-icon="copy"></span><span class="lbl">Duplicate</span></button>
+        <button class="btn" id="sbBlank" aria-haspopup="menu"><span data-icon="blank"></span><span class="lbl">Blank</span><span data-icon="chevDown"></span></button>
+        <span class="sep"></span>
+        <button class="btn danger" id="sbDel" title="Delete (Del)"><span data-icon="trash"></span><span class="lbl">Delete</span></button>
+        <button class="btn ibtn" id="sbClear" title="Clear selection (Esc)" aria-label="Clear selection"><span data-icon="x"></span></button>
+      </div>
+    </div>
+  </section>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+/* ---------- PDF standard-security-handler decryption for pdf-lib ----------
+   pdf-lib cannot read encrypted PDFs, so we decrypt every object as the
+   parser reads it. Key derivation follows ISO 32000 (R2–R6). */
+const SyCrypto = (() => {
+  // ---- MD5 ----
+  const MD5_S = [7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  const MD5_K = new Int32Array(64);
+  for (let i = 0; i < 64; i++) MD5_K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 4294967296) | 0;
+  function md5(data) {
+    const len = data.length;
+    const padLen = ((len + 8) >> 6) + 1 << 6;
+    const buf = new Uint8Array(padLen);
+    buf.set(data); buf[len] = 0x80;
+    const bitLen = len * 8;
+    buf[padLen - 8] = bitLen & 0xff; buf[padLen - 7] = (bitLen >>> 8) & 0xff;
+    buf[padLen - 6] = (bitLen >>> 16) & 0xff; buf[padLen - 5] = (bitLen >>> 24) & 0xff;
+    buf[padLen - 4] = Math.floor(len / 536870912) & 0xff;
+    let a0 = 0x67452301, b0 = 0xefcdab89 | 0, c0 = 0x98badcfe | 0, d0 = 0x10325476;
+    const M = new Int32Array(16);
+    for (let off = 0; off < padLen; off += 64) {
+      for (let j = 0; j < 16; j++) { const p = off + j * 4; M[j] = buf[p] | (buf[p + 1] << 8) | (buf[p + 2] << 16) | (buf[p + 3] << 24); }
+      let A = a0, B = b0, C = c0, D = d0;
+      for (let i = 0; i < 64; i++) {
+        let F, g;
+        if (i < 16) { F = (B & C) | (~B & D); g = i; }
+        else if (i < 32) { F = (D & B) | (~D & C); g = (5 * i + 1) & 15; }
+        else if (i < 48) { F = B ^ C ^ D; g = (3 * i + 5) & 15; }
+        else { F = C ^ (B | ~D); g = (7 * i) & 15; }
+        const tmp = D; D = C; C = B;
+        const x = (A + F + MD5_K[i] + M[g]) | 0;
+        B = (B + ((x << MD5_S[i]) | (x >>> (32 - MD5_S[i])))) | 0;
+        A = tmp;
+      }
+      a0 = (a0 + A) | 0; b0 = (b0 + B) | 0; c0 = (c0 + C) | 0; d0 = (d0 + D) | 0;
+    }
+    const out = new Uint8Array(16);
+    [a0, b0, c0, d0].forEach((v, i) => { out[i * 4] = v & 0xff; out[i * 4 + 1] = (v >>> 8) & 0xff; out[i * 4 + 2] = (v >>> 16) & 0xff; out[i * 4 + 3] = (v >>> 24) & 0xff; });
+    return out;
+  }
+
+  // ---- RC4 ----
+  function rc4(key, data) {
+    const s = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) s[i] = i;
+    for (let i = 0, j = 0; i < 256; i++) { j = (j + s[i] + key[i % key.length]) & 0xff; const t = s[i]; s[i] = s[j]; s[j] = t; }
+    const out = new Uint8Array(data.length);
+    for (let k = 0, i = 0, j = 0; k < data.length; k++) {
+      i = (i + 1) & 0xff; j = (j + s[i]) & 0xff; const t = s[i]; s[i] = s[j]; s[j] = t;
+      out[k] = data[k] ^ s[(s[i] + s[j]) & 0xff];
+    }
+    return out;
+  }
+
+  // ---- AES (block decrypt, CBC) ----
+  const SBOX = new Uint8Array(256), INV = new Uint8Array(256);
+  (() => {
+    let p = 1, q = 1;
+    const rotl = (x, s) => ((x << s) | (x >>> (8 - s))) & 0xff;
+    do {
+      p = (p ^ ((p << 1) & 0xff) ^ (p & 0x80 ? 0x1b : 0)) & 0xff;
+      q ^= q << 1; q ^= q << 2; q ^= q << 4; q &= 0xff; if (q & 0x80) q ^= 0x09;
+      const x = q ^ rotl(q, 1) ^ rotl(q, 2) ^ rotl(q, 3) ^ rotl(q, 4);
+      SBOX[p] = (x ^ 0x63) & 0xff;
+    } while (p !== 1);
+    SBOX[0] = 0x63;
+    for (let i = 0; i < 256; i++) INV[SBOX[i]] = i;
+  })();
+  const xt = (b) => ((b << 1) ^ (b & 0x80 ? 0x1b : 0)) & 0xff;
+  const mul = (a, b) => { let r = 0; while (b) { if (b & 1) r ^= a; a = xt(a); b >>= 1; } return r; };
+  const M9 = new Uint8Array(256), M11 = new Uint8Array(256), M13 = new Uint8Array(256), M14 = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) { M9[i] = mul(i, 9); M11[i] = mul(i, 11); M13[i] = mul(i, 13); M14[i] = mul(i, 14); }
+  function expandKey(key) {
+    const nk = key.length / 4, nr = nk + 6, total = 16 * (nr + 1);
+    const w = new Uint8Array(total); w.set(key);
+    let rcon = 1;
+    for (let i = key.length; i < total; i += 4) {
+      let t0 = w[i - 4], t1 = w[i - 3], t2 = w[i - 2], t3 = w[i - 1];
+      const wi = i / 4;
+      if (wi % nk === 0) {
+        const tmp = t0; t0 = SBOX[t1] ^ rcon; t1 = SBOX[t2]; t2 = SBOX[t3]; t3 = SBOX[tmp];
+        rcon = xt(rcon);
+      } else if (nk > 6 && wi % nk === 4) { t0 = SBOX[t0]; t1 = SBOX[t1]; t2 = SBOX[t2]; t3 = SBOX[t3]; }
+      const b = i - key.length;
+      w[i] = w[b] ^ t0; w[i + 1] = w[b + 1] ^ t1; w[i + 2] = w[b + 2] ^ t2; w[i + 3] = w[b + 3] ^ t3;
+    }
+    return { w, nr };
+  }
+  function decryptBlock(ks, inp, out) {
+    const { w, nr } = ks; const s = out; 
+    for (let i = 0; i < 16; i++) s[i] = inp[i] ^ w[nr * 16 + i];
+    const t = new Uint8Array(16);
+    for (let r = nr - 1; r >= 0; r--) {
+      // inverse shift rows + inverse sub bytes
+      t[0] = INV[s[0]]; t[4] = INV[s[4]]; t[8] = INV[s[8]]; t[12] = INV[s[12]];
+      t[1] = INV[s[13]]; t[5] = INV[s[1]]; t[9] = INV[s[5]]; t[13] = INV[s[9]];
+      t[2] = INV[s[10]]; t[6] = INV[s[14]]; t[10] = INV[s[2]]; t[14] = INV[s[6]];
+      t[3] = INV[s[7]]; t[7] = INV[s[11]]; t[11] = INV[s[15]]; t[15] = INV[s[3]];
+      for (let i = 0; i < 16; i++) t[i] ^= w[r * 16 + i];
+      if (r > 0) {
+        for (let c = 0; c < 16; c += 4) {
+          const a0 = t[c], a1 = t[c + 1], a2 = t[c + 2], a3 = t[c + 3];
+          s[c] = M14[a0] ^ M11[a1] ^ M13[a2] ^ M9[a3];
+          s[c + 1] = M9[a0] ^ M14[a1] ^ M11[a2] ^ M13[a3];
+          s[c + 2] = M13[a0] ^ M9[a1] ^ M14[a2] ^ M11[a3];
+          s[c + 3] = M11[a0] ^ M13[a1] ^ M9[a2] ^ M14[a3];
+        }
+      } else s.set(t);
+    }
+  }
+  // CBC decrypt; first 16 bytes are the IV unless iv is given. Strips PKCS#5 padding when pad=true.
+  function aesCbcDecrypt(key, data, iv, pad) {
+    let start = 0;
+    if (!iv) { if (data.length < 16) return new Uint8Array(0); iv = data.subarray(0, 16); start = 16; }
+    const n = Math.floor((data.length - start) / 16) * 16;
+    const ks = expandKey(key);
+    const out = new Uint8Array(n);
+    const blk = new Uint8Array(16);
+    let prev = iv;
+    for (let o = 0; o < n; o += 16) {
+      const cur = data.subarray(start + o, start + o + 16);
+      decryptBlock(ks, cur, blk);
+      for (let i = 0; i < 16; i++) out[o + i] = blk[i] ^ prev[i];
+      prev = cur;
+    }
+    if (pad && n > 0) {
+      const p = out[n - 1];
+      if (p >= 1 && p <= 16) {
+        let ok = true;
+        for (let i = n - p; i < n; i++) if (out[i] !== p) { ok = false; break; }
+        if (ok) return out.subarray(0, n - p);
+      }
+    }
+    return out;
+  }
+
+  const concat = (...arrs) => { const n = arrs.reduce((a, b) => a + b.length, 0); const o = new Uint8Array(n); let p = 0; for (const a of arrs) { o.set(a, p); p += a.length; } return o; };
+  const eq = (a, b, n) => { for (let i = 0; i < n; i++) if (a[i] !== b[i]) return false; return true; };
+  const PAD = new Uint8Array([0x28,0xbf,0x4e,0x5e,0x4e,0x75,0x8a,0x41,0x64,0x00,0x4e,0x56,0xff,0xfa,0x01,0x08,0x2e,0x2e,0x00,0xb6,0xd0,0x68,0x3e,0x80,0x2f,0x0c,0xa9,0xfe,0x64,0x53,0x69,0x7a]);
+  const latin1 = (s) => { const o = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) o[i] = s.charCodeAt(i) & 0xff; return o; };
+  const padPw = (pw) => { const o = new Uint8Array(32); const n = Math.min(32, pw.length); o.set(pw.subarray(0, n)); o.set(PAD.subarray(0, 32 - n), n); return o; };
+
+  async function sha(alg, data) { return new Uint8Array(await crypto.subtle.digest(alg, data)); }
+  async function aes128CbcEncryptNoPad(key, iv, data) {
+    const k = await crypto.subtle.importKey('raw', key, { name: 'AES-CBC' }, false, ['encrypt']);
+    const out = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-CBC', iv }, k, data));
+    return out.subarray(0, data.length);
+  }
+  async function hashR6(pw, salt, udata) {
+    let k = await sha('SHA-256', concat(pw, salt, udata));
+    let e = new Uint8Array([0]);
+    let i = 0;
+    while (i < 64 || e[e.length - 1] > i - 32) {
+      const unit = concat(pw, k, udata);
+      const k1 = new Uint8Array(unit.length * 64);
+      for (let j = 0; j < 64; j++) k1.set(unit, j * unit.length);
+      e = await aes128CbcEncryptNoPad(k.subarray(0, 16), k.subarray(16, 32), k1);
+      let rem = 0; for (let z = 0; z < 16; z++) rem = (rem + e[z]) % 3;
+      k = await sha(rem === 0 ? 'SHA-256' : rem === 1 ? 'SHA-384' : 'SHA-512', e);
+      i++;
+    }
+    return k.subarray(0, 32);
+  }
+
+  // Build a decryptor from the pdf-lib Encrypt dictionary + trailer ID.
+  async function makeDecryptor(L, encDict, idArr, password) {
+    const N = (n) => L.PDFName.of(n);
+    const num = (v, d) => (v && typeof v.asNumber === 'function' ? v.asNumber() : d);
+    const bytesOf = (v) => (v && typeof v.asBytes === 'function' ? v.asBytes() : new Uint8Array(0));
+    const filter = encDict.get(N('Filter'));
+    if (filter && filter.asString && filter.asString() !== '/Standard') throw new Error('Unsupported security handler');
+    const V = num(encDict.get(N('V')), 0), R = num(encDict.get(N('R')), 2);
+    const O = bytesOf(encDict.get(N('O'))), U = bytesOf(encDict.get(N('U')));
+    const P = num(encDict.get(N('P')), -1);
+    const emObj = encDict.get(N('EncryptMetadata'));
+    const encryptMetadata = !(emObj && emObj.asBoolean && emObj.asBoolean() === false);
+    let id0 = new Uint8Array(0);
+    if (idArr && idArr.size && idArr.size() > 0) id0 = bytesOf(idArr.get(0));
+
+    let strM = 'RC4', stmM = 'RC4', keyLen = 5;
+    if (V === 2 || V === 3) keyLen = Math.min(16, Math.max(5, (num(encDict.get(N('Length')), 40)) / 8));
+    if (V === 4 || V === 5) {
+      const cf = encDict.get(N('CF'));
+      const method = (nameObj) => {
+        const nm = nameObj && nameObj.asString ? nameObj.asString() : '/Identity';
+        if (nm === '/Identity') return 'None';
+        const d = cf && cf.get ? cf.get(L.PDFName.of(nm.slice(1))) : null;
+        const cfm = d && d.get ? d.get(N('CFM')) : null;
+        const c = cfm && cfm.asString ? cfm.asString() : '/None';
+        if (d && d.get && V === 4) { const l = num(d.get(N('Length')), 16); if (c === '/V2') keyLen = Math.min(16, Math.max(5, l > 16 ? l / 8 : l)); }
+        return c === '/AESV2' ? 'AESV2' : c === '/AESV3' ? 'AESV3' : c === '/V2' ? 'RC4' : 'None';
+      };
+      stmM = method(encDict.get(N('StmF')));
+      strM = method(encDict.get(N('StrF')));
+      if (V === 4 && (stmM === 'AESV2' || strM === 'AESV2')) keyLen = 16;
+    }
+
+    let fileKey = null;
+    if (R >= 5) {
+      const pw = new TextEncoder().encode(password || '').subarray(0, 127);
+      const H = R === 5 ? async (p, s, u) => sha('SHA-256', concat(p, s, u)) : hashR6;
+      const OE = bytesOf(encDict.get(N('OE'))), UE = bytesOf(encDict.get(N('UE')));
+      const u48 = U.subarray(0, 48);
+      if (eq(await H(pw, O.subarray(32, 40), u48), O, 32)) {
+        const ik = await H(pw, O.subarray(40, 48), u48);
+        fileKey = aesCbcDecrypt(ik, OE, new Uint8Array(16), false);
+      } else if (eq(await H(pw, U.subarray(32, 40), new Uint8Array(0)), U, 32)) {
+        const ik = await H(pw, U.subarray(40, 48), new Uint8Array(0));
+        fileKey = aesCbcDecrypt(ik, UE, new Uint8Array(16), false);
+      } else throw new Error('Incorrect password');
+    } else {
+      const pBytes = new Uint8Array([P & 0xff, (P >>> 8) & 0xff, (P >>> 16) & 0xff, (P >>> 24) & 0xff]);
+      const computeKey = (paddedPw) => {
+        let h = md5(concat(paddedPw, O.subarray(0, 32), pBytes, id0, (R >= 4 && !encryptMetadata) ? new Uint8Array([255, 255, 255, 255]) : new Uint8Array(0)));
+        if (R >= 3) for (let i = 0; i < 50; i++) h = md5(h.subarray(0, keyLen));
+        return h.slice(0, keyLen);
+      };
+      const checkUser = (key) => {
+        if (R === 2) return eq(rc4(key, PAD), U, 32);
+        let x = rc4(key, md5(concat(PAD, id0)));
+        for (let i = 1; i <= 19; i++) x = rc4(key.map((b) => b ^ i), x);
+        return eq(x, U, 16);
+      };
+      const pw = latin1(password || '');
+      let key = computeKey(padPw(pw));
+      if (!checkUser(key)) {
+        // Try the password as the owner password (Algorithm 7).
+        let h = md5(padPw(pw));
+        if (R >= 3) for (let i = 0; i < 50; i++) h = md5(h);
+        const ok = h.slice(0, keyLen);
+        let userPw;
+        if (R === 2) userPw = rc4(ok, O.subarray(0, 32));
+        else { userPw = O.slice(0, 32); for (let i = 19; i >= 0; i--) userPw = rc4(ok.map((b) => b ^ i), userPw); }
+        key = computeKey(userPw);
+        if (!checkUser(key)) throw new Error('Incorrect password');
+      }
+      fileKey = key;
+    }
+
+    const objKey = (n, g, aes) => {
+      if (!fileKey) return null;
+      const extra = concat(fileKey, new Uint8Array([n & 0xff, (n >> 8) & 0xff, (n >> 16) & 0xff, g & 0xff, (g >> 8) & 0xff]), aes ? latin1('sAlT') : new Uint8Array(0));
+      return md5(extra).subarray(0, Math.min(fileKey.length + 5, 16));
+    };
+    const dec = (bytes, method, n, g) => {
+      if (method === 'None') return bytes;
+      if (method === 'AESV3') return aesCbcDecrypt(fileKey, bytes, null, true);
+      if (method === 'AESV2') return aesCbcDecrypt(objKey(n, g, true), bytes, null, true);
+      return rc4(objKey(n, g, false), bytes);
+    };
+    const toHex = (b) => { let s = ''; for (let i = 0; i < b.length; i++) s += (b[i] < 16 ? '0' : '') + b[i].toString(16); return s; };
+    const decryptValue = (obj, n, g) => {
+      if (obj instanceof L.PDFString || obj instanceof L.PDFHexString) return L.PDFHexString.of(toHex(dec(obj.asBytes(), strM, n, g)));
+      if (obj instanceof L.PDFArray) { for (let i = 0; i < obj.size(); i++) { const v = obj.get(i); const nv = decryptValue(v, n, g); if (nv !== v) obj.set(i, nv); } return obj; }
+      if (obj instanceof L.PDFDict) { for (const [k, v] of obj.entries()) { const nv = decryptValue(v, n, g); if (nv !== v) obj.set(k, nv); } return obj; }
+      return obj;
+    };
+    return {
+      decryptObject(obj, ref) {
+        const n = ref.objectNumber, g = ref.generationNumber;
+        if (obj instanceof L.PDFRawStream) {
+          const type = obj.dict.get(N('Type'));
+          const tn = type && type.asString ? type.asString() : '';
+          if (tn === '/XRef') return obj;
+          if (!(tn === '/Metadata' && !encryptMetadata)) {
+            const f = obj.dict.get(N('Filter'));
+            const isCrypt = f && ((f.asString && f.asString() === '/Crypt') || (f instanceof L.PDFArray && f.size() && f.get(0).asString && f.get(0).asString() === '/Crypt'));
+            if (!isCrypt) obj.contents = dec(obj.contents, stmM, n, g);
+          }
+          decryptValue(obj.dict, n, g);
+          return obj;
+        }
+        return decryptValue(obj, n, g);
+      },
+    };
+  }
+
+  // Patch pdf-lib's top-level parser so objects are decrypted as they are read,
+  // before object streams are unpacked. Only parsers carrying __syDec are affected.
+  let patched = false;
+  function patchParser(L) {
+    if (patched) return; patched = true;
+    const P = L.PDFParser.prototype;
+    const baseParseObject = L.PDFObjectParser.prototype.parseObject;
+    const origHeader = P.parseIndirectObjectHeader;
+    const origPIO = P.parseIndirectObject;
+    P.parseIndirectObjectHeader = function () {
+      const ref = origHeader.call(this);
+      if (this.__syDec) { this.__syCur = ref; this.__syDepth = 0; }
+      return ref;
+    };
+    P.parseIndirectObject = function () {
+      const p = origPIO.call(this);
+      if (!this.__syDec) return p;
+      const clear = () => { this.__syCur = null; };
+      return p.then((r) => { clear(); return r; }, (e) => { clear(); throw e; });
+    };
+    P.parseObject = function () {
+      if (!this.__syDec || !this.__syCur) return baseParseObject.call(this);
+      this.__syDepth++;
+      let obj;
+      try { obj = baseParseObject.call(this); } finally { this.__syDepth--; }
+      if (this.__syDepth === 0 && this.__syCur) {
+        const ref = this.__syCur; this.__syCur = null;
+        if (!(this.__syEncRef && ref.objectNumber === this.__syEncRef.objectNumber && ref.generationNumber === this.__syEncRef.generationNumber)) {
+          obj = this.__syDec.decryptObject(obj, ref);
+        }
+      }
+      return obj;
+    };
+  }
+
+  // Load bytes with pdf-lib, decrypting if needed. Returns a PDFDocument.
+  async function loadPdfLib(L, bytes, password) {
+    const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    const ctx = await L.PDFParser.forBytesWithOptions(u8, 2000, false, false).parseDocument();
+    const encEntry = ctx.trailerInfo.Encrypt;
+    if (!encEntry) return new L.PDFDocument(ctx, false, false);
+    const encDict = encEntry instanceof L.PDFRef ? ctx.lookup(encEntry) : encEntry;
+    if (!encDict) return new L.PDFDocument(ctx, true, false);
+    const idArr = ctx.trailerInfo.ID ? ctx.lookup(ctx.trailerInfo.ID) : null;
+    const dec = await makeDecryptor(L, encDict, idArr, password);
+    patchParser(L);
+    const parser = L.PDFParser.forBytesWithOptions(u8, 2000, false, false);
+    parser.__syDec = dec;
+    parser.__syEncRef = encEntry instanceof L.PDFRef ? encEntry : null;
+    parser.__syDepth = 0;
+    const ctx2 = await parser.parseDocument();
+    const enc2 = ctx2.trailerInfo.Encrypt;
+    ctx2.trailerInfo.Encrypt = undefined;
+    if (enc2 instanceof L.PDFRef) ctx2.delete(enc2);
+    return new L.PDFDocument(ctx2, true, false);
+  }
+
+  return { md5, rc4, aesCbcDecrypt, loadPdfLib, _hashR6: hashR6 };
+})();
+if (typeof module !== 'undefined') module.exports = SyCrypto;
+
+</script>
+<script>
+(() => {
+'use strict';
+/* ================= core helpers ================= */
+const $ = (id) => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+const MOD = isMac ? '⌘' : 'Ctrl';
+const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const raf = () => new Promise((r) => requestAnimationFrame(r));
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'style' && typeof v === 'object') { for (const sk in v) { if (sk.startsWith('--')) el.style.setProperty(sk, v[sk]); else el.style[sk] = v[sk]; } }
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return el;
+}
+
+const ICONS = {
+  lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  history: '<path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.6"/><path d="M4 4v4.6h4.6"/><path d="M12 8v4.3l2.8 1.7"/>',
+  sidebar: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M9.5 4.5v15"/><path d="M5.8 8.5h1.6M5.8 11.5h1.6"/>',
+  undo: '<path d="M9 14.5 4.5 10 9 5.5"/><path d="M4.5 10H14a5.5 5.5 0 0 1 0 11h-3.5"/>',
+  redo: '<path d="M15 14.5 19.5 10 15 5.5"/><path d="M19.5 10H10a5.5 5.5 0 0 0 0 11h3.5"/>',
+  chevDown: '<path d="M7 10l5 5 5-5"/>',
+  chevL: '<path d="M14.5 5.5 8 12l6.5 6.5"/>',
+  chevR: '<path d="M9.5 5.5 16 12l-6.5 6.5"/>',
+  minus: '<path d="M6.5 12h11"/>',
+  plus: '<path d="M12 6.5v11M6.5 12h11"/>',
+  select: '<path d="M10 4.5 8.5 19.5M15.5 4.5 14 19.5M5 9.5h14.5M4.5 14.5H19"/>',
+  filePlus: '<path d="M13.5 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8.5z"/><path d="M13.5 3.5v5h5"/><path d="M12 11.5v6M9 14.5h6"/>',
+  download: '<path d="M12 4v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19.5h14"/>',
+  more: '<circle cx="6" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="18" cy="12" r="1.3" fill="currentColor" stroke="none"/>',
+  rotL: '<path d="M4.5 12.5a7.5 7.5 0 1 0 2.3-5.4L4.5 9.2"/><path d="M4.5 4.7v4.5H9"/>',
+  rotR: '<path d="M19.5 12.5a7.5 7.5 0 1 1-2.3-5.4l2.3 2.1"/><path d="M19.5 4.7v4.5H15"/>',
+  copy: '<rect x="8.5" y="8.5" width="11" height="12" rx="2"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  blank: '<path d="M13.5 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8.5z"/><path d="M13.5 3.5v5h5"/>',
+  pages: '<rect x="4.5" y="7" width="11" height="13.5" rx="2"/><path d="M8.5 3.5h9a2 2 0 0 1 2 2V17"/>',
+  zip: '<path d="M4.5 8h15v10.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2z"/><path d="M3.5 4.5h17V8h-17z"/><path d="M10 12h4"/>',
+  trash: '<path d="M4.5 7h15"/><path d="M9.5 7V5.2c0-.9.7-1.7 1.7-1.7h1.6c.9 0 1.7.8 1.7 1.7V7"/><path d="M6.5 7l.8 11.3a2 2 0 0 0 2 1.7h5.4a2 2 0 0 0 2-1.7L17.5 7"/><path d="M10.3 11v5M13.7 11v5"/>',
+  x: '<path d="M7 7l10 10M17 7 7 17"/>',
+  check: '<path d="M5.5 12.5l4 4L18.5 7.5"/>',
+  keyboard: '<rect x="3" y="6.5" width="18" height="11" rx="2"/><path d="M7 10.3h.01M10.3 10.3h.01M13.7 10.3h.01M17 10.3h.01M8 14h8"/>',
+  restart: '<path d="M4.5 12a7.5 7.5 0 1 0 2.3-5.4L4.5 8.8"/><path d="M4.5 4.5v4.3h4.3"/>',
+  selectAll: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.3 12.2l2.6 2.6 4.8-5"/>',
+  eye: '<path d="M2.8 12S6.2 5.8 12 5.8 21.2 12 21.2 12 17.8 18.2 12 18.2 2.8 12 2.8 12z"/><circle cx="12" cy="12" r="2.7"/>',
+  hash: '<path d="M10 4.5 8.5 19.5M15.5 4.5 14 19.5M5 9.5h14.5M4.5 14.5H19"/>',
+  file: '<path d="M13.5 3.5H7.5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V8.5z"/><path d="M13.5 3.5v5h5"/><path d="M9 13h6M9 16.5h4"/>',
+  pencil: '<path d="M14.5 5.5l4 4"/><path d="M5 19l1-4.5L15.8 4.7a1.8 1.8 0 0 1 2.5 0l1 1a1.8 1.8 0 0 1 0 2.5L9.5 18z"/>',
+  heart: '<path d="M12 20s-7.6-4.5-7.6-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.6 2.6C19.6 15.5 12 20 12 20z"/>',
+  info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.8h.01"/>',
+  alert: '<path d="M12 4.5 21 19.5H3z"/><path d="M12 10v4.2M12 17h.01"/>',
+};
+function icon(name, cls) {
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('viewBox', '0 0 24 24');
+  s.setAttribute('class', 'i' + (cls ? ' ' + cls : ''));
+  s.setAttribute('fill', 'none');
+  s.setAttribute('stroke', 'currentColor');
+  s.setAttribute('stroke-width', '1.75');
+  s.setAttribute('stroke-linecap', 'round');
+  s.setAttribute('stroke-linejoin', 'round');
+  s.setAttribute('aria-hidden', 'true');
+  s.innerHTML = ICONS[name] || '';
+  return s;
+}
+function fillIcons(root) {
+  for (const el of root.querySelectorAll('[data-icon]')) {
+    el.replaceWith(icon(el.getAttribute('data-icon')));
+  }
+}
+
+/* ================= site settings (edited in the block at the top of index.html) ================= */
+const CFG = Object.assign({ supportUrl: '', supportService: '', contactEmail: '', cloudflareAnalyticsToken: '', version: '1.0' }, window.SY_CONFIG || {});
+
+/* ================= state ================= */
+const PALETTE = ['#3867B7', '#D08A2E', '#B4455E', '#7C5CB0', '#2A91A6', '#C4643B', '#958028', '#BE5690', '#4F6A8C', '#8C6A4F'];
+const ZMIN = 40, ZMAX = 160;
+const S = {
+  sources: new Map(),   // id -> source record
+  srcOrder: [],         // import order
+  pages: [],            // immutable page objects {id, kind, src, idx, rot, w, h}
+  sel: new Set(),       // selected page ids
+  anchor: null,         // selection anchor (page id)
+  zoom: 100,
+  showOrig: false,
+  sidebar: false,
+  hl: null,             // highlighted source id
+  undo: [], redo: [],
+  colorCursor: 0, pageSeq: 0, srcSeq: 0,
+  mode: 'landing',      // 'landing' | 'workspace'
+  busy: 0,
+  title: '',            // document name ('' = untitled)
+};
+const newPageId = () => 'p' + (++S.pageSeq);
+const newSrcId = () => 's' + (++S.srcSeq);
+function pageIndex(id) { return S.pages.findIndex((p) => p.id === id); }
+function selectedInOrder() { return S.pages.filter((p) => S.sel.has(p.id)); }
+
+/* ================= toasts ================= */
+const TOASTS = new Map();
+function toast(msg, o = {}) {
+  const wrap = $('toasts');
+  if (o.key && TOASTS.has(o.key)) TOASTS.get(o.key).close(true);
+  const el = h('div', { class: 'toast' + (o.err ? ' err' : ''), role: o.err ? 'alert' : 'status' });
+  const spin = h('span', { class: 'spinner' });
+  const m = h('div', { class: 'tmsg' });
+  const act = h('button', { class: 'tact' });
+  const x = h('button', { class: 'tx', 'aria-label': 'Dismiss' }, icon('x'));
+  el.append(spin, m, act, x);
+  let timer = null, closed = false, remaining = 0;
+  const api = {
+    el,
+    update(msg2, o2 = {}) {
+      Object.assign(o, o2);
+      m.textContent = '';
+      if (msg2 && msg2.nodeType) m.append(msg2); else m.append(String(msg2));
+      spin.hidden = !o.spin;
+      el.classList.toggle('err', !!o.err);
+      if (o.action) { act.hidden = false; act.textContent = o.action.label; act.onclick = () => { api.close(); o.action.fn(); }; } else act.hidden = true;
+      arm(o.timeout != null ? o.timeout : (o.spin ? 0 : o.action ? 6500 : 3600));
+      return api;
+    },
+    close(instant) {
+      if (closed) return; closed = true; clearTimeout(timer);
+      if (o.key && TOASTS.get(o.key) === api) TOASTS.delete(o.key);
+      if (instant) { el.remove(); return; }
+      el.classList.add('bye'); setTimeout(() => el.remove(), 200);
+    },
+  };
+  function arm(ms) { clearTimeout(timer); remaining = ms; if (ms > 0) timer = setTimeout(() => api.close(), ms); }
+  el.addEventListener('pointerenter', () => { if (remaining > 0) clearTimeout(timer); });
+  el.addEventListener('pointerleave', () => { if (remaining > 0 && !closed) timer = setTimeout(() => api.close(), 1800); });
+  x.onclick = () => api.close();
+  if (o.key) TOASTS.set(o.key, api);
+  wrap.append(el);
+  while (wrap.children.length > 4) wrap.firstElementChild.remove();
+  return api.update(msg, o);
+}
+function bold(pre, b, post) { const f = document.createDocumentFragment(); if (pre) f.append(pre); f.append(h('b', null, b)); if (post) f.append(post); return h('span', null, f); }
+
+/* ================= menus ================= */
+let MENU = null;
+function openMenu(anchor, items, o = {}) {
+  closeMenu();
+  const m = h('div', { class: 'menu' + (o.dark ? ' dark' : ''), role: 'menu' });
+  for (const it of items) {
+    if (!it) continue;
+    if (it === '-') { m.append(h('div', { class: 'msep', role: 'separator' })); continue; }
+    if (it.header) { m.append(h('div', { class: 'mh' }, it.header)); continue; }
+    const isSw = it.sw != null;
+    const b = h('button', { class: 'mi' + (it.danger ? ' danger' : ''), role: isSw ? 'menuitemcheckbox' : 'menuitem', disabled: !!it.disabled, 'aria-checked': isSw ? String(!!it.sw) : null });
+    if (it.icon) b.append(icon(it.icon));
+    const lab = h('span', { class: 'mlabel' }, it.label);
+    if (it.sub) lab.append(h('span', { class: 'msub' }, it.sub));
+    b.append(lab);
+    if (it.kbd) b.append(h('span', { class: 'kbd' }, it.kbd));
+    let sw = null;
+    if (isSw) { sw = h('span', { class: 'switch' + (it.sw ? ' on' : '') }); b.append(sw); }
+    b.addEventListener('click', () => {
+      if (isSw) { const v = !sw.classList.contains('on'); sw.classList.toggle('on', v); b.setAttribute('aria-checked', String(v)); it.action(v); }
+      else { closeMenu(true); it.action(); }
+    });
+    m.append(b);
+  }
+  document.body.append(m);
+  const r = anchor.getBoundingClientRect();
+  const mw = m.offsetWidth, mh = m.offsetHeight;
+  let x = o.alignRight ? r.right - mw : o.center ? r.left + r.width / 2 - mw / 2 : r.left;
+  let y = o.above ? r.top - mh - 8 : r.bottom + 6;
+  x = clamp(x, 8, innerWidth - mw - 8);
+  if (!o.above && y + mh > innerHeight - 8) y = r.top - mh - 6;
+  if (y < 8) y = 8;
+  m.style.left = x + 'px'; m.style.top = y + 'px';
+  m.style.transformOrigin = (o.alignRight ? 'right ' : 'left ') + (y < r.top ? 'bottom' : 'top');
+  anchor.classList.add('open'); anchor.setAttribute('aria-expanded', 'true');
+  MENU = { el: m, anchor, onClose: o.onClose, restore: o.kb ? document.activeElement : null };
+  m.addEventListener('keydown', (e) => {
+    const its = [...m.querySelectorAll('.mi:not([disabled])')];
+    const i = its.indexOf(document.activeElement);
+    if (e.key === 'ArrowDown') { e.preventDefault(); its[(i + 1) % its.length]?.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); its[(i - 1 + its.length) % its.length]?.focus(); }
+    else if (e.key === 'Home') { e.preventDefault(); its[0]?.focus(); }
+    else if (e.key === 'End') { e.preventDefault(); its[its.length - 1]?.focus(); }
+    else if (e.key === 'Tab') { closeMenu(); }
+  });
+  if (o.kb) m.querySelector('.mi:not([disabled])')?.focus();
+  return m;
+}
+function closeMenu(fromAction) {
+  if (!MENU) return false;
+  const mm = MENU; MENU = null;
+  mm.el.remove();
+  mm.anchor.classList.remove('open'); mm.anchor.setAttribute('aria-expanded', 'false');
+  if (mm.restore && !fromAction) mm.restore.focus?.();
+  mm.onClose?.();
+  return true;
+}
+function toggleMenu(anchor, build, o) {
+  if (MENU && MENU.anchor === anchor) { closeMenu(); return; }
+  openMenu(anchor, build(), o);
+}
+document.addEventListener('pointerdown', (e) => {
+  if (MENU && !MENU.el.contains(e.target) && !MENU.anchor.contains(e.target)) closeMenu();
+}, true);
+window.addEventListener('resize', () => closeMenu());
+
+/* ================= dialogs ================= */
+let MODAL = null;
+function showDialog(o) {
+  return new Promise((resolve) => {
+    const prevFocus = document.activeElement;
+    const bd = h('div', { class: 'backdrop' });
+    const dlg = h('div', { class: 'dialog' + (o.cls ? ' ' + o.cls : ''), role: o.alert ? 'alertdialog' : 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'dlgTitle' });
+    if (o.icon) dlg.append(h('div', { class: 'icon-head' + (o.danger ? ' danger' : '') }, icon(o.icon)));
+    dlg.append(h('h3', { id: 'dlgTitle' }, o.title));
+    if (o.text) dlg.append(h('p', null, o.text));
+    if (o.body) dlg.append(o.body);
+    const acts = h('div', { class: 'actions' });
+    const done = (v) => {
+      if (MODAL !== api) return;
+      MODAL = null; bd.remove();
+      document.removeEventListener('keydown', onKey, true);
+      prevFocus?.focus?.({ preventScroll: true });
+      resolve(v);
+    };
+    let primary = null;
+    for (const a of o.actions) {
+      const b = h('button', { class: 'btn ' + (a.cls || 'outline') }, a.label);
+      b.addEventListener('click', () => {
+        if (a.get) { const v = a.get(); if (v === undefined) return; done(v); } else done(a.value);
+      });
+      acts.append(b);
+      if (a.primary) primary = b;
+    }
+    dlg.append(acts); bd.append(dlg);
+    bd.addEventListener('pointerdown', (e) => { if (e.target === bd && o.dismissable !== false) done(o.cancelValue ?? null); });
+    function onKey(e) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(o.cancelValue ?? null); return; }
+      if (e.key === 'Enter' && primary && !(e.target && e.target.tagName === 'BUTTON')) { e.preventDefault(); e.stopPropagation(); primary.click(); return; }
+      if (e.key === 'Tab') {
+        const f = [...dlg.querySelectorAll('button, input')].filter((x) => !x.disabled);
+        if (!f.length) return;
+        const i = f.indexOf(document.activeElement);
+        if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+      }
+      e.stopPropagation();
+    }
+    document.addEventListener('keydown', onKey, true);
+    const api = { done, dlg };
+    MODAL = api;
+    closeMenu();
+    document.body.append(bd);
+    (o.focus || primary || acts.lastChild).focus();
+  });
+}
+
+function askPassword(name, wrong) {
+  const inp = h('input', { type: 'password', autocomplete: 'off', 'aria-label': 'Password', spellcheck: 'false' });
+  const err = h('div', { class: 'err', role: 'alert' }, wrong ? 'That password didn’t open the file. Check it and try again.' : '');
+  const body = h('div', null,
+    h('p', null, 'This PDF is password protected. Enter its password to continue.'),
+    h('p', { class: 'fname' }, name),
+    inp, err);
+  inp.addEventListener('input', () => { err.textContent = ''; });
+  return showDialog({
+    title: 'Password required', icon: 'lock', body, focus: inp, dismissable: false,
+    actions: [
+      { label: 'Skip this file', value: null },
+      { label: 'Open', cls: 'primary', primary: true, get: () => { if (!inp.value) { err.textContent = 'Enter the password, or skip this file.'; inp.focus(); return undefined; } return inp.value; } },
+    ],
+  });
+}
+
+/* ================= PDF engine ================= */
+const CDN = {
+  pdfjsWorker: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+  pdflib: 'https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js',
+  jszip: 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+};
+const SCRIPTS = new Map();
+function loadScript(src) {
+  if (SCRIPTS.has(src)) return SCRIPTS.get(src);
+  const p = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true; s.crossOrigin = 'anonymous';
+    s.onload = () => resolve();
+    s.onerror = () => { SCRIPTS.delete(src); s.remove(); reject(new Error('Could not load ' + src)); };
+    document.head.append(s);
+  });
+  SCRIPTS.set(src, p);
+  return p;
+}
+
+let PDF_WORKER = null;
+let PDFJS_READY = null;
+function pdfReady() {
+  if (PDFJS_READY) return PDFJS_READY;
+  PDFJS_READY = (async () => {
+    const L = window.pdfjsLib;
+    if (!L) throw new Error('engine');
+    L.GlobalWorkerOptions.workerSrc = CDN.pdfjsWorker;
+    let w = null;
+    try { w = await probeWorker(); } catch (e) { w = null; }
+    if (w) PDF_WORKER = new L.PDFWorker({ port: w, verbosity: 0 });
+    else await loadScript(CDN.pdfjsWorker); // PDF.js then runs its parser on the main thread
+    return L;
+  })();
+  PDFJS_READY.catch(() => { PDFJS_READY = null; });
+  return PDFJS_READY;
+}
+function probeWorker() {
+  return new Promise((resolve, reject) => {
+    let w, url;
+    try {
+      url = URL.createObjectURL(new Blob(['importScripts(' + JSON.stringify(CDN.pdfjsWorker) + ');postMessage({__syProbe:1});'], { type: 'text/javascript' }));
+      w = new Worker(url);
+    } catch (e) { reject(e); return; }
+    const t = setTimeout(() => { done(); w.terminate(); reject(new Error('timeout')); }, 7000);
+    const onMsg = (e) => { if (e.data && e.data.__syProbe) { done(); resolve(w); } };
+    const onErr = (e) => { done(); w.terminate(); reject(e); };
+    function done() { clearTimeout(t); w.removeEventListener('message', onMsg); w.removeEventListener('error', onErr); setTimeout(() => URL.revokeObjectURL(url), 1000); }
+    w.addEventListener('message', onMsg);
+    w.addEventListener('error', onErr);
+  });
+}
+
+function looksLikePdf(bytes) {
+  const n = Math.min(bytes.length - 4, 1024);
+  for (let i = 0; i < n; i++) if (bytes[i] === 0x25 && bytes[i + 1] === 0x50 && bytes[i + 2] === 0x44 && bytes[i + 3] === 0x46) return true;
+  return false;
+}
+
+async function openPdf(bytes, name, knownPw) {
+  const L = await pdfReady();
+  let usedPw = knownPw || null, cancel;
+  const cancelled = new Promise((_, rej) => { cancel = rej; });
+  const task = L.getDocument({
+    data: bytes.slice(), password: knownPw || undefined, isEvalSupported: false, useSystemFonts: true,
+    verbosity: 0, worker: PDF_WORKER || undefined, enableXfa: false, disableAutoFetch: true, disableStream: true,
+  });
+  task.onPassword = (update, reason) => {
+    askPassword(name, reason === L.PasswordResponses.INCORRECT_PASSWORD).then((pw) => {
+      if (pw == null) { task.destroy().catch(() => {}); cancel(Object.assign(new Error('cancelled'), { cancelled: true })); }
+      else { usedPw = pw; update(pw); }
+    });
+  };
+  const doc = await Promise.race([task.promise, cancelled]);
+  return { doc, password: usedPw };
+}
+
+async function makeSource(name, bytes, doc, password, preset) {
+  const p1 = await doc.getPage(1);
+  const vp = p1.getViewport({ scale: 1 });
+  const src = {
+    id: preset?.id || newSrcId(),
+    name, bytes, doc, password,
+    color: preset?.color || PALETTE[S.colorCursor++ % PALETTE.length],
+    numPages: doc.numPages,
+    dim0: { w: vp.width, h: vp.height, r: p1.rotate },
+    dims: new Array(doc.numPages),
+    stored: !!preset,
+    lib: null,
+  };
+  src.dims[0] = src.dim0;
+  S.sources.set(src.id, src);
+  if (!S.srcOrder.includes(src.id)) S.srcOrder.push(src.id);
+  dimsPass(src);
+  return src;
+}
+
+// Read every page's size in the background (layout assumes page 1's size until then).
+async function dimsPass(src) {
+  let changed = false;
+  for (let i = 1; i < src.numPages; i++) {
+    if (!S.sources.has(src.id)) return;
+    if (src.dims[i]) continue;
+    try {
+      const pg = await src.doc.getPage(i + 1);
+      const vp = pg.getViewport({ scale: 1 });
+      src.dims[i] = { w: vp.width, h: vp.height, r: pg.rotate };
+      if (Math.abs(vp.width - src.dim0.w) > 0.5 || Math.abs(vp.height - src.dim0.h) > 0.5) changed = true;
+    } catch (e) { src.dims[i] = src.dim0; }
+    if (i % 40 === 0) { await wait(0); if (changed) { refreshCards(); changed = false; } }
+  }
+  if (changed) refreshCards();
+}
+function srcDims(src, idx) { return src.dims[idx] || src.dim0; }
+// Page size as it appears before the user's own rotation (includes the file's own /Rotate).
+function baseDims(p) {
+  if (p.kind === 'blank') return [p.w, p.h];
+  const s = S.sources.get(p.src);
+  if (!s) return [612, 792];
+  const d = srcDims(s, p.idx);
+  return [d.w, d.h];
+}
+function visDims(p) { const [w, h] = baseDims(p); return p.rot % 180 ? [h, w] : [w, h]; }
+
+/* ================= thumbnails ================= */
+const BUCKETS = [140, 200, 280, 400, 560, 800];
+const THUMB = { cache: new Map(), inflight: new Map(), queue: [], running: 0, paused: false, sched: false };
+const DPR = () => Math.min(2, window.devicePixelRatio || 1);
+function bucketFor(px) { for (const b of BUCKETS) if (b >= px) return b; return BUCKETS[BUCKETS.length - 1]; }
+const thumbKey = (p) => p.src + ':' + p.idx;
+
+function scheduleThumbs() {
+  if (THUMB.sched) return;
+  THUMB.sched = true;
+  requestAnimationFrame(() => { THUMB.sched = false; buildThumbQueue(); pumpThumbs(); });
+}
+function buildThumbQueue() {
+  if (!LAY) return;
+  const b = LAY.bucket, top = WS.scrollTop, bot = top + WS.clientHeight;
+  const seen = new Set(), list = [];
+  for (const el of MOUNTED.values()) {
+    if (el._kind !== 'page' || el._expire || !el._p || el._p.kind !== 'page') continue;
+    const tk = thumbKey(el._p);
+    if (seen.has(tk)) continue; seen.add(tk);
+    const c = THUMB.cache.get(tk);
+    if (c && (c.b >= b || c.err)) continue;
+    if (THUMB.inflight.has(tk)) continue;
+    const y = el._y, inView = y + LAY.ch > top && y < bot;
+    list.push({ tk, src: el._p.src, idx: el._p.idx, pri: (inView ? 0 : 1e7) + Math.abs(y - top) });
+  }
+  list.sort((a, b2) => a.pri - b2.pri);
+  THUMB.queue = list;
+}
+function pumpThumbs() {
+  while (!THUMB.paused && THUMB.running < 2 && THUMB.queue.length) {
+    const it = THUMB.queue.shift();
+    if (THUMB.inflight.has(it.tk)) continue;
+    const b = LAY ? LAY.bucket : 280;
+    const c = THUMB.cache.get(it.tk);
+    if (c && (c.b >= b || c.err)) continue;
+    THUMB.running++;
+    const pr = renderThumb(it.src, it.idx, b).then((res) => {
+      const old = THUMB.cache.get(it.tk);
+      THUMB.cache.delete(it.tk);
+      THUMB.cache.set(it.tk, res);
+      if (old && old.url) setTimeout(() => URL.revokeObjectURL(old.url), 4000);
+      applyThumb(it.tk);
+      evictThumbs();
+    }).catch(() => {
+      if (!THUMB.cache.get(it.tk)?.url) { THUMB.cache.set(it.tk, { err: true, b: 1e9 }); applyThumb(it.tk); }
+    }).finally(() => {
+      THUMB.running--; THUMB.inflight.delete(it.tk);
+      pumpThumbs();
+    });
+    THUMB.inflight.set(it.tk, pr);
+  }
+}
+async function renderThumb(srcId, idx, b) {
+  const L = window.pdfjsLib;
+  const src = S.sources.get(srcId);
+  if (!src) throw new Error('gone');
+  const page = await src.doc.getPage(idx + 1);
+  const vp1 = page.getViewport({ scale: 1 });
+  if (!src.dims[idx]) src.dims[idx] = { w: vp1.width, h: vp1.height, r: page.rotate };
+  const scale = b / Math.max(vp1.width, vp1.height);
+  const vp = page.getViewport({ scale });
+  const cv = document.createElement('canvas');
+  const cw = Math.max(1, Math.round(vp.width)), ch = Math.max(1, Math.round(vp.height));
+  cv.width = cw; cv.height = ch;
+  const task = page.render({ canvasContext: cv.getContext('2d'), viewport: vp, annotationMode: L.AnnotationMode.ENABLE, intent: 'display' });
+  await task.promise;
+  const blob = await new Promise((r) => cv.toBlob(r, 'image/jpeg', 0.85));
+  cv.width = cv.height = 0;
+  page.cleanup();
+  if (!blob) throw new Error('encode');
+  return { url: URL.createObjectURL(blob), b, w: cw, h: ch };
+}
+function evictThumbs() {
+  const MAX = 700;
+  if (THUMB.cache.size <= MAX) return;
+  const live = new Set();
+  for (const el of MOUNTED.values()) if (el._p && el._p.kind === 'page') live.add(thumbKey(el._p));
+  for (const [k, v] of THUMB.cache) {
+    if (THUMB.cache.size <= MAX * 0.8) break;
+    if (live.has(k) || v.err) continue;
+    THUMB.cache.delete(k);
+    if (v.url) setTimeout(() => URL.revokeObjectURL(v.url), 2000);
+  }
+}
+function clearThumbs() {
+  for (const v of THUMB.cache.values()) if (v.url) URL.revokeObjectURL(v.url);
+  THUMB.cache.clear(); THUMB.queue = [];
+}
+
+// High-resolution render for the preview (and raster export fallback).
+async function renderPageCanvas(srcId, idx, userRot, maxW, maxH, opts = {}) {
+  const L = window.pdfjsLib;
+  const src = S.sources.get(srcId);
+  const page = await src.doc.getPage(idx + 1);
+  const rotation = ((page.rotate + userRot) % 360 + 360) % 360;
+  const vp1 = page.getViewport({ scale: 1, rotation });
+  const scale = opts.scale || Math.min(maxW / vp1.width, maxH / vp1.height);
+  const vp = page.getViewport({ scale, rotation });
+  const cv = document.createElement('canvas');
+  cv.width = Math.max(1, Math.round(vp.width)); cv.height = Math.max(1, Math.round(vp.height));
+  const task = page.render({ canvasContext: cv.getContext('2d'), viewport: vp, annotationMode: L.AnnotationMode.ENABLE, intent: opts.print ? 'print' : 'display' });
+  if (opts.onTask) opts.onTask(task);
+  await task.promise;
+  return { canvas: cv, page, vp1 };
+}
+
+/* ================= grid: layout + virtualised rendering ================= */
+const G = { BASE_W: 186, RATIO: 1.36, CAP_H: 30, DIV_H: 34, DIV_GAP: 14, DIV_SPACE: 12, PAD_X: 36, PAD_TOP: 24, PAD_BOTTOM: 160 };
+const WS = $('ws'), CANVAS = $('canvas');
+let LAY = null;
+const MOUNTED = new Map();
+const EXPIRING = new Set();
+// Source dividers are no longer drawn; pages show their source with a coloured dot.
+let NUM = new Map(), DIVS = null, COUNTS = new Map();
+let FLASH = { ids: new Set(), until: 0 };
+const BUF = () => Math.max(500, WS.clientHeight * 0.9);
+
+function buildDisplay(list, anchors, slot) {
+  const out = [];
+  const slotIt = slot ? { t: 'slot', key: 'slot', li: slot.k } : null;
+  for (let i = 0; i <= list.length; i++) {
+    const p = list[i];
+    const dv = p && anchors ? anchors.get(p.id) : null;
+    if (slotIt && slot.k === i && (slot.afterPrev || !dv)) out.push(slotIt);
+    if (dv) out.push({ t: 'div', key: 'd:' + dv, src: dv, li: i });
+    if (slotIt && slot.k === i && !slot.afterPrev && dv) out.push(slotIt);
+    if (p) out.push({ t: 'page', key: p.id, p, li: i });
+  }
+  return out;
+}
+
+function metrics() {
+  const z = S.zoom / 100;
+  const cw = Math.round(G.BASE_W * z), th = Math.round(cw * G.RATIO);
+  return { cw, th, ch: th + G.CAP_H, colGap: Math.round(18 + 14 * z), rowGap: Math.round(8 + 10 * z) };
+}
+function computeLayout(disp) {
+  const W = WS.clientWidth || 800;
+  const m = metrics();
+  const { cw, ch, colGap, rowGap } = m;
+  const avail = Math.max(cw, W - 2 * G.PAD_X);
+  const cols = Math.max(1, Math.floor((avail + colGap) / (cw + colGap)));
+  const gridW = cols * cw + (cols - 1) * colGap;
+  const left = Math.max(10, Math.round((W - gridW) / 2));
+  const pos = new Map(), rows = [];
+  let y = G.PAD_TOP, col = 0, row = null;
+  for (let i = 0; i < disp.length; i++) {
+    const it = disp[i];
+    if (it.t === 'div') {
+      if (row) { y += ch + rowGap; row = null; }
+      if (i > 0) y += G.DIV_SPACE;
+      it.x = left; it.y = y;
+      rows.push({ t: 'div', y, h: G.DIV_H, it });
+      pos.set(it.key, { x: left, y });
+      y += G.DIV_H + G.DIV_GAP;
+      col = 0;
+      continue;
+    }
+    if (!row || col >= cols) {
+      if (row) y += ch + rowGap;
+      row = { t: 'cards', y, h: ch, items: [] };
+      rows.push(row); col = 0;
+    }
+    it.x = left + col * (cw + colGap); it.y = y;
+    row.items.push(it); col++;
+    pos.set(it.key, { x: it.x, y });
+  }
+  const height = (row ? y + ch : y) + G.PAD_BOTTOM;
+  return { ...m, W, cols, gridW, left, pos, rows, items: disp, height, bucket: bucketFor(m.th * DPR()) };
+}
+
+let VARS = '';
+function applyCanvasVars() {
+  const v = LAY.cw + '/' + LAY.th + '/' + LAY.colGap;
+  if (v === VARS) return;
+  VARS = v;
+  CANVAS.style.setProperty('--cw', LAY.cw + 'px');
+  CANVAS.style.setProperty('--th', LAY.th + 'px');
+  CANVAS.style.setProperty('--ch', LAY.ch + 'px');
+  CANVAS.style.setProperty('--gap', LAY.colGap + 'px');
+}
+
+function render(o = {}) {
+  if (S.mode !== 'workspace') return;
+  const disp = DRAG ? DRAG.disp : buildDisplay(S.pages, DIVS, null);
+  const prev = LAY;
+  LAY = computeLayout(disp);
+  applyCanvasVars();
+  CANVAS.style.height = LAY.height + 'px';
+  sync(o.anim !== false, prev, o);
+  scheduleThumbs();
+}
+
+/* ---- element placement ---- */
+const NOANIM = new Set();
+let noanimRaf = 0;
+function place(el, x, y, anim, extra) {
+  const tf = 'translate3d(' + x + 'px,' + y + 'px,0)' + (extra || '');
+  el._x = x; el._y = y;
+  if (el._tf === tf) return;
+  el._tf = tf;
+  if (anim) el.classList.remove('noanim');
+  else {
+    el.classList.add('noanim'); NOANIM.add(el);
+    if (!noanimRaf) noanimRaf = requestAnimationFrame(clearNoanim);
+  }
+  el.style.transform = tf;
+}
+function clearNoanim() {
+  noanimRaf = 0;
+  void CANVAS.offsetWidth;
+  for (const el of NOANIM) el.classList.remove('noanim');
+  NOANIM.clear();
+}
+let sweepT = 0;
+function expire(el, ms) {
+  el._expire = performance.now() + ms;
+  EXPIRING.add(el);
+  clearTimeout(sweepT);
+  sweepT = setTimeout(sweep, ms + 30);
+}
+function revive(el) {
+  el._expire = 0; EXPIRING.delete(el);
+  el.classList.remove('out', 'gone');
+}
+function sweep() {
+  const now = performance.now();
+  let next = Infinity;
+  for (const el of EXPIRING) {
+    if (el._expire <= now) {
+      EXPIRING.delete(el);
+      if (MOUNTED.get(el._key) === el) MOUNTED.delete(el._key);
+      el.remove();
+    } else next = Math.min(next, el._expire);
+  }
+  if (next < Infinity) sweepT = setTimeout(sweep, next - now + 30);
+}
+function unmountAll() {
+  for (const el of MOUNTED.values()) el.remove();
+  MOUNTED.clear(); EXPIRING.clear();
+  VARS = '';
+}
+
+function sync(anim, prev, o = {}) {
+  const top = WS.scrollTop - BUF(), bot = WS.scrollTop + WS.clientHeight + BUF();
+  const want = new Set();
+  const fresh = [];
+  for (const it of LAY.items) {
+    const hh = it.t === 'div' ? G.DIV_H : LAY.ch;
+    if (!(it.y + hh > top && it.y < bot)) continue;
+    want.add(it.key);
+    let el = MOUNTED.get(it.key);
+    const from = o.from && o.from.get(it.key);
+    if (!el) {
+      el = createEl(it);
+      MOUNTED.set(it.key, el);
+      CANVAS.append(el);
+      updateEl(el, it);
+      const pp = anim && prev ? prev.pos.get(it.key) : null;
+      if (from) { place(el, from.x, from.y, false); fresh.push([el, it]); }
+      else if (pp && (pp.x !== it.x || pp.y !== it.y)) { place(el, pp.x, pp.y, false); fresh.push([el, it]); }
+      else {
+        place(el, it.x, it.y, false);
+        if (anim && o.fadeIn && o.fadeIn.has(it.key)) { el.classList.add('out'); fresh.push([el, it]); }
+      }
+      continue;
+    }
+    if (el._expire) revive(el);
+    updateEl(el, it);
+    if (from) { place(el, from.x, from.y, false); fresh.push([el, it]); }
+    else if (!el._pinned) place(el, it.x, it.y, anim);
+  }
+  if (fresh.length) {
+    void CANVAS.offsetWidth;
+    for (const [el, it] of fresh) {
+      el.classList.remove('out');
+      if (o.fanMs && o.from && o.from.has(it.key)) {
+        el.style.transitionDuration = o.fanMs + 'ms';
+        el.classList.add('landing');
+        setTimeout(() => { el.style.transitionDuration = ''; el.classList.remove('landing'); }, o.fanMs + 40);
+      }
+      place(el, it.x, it.y, true);
+    }
+  }
+  for (const [key, el] of MOUNTED) {
+    if (want.has(key) || el._pinned || el._expire) continue;
+    const np = LAY.pos.get(key);
+    if (anim && np) { place(el, np.x, np.y, true); expire(el, 320); }
+    else if (anim && !np && el._kind !== 'slot') { el.classList.add('out'); expire(el, 260); }
+    else { MOUNTED.delete(key); el.remove(); }
+  }
+}
+let syncRaf = 0;
+function requestSync() {
+  if (syncRaf) return;
+  syncRaf = requestAnimationFrame(() => { syncRaf = 0; if (LAY && S.mode === 'workspace') { sync(false, null); scheduleThumbs(); } });
+}
+
+/* ---- elements ---- */
+function createEl(it) {
+  let el;
+  if (it.t === 'page') el = createCard(it.p);
+  else if (it.t === 'div') {
+    el = h('div', { class: 'divider', 'aria-hidden': 'true' });
+    const nm = h('span', { class: 'dv-name' }), mt = h('span', { class: 'dv-meta' }), rail = h('span', { class: 'dv-rail' });
+    el.append(nm, mt, rail);
+    el._r = { nm, mt };
+  } else {
+    el = h('div', { class: 'slot', 'aria-hidden': 'true' }, h('div', { class: 'sb' }), h('div', { class: 'slab' }));
+  }
+  el._kind = it.t; el._key = it.key;
+  return el;
+}
+function createCard(p) {
+  const el = h('div', { class: 'card', 'data-id': p.id, role: 'option' });
+  const sheet = h('div', { class: 'sheet' });
+  const ring = h('div', { class: 'ring' });
+  const chk = h('div', { class: 'chk' }, icon('check'));
+  const box = h('div', { class: 'box' }, sheet, ring, chk);
+  const dot = h('span', { class: 'dot' }), on = h('span', { class: 'on' });
+  const pn = h('span', { class: 'pn' });
+  const cap = h('div', { class: 'cap' }, h('span', { class: 'src' }, dot, on), pn);
+  el.append(box, cap);
+  el._r = { sheet, ring, chk, dot, on, pn, img: null, lbl: null };
+  el._ang = p.rot;
+  return el;
+}
+function updateEl(el, it) {
+  el._it = it;
+  if (it.t === 'page') return updateCard(el, it.p);
+  if (it.t === 'div') {
+    const s = S.sources.get(it.src);
+    if (!s) return;
+    const n = COUNTS.get(it.src) || 0;
+    const sig = s.name + '|' + n + '|' + LAY.gridW;
+    if (el._sig === sig) return;
+    el._sig = sig;
+    el.style.width = LAY.gridW + 'px';
+    el.style.setProperty('--c', s.color);
+    el._r.nm.textContent = s.name;
+    el._r.mt.textContent = '· ' + plural(n, 'page');
+    return;
+  }
+  if (it.t === 'slot') {
+    const n = DRAG ? DRAG.ids.length : 1;
+    const sig = n > 1 ? n : 0;
+    if (el._sig === sig) return;
+    el._sig = sig;
+    const lab = el.lastChild;
+    lab.textContent = '';
+    if (n > 1) lab.append('Move ', h('b', null, String(n)), ' pages here');
+  }
+}
+function updateCard(el, p) {
+  const r = el._r;
+  const n = NUM.get(p.id) || '';
+  if (el._n !== n) { r.pn.textContent = n; el._n = n; }
+  const sel = S.sel.has(p.id);
+  if (el._sel !== sel) { el.classList.toggle('sel', sel); el._sel = sel; el.setAttribute('aria-selected', String(sel)); }
+  const src = p.kind === 'page' ? S.sources.get(p.src) : null;
+  const srcSig = src ? src.color + (p.idx + 1) : 'blank';
+  if (el._srcSig !== srcSig) {
+    el._srcSig = srcSig;
+    r.dot.classList.toggle('hollow', !src);
+    if (src) { r.dot.style.setProperty('--c', src.color); r.on.textContent = String(p.idx + 1); }
+    else r.on.textContent = '';
+    el.setAttribute('aria-label', 'Page ' + n + (src ? ', ' + src.name + ' page ' + (p.idx + 1) : ', blank page'));
+  }
+  const hl = !!(S.hl && src && p.src === S.hl);
+  if (el._hl !== hl) { el._hl = hl; el.classList.toggle('hl-on', hl); if (hl) el.style.setProperty('--hlc', src.color); }
+  // geometry
+  const [bw, bh] = baseDims(p);
+  const gsig = bw.toFixed(1) + 'x' + bh.toFixed(1) + '@' + p.rot + '/' + LAY.cw;
+  if (el._g !== gsig) {
+    el._g = gsig;
+    const g = sheetGeom(bw, bh, p.rot, LAY.cw, LAY.th);
+    const cur = el._ang, d = ((((p.rot - cur) % 360) + 540) % 360) - 180;
+    el._ang = cur + d;
+    const st = r.sheet.style;
+    st.width = g.sw + 'px'; st.height = g.sh + 'px'; st.left = g.sl + 'px'; st.top = g.st + 'px';
+    st.transform = el._ang ? 'rotate(' + el._ang + 'deg)' : '';
+    const rs = r.ring.style;
+    rs.left = g.vl + 'px'; rs.top = g.vt + 'px'; rs.width = g.vw + 'px'; rs.height = g.vh + 'px';
+    r.chk.style.left = (g.vl + g.vw - 13) + 'px'; r.chk.style.top = (g.vt - 7) + 'px';
+  }
+  // content
+  if (p.kind === 'blank') {
+    if (r.img) { r.img.remove(); r.img = null; el._url = null; }
+    if (!r.lbl) { r.lbl = h('div', { class: 'blank-label' }, 'Blank'); r.sheet.append(r.lbl); }
+    else r.lbl.textContent = 'Blank';
+  } else {
+    const c = THUMB.cache.get(thumbKey(p));
+    if (c && c.err) {
+      if (!r.lbl) { r.lbl = h('div', { class: 'blank-label' }); r.sheet.append(r.lbl); }
+      r.lbl.textContent = 'No preview';
+    } else if (r.lbl) { r.lbl.remove(); r.lbl = null; }
+    if (c && c.url && el._url !== c.url) {
+      if (!r.img) {
+        r.img = h('img', { alt: '', draggable: 'false', decoding: 'async' });
+        r.img.addEventListener('load', () => r.img && r.img.classList.add('ok'));
+        r.sheet.prepend(r.img);
+      }
+      r.img.src = c.url; el._url = c.url;
+    }
+  }
+  if (FLASH.ids.has(p.id) && performance.now() < FLASH.until && !el._flashed) {
+    el._flashed = true;
+    el.classList.add('flash');
+    setTimeout(() => { el.classList.remove('flash'); el._flashed = false; }, 950);
+  }
+  el._p = p;
+}
+// Fit a page (base size bw×bh, rotated by rot) into the card box; bottom-aligned.
+function sheetGeom(bw, bh, rot, cw, th) {
+  const turned = rot % 180 !== 0;
+  const vw0 = turned ? bh : bw, vh0 = turned ? bw : bh;
+  const s = Math.min(cw / vw0, th / vh0);
+  const vw = vw0 * s, vh = vh0 * s, sw = bw * s, sh = bh * s;
+  const cx = cw / 2, cy = th - vh / 2;
+  return { sw, sh, sl: cx - sw / 2, st: cy - sh / 2, vw, vh, vl: cx - vw / 2, vt: th - vh };
+}
+function applyThumb(tk) {
+  for (const el of MOUNTED.values()) if (el._kind === 'page' && el._p && el._p.kind === 'page' && thumbKey(el._p) === tk) updateCard(el, el._p);
+  if (DRAG && DRAG.proxyTk === tk) refreshProxyTop();
+  if (PV && PV.tk === tk) pvThumbReady();
+}
+function refreshCards() {
+  if (!LAY) return;
+  for (const el of MOUNTED.values()) if (el._it && !el._expire) updateEl(el, el._it);
+}
+function flashPages(ids) { FLASH = { ids: new Set(ids), until: performance.now() + 1200 }; }
+function scrollToPage(id, o = {}) {
+  const pp = LAY && LAY.pos.get(id);
+  if (!pp) return;
+  const top = WS.scrollTop, vh = WS.clientHeight;
+  if (!o.force && pp.y >= top + 8 && pp.y + LAY.ch <= top + vh - 70) return;
+  const target = o.center ? pp.y - (vh - LAY.ch) / 2 : (pp.y < top ? pp.y - 24 : pp.y + LAY.ch - vh + 90);
+  WS.scrollTo({ top: Math.max(0, target), behavior: o.instant || REDUCED ? 'auto' : 'smooth' });
+}
+
+/* ================= selection ================= */
+function setSel(ids, anchor) { S.sel = new Set(ids); if (anchor !== undefined) S.anchor = anchor; selChanged(); }
+function clearSel() { if (!S.sel.size) return; S.sel.clear(); selChanged(); }
+function selectAll() { setSel(S.pages.map((p) => p.id), S.pages[0]?.id ?? null); }
+function selectRange(a, b, add) {
+  const ia = pageIndex(a), ib = pageIndex(b);
+  if (ia < 0 || ib < 0) { setSel([b], b); return; }
+  const lo = Math.min(ia, ib), hi = Math.max(ia, ib);
+  const ids = S.pages.slice(lo, hi + 1).map((p) => p.id);
+  if (add) ids.forEach((id) => S.sel.add(id)); else S.sel = new Set(ids);
+  selChanged();
+}
+function selChanged() {
+  refreshCards();
+  updateSelbar();
+  updateToolbar();
+  if (PV) pvUpdateMeta();
+}
+
+/* ================= pointer handling on the grid ================= */
+let PTR = null, DRAG = null, MARQ = null;
+function canvasPoint(cx, cy) { const r = CANVAS.getBoundingClientRect(); return [cx - r.left, cy - r.top]; }
+
+function onGridPointerDown(e) {
+  if (e.button !== 0 || DRAG || MARQ || S.mode !== 'workspace' || MODAL) return;
+  if (e.target.closest('.gapplus, .empty .row, .dropbar')) return;
+  hideGapPlus();
+  const card = e.target.closest('.card');
+  const mods = { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey };
+  if (S.hl && !card) setHighlight(null);
+  if (card && card._p && !card._expire) {
+    e.preventDefault();
+    WS.focus({ preventScroll: true });
+    const id = card._p.id;
+    let deferred = null;
+    if (mods.shift) selectRange(S.anchor && pageIndex(S.anchor) >= 0 ? S.anchor : id, id, mods.ctrl);
+    else if (mods.ctrl) {
+      if (S.sel.has(id)) deferred = 'toggleOff';
+      else { S.sel.add(id); S.anchor = id; selChanged(); }
+    } else if (S.sel.has(id)) { if (S.sel.size > 1) deferred = 'only'; else S.anchor = id; }
+    else setSel([id], id);
+    PTR = { kind: 'card', id, x0: e.clientX, y0: e.clientY, pid: e.pointerId, deferred };
+  } else {
+    if (e.target !== WS && e.target !== CANVAS && !e.target.closest('.divider')) return;
+    e.preventDefault();
+    WS.focus({ preventScroll: true });
+    PTR = { kind: 'bg', x0: e.clientX, y0: e.clientY, pid: e.pointerId, mods, base: (mods.ctrl || mods.shift) ? new Set(S.sel) : new Set() };
+  }
+  window.addEventListener('pointermove', onPtrMove);
+  window.addEventListener('pointerup', onPtrUp);
+  window.addEventListener('pointercancel', onPtrCancel);
+}
+function detachPtr() {
+  window.removeEventListener('pointermove', onPtrMove);
+  window.removeEventListener('pointerup', onPtrUp);
+  window.removeEventListener('pointercancel', onPtrCancel);
+}
+function onPtrMove(e) {
+  if (!PTR || e.pointerId !== PTR.pid) return;
+  if (DRAG) { dragMove(e); return; }
+  if (MARQ) { MARQ.cx = e.clientX; MARQ.cy = e.clientY; scheduleMarquee(); return; }
+  const d = Math.hypot(e.clientX - PTR.x0, e.clientY - PTR.y0);
+  if (PTR.kind === 'card' && d > 5) startDrag(e);
+  else if (PTR.kind === 'bg' && d > 4) startMarquee(e);
+}
+function onPtrUp(e) {
+  if (!PTR || e.pointerId !== PTR.pid) return;
+  const p = PTR;
+  if (DRAG) {
+    const r = WS.getBoundingClientRect();
+    const inside = e.clientX >= r.left - 4 && e.clientX <= r.right + 4 && e.clientY >= r.top - 4 && e.clientY <= r.bottom + 4;
+    DRAG.cx = e.clientX; DRAG.cy = e.clientY;
+    endDrag(!inside);
+  } else if (MARQ) endMarquee();
+  else if (p.kind === 'card') {
+    if (p.deferred === 'only') setSel([p.id], p.id);
+    else if (p.deferred === 'toggleOff') { S.sel.delete(p.id); S.anchor = p.id; selChanged(); }
+  } else if (p.kind === 'bg' && !p.mods.ctrl && !p.mods.shift) clearSel();
+  PTR = null;
+  detachPtr();
+}
+function onPtrCancel(e) {
+  if (!PTR || e.pointerId !== PTR.pid) return;
+  if (DRAG) endDrag(true);
+  if (MARQ) endMarquee();
+  PTR = null;
+  detachPtr();
+}
+
+/* ================= drag engine ================= */
+function dragAnchors(anchors, set) {
+  const res = new Map();
+  for (const [pid, sid] of anchors) {
+    let i = pageIndex(pid);
+    while (i >= 0 && i < S.pages.length && set.has(S.pages[i].id)) i++;
+    if (i < 0 || i >= S.pages.length) continue;
+    const q = S.pages[i];
+    if (q.id !== pid && anchors.has(q.id)) continue;
+    res.set(q.id, sid);
+  }
+  return res;
+}
+function startDrag(e) {
+  const grabbed = PTR.id;
+  if (!S.sel.has(grabbed)) setSel([grabbed], grabbed);
+  const pages = S.pages.filter((p) => S.sel.has(p.id));
+  const ids = pages.map((p) => p.id);
+  const set = new Set(ids);
+  const rest = S.pages.filter((p) => !set.has(p.id));
+  const k0 = S.pages.findIndex((p) => set.has(p.id));
+  const [px, py] = canvasPoint(e.clientX, e.clientY);
+  const gp = LAY.pos.get(grabbed) || { x: px - LAY.cw / 2, y: py - LAY.th / 2 };
+  const group = ids.length >= 2;
+  closeMenu(); hideGapPlus();
+  DRAG = {
+    ids, set, pages, group, rest, orig: S.pages, origPos: new Map(LAY.pos),
+    anchors: DIVS ? dragAnchors(DIVS, set) : null,
+    slot: { k: k0, afterPrev: false },
+    grab: { dx: clamp(px - gp.x, 8, LAY.cw - 8), dy: clamp(py - gp.y, 8, LAY.th - 8) },
+    cx: e.clientX, cy: e.clientY, px, py, raf: 0, dropping: false,
+  };
+  DRAG.disp = buildDisplay(rest, DRAG.anchors, DRAG.slot);
+  document.body.classList.add('dragging');
+  THUMB.paused = true;
+  updateSelbar();
+  if (!group) {
+    const el = MOUNTED.get(grabbed);
+    DRAG.el = el;
+    if (el) { el._pinned = true; el.classList.add('lifted'); }
+  } else {
+    buildProxy(pages[0]);
+    const fx = px - DRAG.grab.dx, fy = py - DRAG.grab.dy;
+    for (const id of ids) {
+      const el = MOUNTED.get(id);
+      if (!el || el._expire) continue;
+      el.classList.add('out');
+      place(el, fx, fy, true, ' scale(0.92)');
+      expire(el, 300);
+    }
+  }
+  positionFollower();
+  render({ anim: true });
+  startAutoScroll();
+}
+const PROXY_SCALE = 0.8;
+function buildProxy(first) {
+  const n = DRAG.ids.length;
+  const [bw, bh] = baseDims(first);
+  const g = sheetGeom(bw, bh, first.rot, LAY.cw, LAY.th);
+  const box = { left: g.vl + 'px', top: g.vt + 'px', width: g.vw + 'px', height: g.vh + 'px' };
+  const pr = h('div', { class: 'proxy', style: { transformOrigin: DRAG.grab.dx + 'px ' + DRAG.grab.dy + 'px' } });
+  const layers = n >= 3 ? 2 : 1;
+  for (let i = layers; i >= 1; i--) {
+    pr.append(h('div', { class: 'pl', style: { ...box, transform: 'translate(' + (i * 6) + 'px,' + (i * 5) + 'px) rotate(' + (i * 1.8) + 'deg)' } }));
+  }
+  const sheet = h('div', { class: 'sheet', style: { width: g.sw + 'px', height: g.sh + 'px', left: (g.sl - g.vl) + 'px', top: (g.st - g.vt) + 'px', transform: first.rot ? 'rotate(' + first.rot + 'deg)' : '' } });
+  const top = h('div', { class: 'pt', style: box }, sheet);
+  const badge = h('div', { class: 'badge', style: { left: (g.vl + g.vw) + 'px', top: (g.vt - 11) + 'px', transform: 'translateX(-72%)' } }, h('b', null, String(n)), ' pages');
+  pr.append(top, badge);
+  CANVAS.append(pr);
+  DRAG.proxy = pr; DRAG.proxySheet = sheet;
+  DRAG.proxyTk = first.kind === 'page' ? thumbKey(first) : null;
+  if (first.kind === 'blank') sheet.append(h('div', { class: 'blank-label' }, 'Blank'));
+  refreshProxyTop();
+}
+function refreshProxyTop() {
+  if (!DRAG || !DRAG.proxyTk) return;
+  const c = THUMB.cache.get(DRAG.proxyTk);
+  if (!c || !c.url) return;
+  let img = DRAG.proxySheet.querySelector('img');
+  if (!img) { img = h('img', { alt: '', draggable: 'false' }); DRAG.proxySheet.append(img); }
+  img.src = c.url;
+}
+function positionFollower() {
+  const x = DRAG.px - DRAG.grab.dx, y = DRAG.py - DRAG.grab.dy;
+  if (DRAG.group) DRAG.proxy.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0) scale(' + PROXY_SCALE + ')';
+  else if (DRAG.el) {
+    const tf = 'translate3d(' + x + 'px,' + y + 'px,0) scale(1.035)';
+    DRAG.el._tf = tf; DRAG.el._x = x; DRAG.el._y = y;
+    DRAG.el.style.transform = tf;
+  }
+}
+function dragMove(e) {
+  if (DRAG.dropping) return;
+  DRAG.cx = e.clientX; DRAG.cy = e.clientY;
+  if (!DRAG.raf) DRAG.raf = requestAnimationFrame(dragFrame);
+}
+function dragFrame() {
+  if (!DRAG || DRAG.dropping) return;
+  DRAG.raf = 0;
+  [DRAG.px, DRAG.py] = canvasPoint(DRAG.cx, DRAG.cy);
+  positionFollower();
+  const s = hitSlot(DRAG.px, DRAG.py);
+  if (s.k !== DRAG.slot.k || s.afterPrev !== DRAG.slot.afterPrev) {
+    DRAG.slot = s;
+    DRAG.disp = buildDisplay(DRAG.rest, DRAG.anchors, s);
+    render({ anim: true });
+  }
+}
+function hitSlot(px, py) {
+  const rows = LAY.rows, cur = DRAG.slot;
+  if (!rows.length) return { k: 0, afterPrev: false };
+  let ri = rows.length - 1;
+  for (let i = 0; i < rows.length - 1; i++) {
+    const a = rows[i], b = rows[i + 1];
+    if (py < (a.y + a.h + b.y) / 2) { ri = i; break; }
+  }
+  const r = rows[ri];
+  if (r.t === 'div') {
+    const li = r.it.li;
+    if (li === 0 || py >= r.y + r.h / 2) return { k: li, afterPrev: false };
+    return { k: li, afterPrev: true };
+  }
+  if (ri === rows.length - 1 && py > r.y + r.h + LAY.rowGap) {
+    const last = r.items[r.items.length - 1];
+    if (last.t === 'slot') return cur;
+    return { k: last.li + 1, afterPrev: true };
+  }
+  for (const it of r.items) {
+    if (px < it.x + LAY.cw / 2) {
+      if (it.t === 'slot') return cur;
+      return { k: it.li, afterPrev: false };
+    }
+  }
+  const last = r.items[r.items.length - 1];
+  if (last.t === 'slot') return cur;
+  return { k: last.li + 1, afterPrev: true };
+}
+function endDrag(cancel) {
+  const D = DRAG;
+  if (!D || D.dropping) return;
+  cancelAnimationFrame(D.raf); D.raf = 0;
+  stopAutoScroll();
+  if (!cancel) {
+    [D.px, D.py] = canvasPoint(D.cx, D.cy);
+    const s = hitSlot(D.px, D.py);
+    if (s.k !== D.slot.k || s.afterPrev !== D.slot.afterPrev) { D.slot = s; D.disp = buildDisplay(D.rest, D.anchors, s); render({ anim: true }); }
+  }
+  let next = null;
+  if (!cancel) {
+    const k = D.slot.k;
+    next = [...D.rest.slice(0, k), ...D.pages, ...D.rest.slice(k)];
+    if (next.every((p, i) => p === D.orig[i])) next = null;
+  }
+  const label = D.group ? 'Move ' + plural(D.ids.length, 'page') : 'Move page';
+  document.body.classList.remove('dragging');
+  const slotEl = MOUNTED.get('slot');
+  const slotPos = LAY.pos.get('slot');
+  const finish = () => {
+    if (slotEl) { MOUNTED.delete('slot'); slotEl.remove(); }
+    DRAG = null;
+    THUMB.paused = false;
+  };
+  if (!D.group) {
+    const el = D.el;
+    finish();
+    if (el) {
+      el._pinned = false;
+      el.classList.remove('lifted');
+      el.classList.add('landing');
+      setTimeout(() => el.classList.remove('landing'), 300);
+    }
+    if (next) commit(label, () => { S.pages = next; });
+    else render({ anim: true });
+    updateSelbar();
+    return;
+  }
+  D.dropping = true;
+  const target = (!cancel && slotPos) ? slotPos : (D.origPos.get(D.ids[0]) || slotPos || { x: D.px, y: D.py });
+  const pr = D.proxy;
+  pr.classList.add('settle');
+  void pr.offsetWidth;
+  pr.style.transform = 'translate3d(' + target.x + 'px,' + target.y + 'px,0)';
+  setTimeout(() => {
+    pr.remove();
+    finish();
+    const from = new Map(D.ids.map((id) => [id, target]));
+    if (next) commit(label, () => { S.pages = next; }, { from, fanMs: 200 });
+    else render({ anim: true, from, fanMs: 200 });
+    updateSelbar();
+  }, REDUCED ? 0 : 150);
+}
+function cancelDrag() { if (DRAG && !DRAG.dropping) { endDrag(true); PTR = null; detachPtr(); } }
+
+/* ---- auto-scroll (drag + marquee) ---- */
+let AS = 0;
+function startAutoScroll() { if (!AS) AS = requestAnimationFrame(autoScrollTick); }
+function stopAutoScroll() { cancelAnimationFrame(AS); AS = 0; }
+function autoScrollTick() {
+  AS = 0;
+  const g = DRAG || MARQ;
+  if (!g || (DRAG && DRAG.dropping)) return;
+  const r = WS.getBoundingClientRect(), zone = 72, y = g.cy;
+  let v = 0;
+  if (y < r.top + zone) v = -Math.pow(Math.min(1.6, (r.top + zone - y) / zone), 1.5) * 20;
+  else if (y > r.bottom - zone) v = Math.pow(Math.min(1.6, (y - (r.bottom - zone)) / zone), 1.5) * 20;
+  if (v) {
+    const before = WS.scrollTop;
+    WS.scrollTop = before + v;
+    if (WS.scrollTop !== before) {
+      if (DRAG) { if (!DRAG.raf) dragFrame(); }
+      else if (MARQ) marqueeFrame();
+    }
+  }
+  AS = requestAnimationFrame(autoScrollTick);
+}
+
+/* ---- marquee selection ---- */
+function startMarquee(e) {
+  const [x, y] = canvasPoint(PTR.x0, PTR.y0);
+  const el = h('div', { class: 'marquee' });
+  CANVAS.append(el);
+  MARQ = { x0: x, y0: y, cx: e.clientX, cy: e.clientY, el, base: PTR.base, raf: 0 };
+  document.body.classList.add('marqueeing');
+  marqueeFrame();
+  startAutoScroll();
+}
+function scheduleMarquee() { if (!MARQ.raf) MARQ.raf = requestAnimationFrame(() => { if (MARQ) { MARQ.raf = 0; marqueeFrame(); } }); }
+function marqueeFrame() {
+  const [x1, y1] = canvasPoint(MARQ.cx, MARQ.cy);
+  const l = Math.min(MARQ.x0, x1), t = Math.min(MARQ.y0, y1), r = Math.max(MARQ.x0, x1), b = Math.max(MARQ.y0, y1);
+  Object.assign(MARQ.el.style, { left: l + 'px', top: t + 'px', width: (r - l) + 'px', height: (b - t) + 'px' });
+  const next = new Set(MARQ.base);
+  for (const it of LAY.items) {
+    if (it.t !== 'page') continue;
+    if (it.x < r && it.x + LAY.cw > l && it.y < b && it.y + LAY.th > t) next.add(it.key);
+  }
+  if (next.size !== S.sel.size || [...next].some((id) => !S.sel.has(id))) {
+    S.sel = next;
+    selChanged();
+  }
+}
+function endMarquee() {
+  stopAutoScroll();
+  if (MARQ.raf) cancelAnimationFrame(MARQ.raf);
+  MARQ.el.remove();
+  const first = S.pages.find((p) => S.sel.has(p.id));
+  if (first && !MARQ.base.size) S.anchor = first.id;
+  MARQ = null;
+  document.body.classList.remove('marqueeing');
+}
+
+/* ================= insert-between control ================= */
+const GAP = { el: null, k: -1, locked: false, raf: 0, ev: null };
+function initGapPlus() {
+  const btn = h('button', { 'aria-label': 'Insert pages here', title: 'Insert here' }, icon('plus'));
+  GAP.el = h('div', { class: 'gapplus' }, h('div', { class: 'gl' }), btn);
+  btn.addEventListener('click', (e) => { e.stopPropagation(); openInsertMenu(btn, GAP.k); });
+  CANVAS.append(GAP.el);
+  WS.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return;
+    GAP.ev = e;
+    if (!GAP.raf) GAP.raf = requestAnimationFrame(gapHover);
+  });
+  WS.addEventListener('pointerleave', () => { if (!GAP.locked) hideGapPlus(); });
+}
+function gapHover() {
+  GAP.raf = 0;
+  const e = GAP.ev;
+  if (!e || GAP.locked) return;
+  if (DRAG || MARQ || PTR || MODAL || !LAY || e.buttons) { hideGapPlus(); return; }
+  if (e.target.closest && e.target.closest('.gapplus')) return;
+  const [px, py] = canvasPoint(e.clientX, e.clientY);
+  const g = gapAt(px, py, false);
+  if (!g) { hideGapPlus(); return; }
+  if (!GAP.el.isConnected) CANVAS.append(GAP.el);
+  GAP.k = g.k;
+  GAP.el.style.height = LAY.th + 'px';
+  GAP.el.style.transform = 'translate3d(' + (g.x - 14) + 'px,' + g.y + 'px,0)';
+  GAP.el.classList.add('show');
+}
+function hideGapPlus() { if (GAP.el && !GAP.locked) GAP.el.classList.remove('show'); }
+// Nearest insertion gap to a point. With loose=true, always returns the nearest gap in the nearest row.
+function gapAt(px, py, loose) {
+  if (!LAY) return null;
+  const cards = LAY.rows.filter((r) => r.t === 'cards' && r.items.some((i) => i.t === 'page'));
+  if (!cards.length) return loose ? { k: S.pages.length, x: LAY.left - LAY.colGap / 2, y: G.PAD_TOP } : null;
+  let row = null;
+  if (loose) {
+    let best = Infinity;
+    for (const r of cards) { const d = py < r.y ? r.y - py : py > r.y + LAY.th ? py - r.y - LAY.th : 0; if (d < best) { best = d; row = r; } }
+  } else row = cards.find((r) => py >= r.y - 4 && py <= r.y + LAY.th + 4);
+  if (!row) return null;
+  const items = row.items.filter((i) => i.t === 'page');
+  const reach = Math.max(12, LAY.colGap / 2 + 4);
+  let best = null, bd = Infinity;
+  for (let j = 0; j <= items.length; j++) {
+    const gx = j < items.length ? items[j].x - LAY.colGap / 2 : items[j - 1].x + LAY.cw + LAY.colGap / 2;
+    const d = Math.abs(px - gx);
+    if (d < bd) { bd = d; best = { k: j < items.length ? items[j].li : items[j - 1].li + 1, x: gx, y: row.y }; }
+  }
+  if (!loose && bd > reach) return null;
+  return best;
+}
+function gapLabel(k) {
+  const n = S.pages.length;
+  if (!n) return 'Insert here';
+  if (k <= 0) return 'Before page 1';
+  if (k >= n) return 'After page ' + n;
+  return 'Between pages ' + k + ' and ' + (k + 1);
+}
+function openInsertMenu(btn, k) {
+  GAP.locked = true;
+  GAP.el.classList.add('active', 'show');
+  openMenu(btn, [
+    { header: 'Insert here · ' + gapLabel(k) },
+    { label: 'PDF(s)', sub: 'Choose files to place at this point', icon: 'filePlus', action: () => pickFiles(k) },
+    { label: 'Blank page', sub: k > 0 ? 'Same size as page ' + k : 'Same size as page 1', icon: 'blank', action: () => insertBlankAt(k, S.pages[k - 1] || S.pages[0]) },
+  ], {
+    onClose: () => { GAP.locked = false; GAP.el.classList.remove('active'); hideGapPlus(); },
+  });
+}
+
+/* ================= files dragged in from the desktop ================= */
+const FD = { depth: 0, bar: null, k: null };
+const hasFiles = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+function initFileDrop() {
+  FD.bar = h('div', { class: 'dropbar', hidden: true }, h('span', null, 'Insert here'));
+  window.addEventListener('dragenter', (e) => {
+    if (!hasFiles(e) || MODAL) return;
+    e.preventDefault();
+    FD.depth++;
+    if (S.mode === 'landing') $('dropzone').classList.add('over');
+    else WS.classList.add('filedrag');
+  });
+  window.addEventListener('dragover', (e) => {
+    if (!hasFiles(e) || MODAL) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    if (S.mode === 'workspace') fileDragOver(e);
+  });
+  window.addEventListener('dragleave', (e) => {
+    if (!hasFiles(e)) return;
+    FD.depth = Math.max(0, FD.depth - 1);
+    if (!FD.depth) endFileDrag();
+  });
+  window.addEventListener('drop', (e) => {
+    if (!hasFiles(e)) return;
+    e.preventDefault();
+    const k = FD.k;
+    endFileDrag();
+    if (MODAL || S.busy) return;
+    const files = [...e.dataTransfer.files];
+    importFiles(files, S.mode === 'workspace' ? k : null);
+  });
+}
+function fileDragOver(e) {
+  const r = WS.getBoundingClientRect();
+  const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+  if (!inside || !S.pages.length) { FD.k = null; FD.bar.hidden = true; return; }
+  const [px, py] = canvasPoint(e.clientX, e.clientY);
+  const g = gapAt(px, py, true);
+  if (!g) { FD.k = null; FD.bar.hidden = true; return; }
+  FD.k = g.k;
+  if (!FD.bar.isConnected) CANVAS.append(FD.bar);
+  FD.bar.hidden = false;
+  FD.bar.style.height = LAY.th + 'px';
+  FD.bar.style.transform = 'translate3d(' + (g.x - 2) + 'px,' + g.y + 'px,0)';
+  FD.bar.firstChild.textContent = g.k >= S.pages.length ? 'Add at the end' : 'Insert here';
+}
+function endFileDrag() {
+  FD.depth = 0;
+  $('dropzone').classList.remove('over');
+  WS.classList.remove('filedrag');
+  if (FD.bar) FD.bar.hidden = true;
+}
+
+/* ================= history ================= */
+function commit(label, fn, o = {}) {
+  const before = { pages: S.pages, sel: [...S.sel], anchor: S.anchor, label };
+  fn();
+  if (S.pages !== before.pages) {
+    S.undo.push(before);
+    if (S.undo.length > 300) S.undo.shift();
+    S.redo = [];
+  }
+  afterChange(o);
+}
+function restoreSnap(snap) {
+  S.pages = snap.pages;
+  S.sel = new Set(snap.sel);
+  S.anchor = snap.anchor;
+}
+function undo() {
+  if (!S.undo.length || DRAG || S.mode !== 'workspace') return;
+  const e = S.undo.pop();
+  S.redo.push({ pages: S.pages, sel: [...S.sel], anchor: S.anchor, label: e.label });
+  restoreSnap(e);
+  afterChange();
+  toast('Undone: ' + e.label, { key: 'hist', timeout: 2200 });
+}
+function redo() {
+  if (!S.redo.length || DRAG || S.mode !== 'workspace') return;
+  const e = S.redo.pop();
+  S.undo.push({ pages: S.pages, sel: [...S.sel], anchor: S.anchor, label: e.label });
+  restoreSnap(e);
+  afterChange();
+  toast('Redone: ' + e.label, { key: 'hist', timeout: 2200 });
+}
+function afterChange(o = {}) {
+  const prev = NUM;
+  NUM = new Map(S.pages.map((p, i) => [p.id, i + 1]));
+  COUNTS = new Map();
+  for (const p of S.pages) if (p.kind === 'page') COUNTS.set(p.src, (COUNTS.get(p.src) || 0) + 1);
+  for (const id of [...S.sel]) if (!NUM.has(id)) S.sel.delete(id);
+  if (S.anchor && !NUM.has(S.anchor)) S.anchor = null;
+  if (S.cursor && !NUM.has(S.cursor)) S.cursor = null;
+  const fadeIn = new Set();
+  for (const p of S.pages) if (!prev.has(p.id)) fadeIn.add(p.id);
+  if (o.flash) flashPages(o.flash);
+  render({ anim: o.anim !== false, fadeIn, from: o.from, fanMs: o.fanMs });
+  $('empty').hidden = S.pages.length > 0 || S.mode !== 'workspace';
+  updateToolbar();
+  updateSelbar();
+  renderSidebar();
+  if (PV) pvAfterChange();
+  scheduleSave();
+}
+
+/* ================= page operations ================= */
+function rotatePages(ids, delta) {
+  const set = new Set(ids);
+  if (!set.size) return;
+  const label = (delta < 0 ? 'Rotate left' : 'Rotate right') + (set.size > 1 ? ' · ' + plural(set.size, 'page') : '');
+  commit(label, () => { S.pages = S.pages.map((p) => (set.has(p.id) ? { ...p, rot: (p.rot + delta + 360) % 360 } : p)); });
+}
+function rotateSel(delta) { rotatePages(selectedInOrder().map((p) => p.id), delta); }
+function duplicatePages(ids, o = {}) {
+  const set = new Set(ids);
+  if (!set.size) return [];
+  const orig = S.pages.filter((p) => set.has(p.id));
+  const copies = orig.map((p) => ({ ...p, id: newPageId() }));
+  let last = -1;
+  S.pages.forEach((p, i) => { if (set.has(p.id)) last = i; });
+  commit('Duplicate ' + plural(copies.length, 'page'), () => {
+    S.pages = [...S.pages.slice(0, last + 1), ...copies, ...S.pages.slice(last + 1)];
+    if (o.select !== false) { S.sel = new Set(copies.map((p) => p.id)); S.anchor = copies[0].id; S.cursor = copies[0].id; }
+  }, { flash: copies.map((p) => p.id) });
+  if (o.select !== false) scrollToPage(copies[0].id);
+  toast(copies.length === 1 ? 'Page duplicated' : plural(copies.length, 'page') + ' duplicated', { key: 'op' });
+  return copies;
+}
+function duplicateSel() { duplicatePages(selectedInOrder().map((p) => p.id)); }
+function deletePages(ids) {
+  const set = new Set(ids);
+  if (!set.size) return;
+  const n = S.pages.filter((p) => set.has(p.id)).length;
+  commit('Delete ' + plural(n, 'page'), () => {
+    S.pages = S.pages.filter((p) => !set.has(p.id));
+    for (const id of set) S.sel.delete(id);
+    if (S.sel.size === 0) S.anchor = null;
+  });
+  toast(n === 1 ? '1 page deleted' : n + ' pages deleted', { key: 'op', action: { label: 'Undo', fn: undo } });
+}
+function deleteSel() { deletePages([...S.sel]); }
+function insertBlankAt(k, ref, o = {}) {
+  k = clamp(k, 0, S.pages.length);
+  const [w, h2] = ref ? visDims(ref) : [595.28, 841.89];
+  const blank = { id: newPageId(), kind: 'blank', src: null, idx: 0, rot: 0, w, h: h2 };
+  commit('Insert blank page', () => {
+    S.pages = [...S.pages.slice(0, k), blank, ...S.pages.slice(k)];
+    if (o.select !== false) { S.sel = new Set([blank.id]); S.anchor = blank.id; S.cursor = blank.id; }
+  }, { flash: [blank.id] });
+  scrollToPage(blank.id);
+  return blank;
+}
+function blankRelative(where) {
+  const sel = selectedInOrder();
+  if (!sel.length) return;
+  const ref = where === 'before' ? sel[0] : sel[sel.length - 1];
+  const i = pageIndex(ref.id);
+  insertBlankAt(where === 'before' ? i : i + 1, ref);
+}
+
+/* ================= toolbar / selection bar ================= */
+function updateToolbar() {
+  const u = $('undoBtn'), r = $('redoBtn');
+  u.disabled = !S.undo.length;
+  r.disabled = !S.redo.length;
+  u.title = S.undo.length ? 'Undo ' + S.undo[S.undo.length - 1].label.toLowerCase() + ' (' + MOD + '+Z)' : 'Nothing to undo';
+  r.title = S.redo.length ? 'Redo ' + S.redo[S.redo.length - 1].label.toLowerCase() + ' (' + MOD + '+Shift+Z)' : 'Nothing to redo';
+  const hasSel = S.sel.size > 0, hasPages = S.pages.length > 0;
+  $('expSelBtn').disabled = !hasSel; $('expSelMore').disabled = !hasSel;
+  $('expAllBtn').disabled = !hasPages; $('expAllMore').disabled = !hasPages;
+  $('expSelBtn').title = hasSel ? 'Export the ' + plural(S.sel.size, 'selected page') + ' as one PDF' : 'Select pages to export them';
+  $('expAllBtn').title = hasPages ? 'Export all ' + plural(S.pages.length, 'page') + ' as one PDF' : 'Nothing to export yet';
+  const zv = $('zoomVal');
+  if (zv) zv.textContent = S.zoom + '%';
+  $('zoomOut').disabled = S.zoom <= ZMIN; $('zoomIn').disabled = S.zoom >= ZMAX;
+  $('emptyUndo').disabled = !S.undo.length;
+}
+function updateSelbar() {
+  const n = S.sel.size;
+  const bar = $('selbar');
+  bar.classList.toggle('show', n > 0 && !DRAG && S.mode === 'workspace');
+  if (n) $('selCount').replaceChildren(h('b', null, String(n)), ' selected');
+  bar.setAttribute('aria-hidden', String(!(n > 0)));
+}
+function positionSelbar() {
+  $('selbar').style.left = (WS.offsetLeft + WS.clientWidth / 2) + 'px';
+}
+function openBlankMenu(btn, kb) {
+  const one = S.sel.size === 1;
+  openMenu(btn, [
+    { label: one ? 'Insert blank before' : 'Insert blank before first selected', icon: 'blank', action: () => blankRelative('before') },
+    { label: one ? 'Insert blank after' : 'Insert blank after last selected', icon: 'blank', action: () => blankRelative('after') },
+  ], { dark: true, above: true, center: true, kb });
+}
+
+/* ================= sources panel ================= */
+function renderSidebar() {
+  const list = $('sbList');
+  const ids = S.srcOrder.filter((id) => S.sources.has(id));
+  const frag = document.createDocumentFragment();
+  for (const id of ids) {
+    const s = S.sources.get(id);
+    const n = COUNTS.get(id) || 0;
+    const sel = h('button', { class: 'sact', title: 'Select every page from ' + s.name, tabindex: '-1' }, 'Select');
+    const row = h('div', {
+      class: 'src-row' + (S.hl === id ? ' on' : '') + (n ? '' : ' empty'),
+      style: { '--c': s.color }, role: 'button', tabindex: '0', 'aria-pressed': String(S.hl === id),
+      title: n ? 'Highlight pages from ' + s.name : s.name + ' has no pages in the workspace',
+    }, h('span', { class: 'sdot' }), h('span', { class: 'sname' }, s.name), sel,
+      h('span', { class: 'scount' }, plural(n, 'page') + (n !== s.numPages ? ' · ' + s.numPages + ' in file' : '')));
+    row.addEventListener('click', (e) => { if (e.target === sel) return; if (n) setHighlight(S.hl === id ? null : id); });
+    row.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === row) { e.preventDefault(); if (n) setHighlight(S.hl === id ? null : id); } });
+    sel.addEventListener('click', () => selectSource(id));
+    if (!n) sel.disabled = true;
+    frag.append(row);
+  }
+  const blanks = S.pages.filter((p) => p.kind === 'blank').length;
+  if (blanks) frag.append(h('div', { class: 'sb-blank' }, '+ ' + plural(blanks, 'blank page')));
+  list.replaceChildren(frag);
+  $('sbSum').textContent = plural(S.pages.length, 'page');
+}
+function setHighlight(id) {
+  S.hl = id && S.sources.has(id) ? id : null;
+  CANVAS.classList.toggle('hl', !!S.hl);
+  refreshCards();
+  renderSidebar();
+  if (S.hl) {
+    const first = S.pages.find((p) => p.src === S.hl);
+    if (first) scrollToPage(first.id);
+  }
+}
+function selectSource(id) {
+  const ids = S.pages.filter((p) => p.src === id).map((p) => p.id);
+  if (!ids.length) return;
+  setSel(ids, ids[0]);
+  S.cursor = ids[0];
+  scrollToPage(ids[0]);
+}
+function setSidebar(open, o = {}) {
+  S.sidebar = !!open;
+  $('sidebar').hidden = !S.sidebar;
+  const b = $('sidebarBtn');
+  b.setAttribute('aria-pressed', String(S.sidebar));
+  b.classList.toggle('open', S.sidebar);
+  if (!o.auto) { try { localStorage.setItem('sy.sidebar', S.sidebar ? '1' : '0'); } catch (e) { /* ignore */ } }
+  positionSelbar();
+}
+function maybeAutoSidebar() {
+  let pref = null;
+  try { pref = localStorage.getItem('sy.sidebar'); } catch (e) { /* ignore */ }
+  if (pref != null) { if ((pref === '1') !== S.sidebar) setSidebar(pref === '1', { auto: true }); return; }
+  if (!S.sidebar && S.srcOrder.length >= 2 && innerWidth >= 1100) setSidebar(true, { auto: true });
+}
+function setShowOrig(v) {
+  S.showOrig = !!v;
+  CANVAS.classList.toggle('orig', S.showOrig);
+  try { localStorage.setItem('sy.orig', S.showOrig ? '1' : '0'); } catch (e) { /* ignore */ }
+  scheduleSave();
+}
+
+/* ================= zoom ================= */
+function setZoom(z) {
+  z = clamp(Math.round(z), ZMIN, ZMAX);
+  if (z === S.zoom) { updateToolbar(); return; }
+  let anchorId = null, off = 0;
+  if (LAY) {
+    const top = WS.scrollTop;
+    for (const it of LAY.items) if (it.t === 'page' && it.y + LAY.th > top) { anchorId = it.key; off = it.y - top; break; }
+  }
+  S.zoom = z;
+  CANVAS.classList.add('instant');
+  render({ anim: false });
+  if (anchorId && LAY.pos.get(anchorId)) {
+    WS.scrollTop = Math.max(0, LAY.pos.get(anchorId).y - off);
+    sync(false, null);
+  }
+  requestAnimationFrame(() => requestAnimationFrame(() => CANVAS.classList.remove('instant')));
+  updateToolbar();
+  try { localStorage.setItem('sy.zoom', String(z)); } catch (e) { /* ignore */ }
+  scheduleSave();
+}
+function editZoom() {
+  const btn = $('zoomVal');
+  const inp = h('input', { class: 'zv', value: String(S.zoom), inputmode: 'numeric', 'aria-label': 'Thumbnail size in percent (40 to 160)', maxlength: '4' });
+  btn.replaceWith(inp);
+  inp.focus(); inp.select();
+  let finished = false;
+  const done = (apply) => {
+    if (finished) return; finished = true;
+    const v = parseInt(inp.value.replace(/[^\d]/g, ''), 10);
+    inp.replaceWith(btn);
+    if (apply && v) setZoom(v); else updateToolbar();
+    btn.focus({ preventScroll: true });
+  };
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); done(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); }
+    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const v = parseInt(inp.value, 10) || S.zoom;
+      inp.value = String(clamp(v + (e.key === 'ArrowUp' ? 10 : -10), ZMIN, ZMAX));
+    }
+  });
+  inp.addEventListener('blur', () => done(true));
+}
+
+/* ================= page range selection ================= */
+function parseRange(str, n) {
+  let s = str.replace(/[\u2012-\u2015\u2212]/g, '-').replace(/\bto\b/gi, '-').replace(/\s*-\s*/g, '-').trim();
+  if (!s) return { error: 'Type page numbers, e.g. 1-5, 8, 12-17' };
+  if (/^(all|\*)$/i.test(s)) return { idx: [...Array(n).keys()] };
+  const toks = s.split(/[\s,;]+/).filter(Boolean);
+  const out = [], seen = new Set();
+  for (const t of toks) {
+    const m = /^(\d+)?-(\d+)?$/.exec(t);
+    let a, b;
+    if (/^\d+$/.test(t)) a = b = parseInt(t, 10);
+    else if (m && (m[1] || m[2])) { a = m[1] ? parseInt(m[1], 10) : 1; b = m[2] ? parseInt(m[2], 10) : n; }
+    else return { error: 'Couldn’t read “' + t + '”. Use numbers and ranges like 1-5, 8.' };
+    if (a > b) [a, b] = [b, a];
+    if (a < 1) return { error: 'Page numbers start at 1.' };
+    if (b > n) return { error: 'Page ' + b + ' doesn’t exist. The workspace has ' + plural(n, 'page') + '.' };
+    for (let i = a; i <= b; i++) if (!seen.has(i)) { seen.add(i); out.push(i - 1); }
+  }
+  return { idx: out };
+}
+function rangeHint(msg) {
+  const lab = $('rangeInput').parentElement;
+  lab.querySelector('.hint-pop')?.remove();
+  if (msg) lab.append(h('div', { class: 'hint-pop', role: 'alert' }, msg));
+}
+function applyRange() {
+  const inp = $('rangeInput');
+  if (!S.pages.length) return;
+  const r = parseRange(inp.value, S.pages.length);
+  if (r.error) {
+    inp.classList.remove('bad'); void inp.offsetWidth; inp.classList.add('bad');
+    rangeHint(r.error);
+    return;
+  }
+  const ids = r.idx.map((i) => S.pages[i].id);
+  setSel(ids, ids[0]);
+  S.cursor = ids[0];
+  inp.value = '';
+  rangeHint(null);
+  inp.blur();
+  WS.focus({ preventScroll: true });
+  scrollToPage(ids[0]);
+}
+
+/* ================= menus in the toolbar ================= */
+function viewMenuItems() {
+  return [
+    { header: 'View' },
+    { label: 'Show original page numbers', sub: 'Adds each page’s number in its source file', sw: S.showOrig, action: (v) => setShowOrig(v) },
+    { label: 'Show Sources panel', sub: 'Files, colours and page counts', sw: S.sidebar, action: (v) => setSidebar(v) },
+    '-',
+    { label: 'Reset thumbnail size', icon: 'restart', kbd: '100%', disabled: S.zoom === 100, action: () => setZoom(100) },
+  ];
+}
+function moreMenuItems() {
+  return [
+    { label: 'Select all pages', icon: 'selectAll', kbd: MOD + '+A', disabled: !S.pages.length, action: selectAll },
+    { label: 'Add PDFs…', icon: 'filePlus', kbd: MOD + '+O', action: () => pickFiles(null) },
+    { label: 'Keyboard shortcuts', icon: 'keyboard', kbd: '?', action: showShortcuts },
+    { label: 'About & privacy', icon: 'info', action: showAbout },
+    { label: 'Support this tool', icon: 'heart', action: openSupport },
+    '-',
+    { label: 'Start over…', sub: 'Clear the workspace and its saved copy', icon: 'restart', danger: true, action: confirmStartOver },
+  ];
+}
+function exportMenuItems(scope) {
+  const sel = scope === 'sel';
+  return [
+    { label: sel ? 'Export selected' : 'Export all', sub: 'One PDF in workspace order', icon: 'file', action: () => exportPages(scope, 'one') },
+    { label: sel ? 'Export selected as individual pages' : 'Export all as individual pages', sub: 'One PDF per page, zipped when there are several', icon: 'pages', action: () => exportPages(scope, 'each') },
+  ];
+}
+function showShortcuts() {
+  const rows = [
+    ['Click', 'Select a page'], [MOD + '+click', 'Add or remove a page'], ['Shift+click', 'Select a run of pages'],
+    ['Drag', 'Move the page or the whole selection'], ['Double-click / Enter', 'Preview the page'],
+    [MOD + '+A', 'Select all'], ['Arrow keys', 'Move between pages'], ['R / Shift+R', 'Rotate right / left'],
+    [MOD + '+D', 'Duplicate'], ['Delete', 'Delete the selection'],
+    [MOD + '+Z', 'Undo'], [MOD + '+Shift+Z', 'Redo'], ['+ / −', 'Thumbnail size'], ['Esc', 'Clear the selection'],
+  ];
+  const body = h('div', { class: 'keys' });
+  for (const [k, d] of rows) body.append(h('kbd', null, k), h('span', null, d));
+  showDialog({ title: 'Keyboard shortcuts', icon: 'keyboard', body, actions: [{ label: 'Done', cls: 'primary', primary: true, value: true }] });
+}
+async function confirmStartOver() {
+  const ok = await showDialog({
+    title: 'Start over?', icon: 'restart',
+    text: 'This clears every page and file from the workspace and deletes the recovery copy kept in this browser. Export anything you need first.',
+    actions: [{ label: 'Cancel', value: false }, { label: 'Clear workspace', cls: 'danger-solid', primary: true, value: true }],
+  });
+  if (ok) startOver();
+}
+
+/* ================= keyboard ================= */
+function onKeyDown(e) {
+  if (MODAL) return;
+  if (PV) { pvKey(e); return; }
+  const t = e.target;
+  const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+  const mod = e.ctrlKey || e.metaKey;
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (e.key === 'Escape') {
+    if (closeMenu()) { e.preventDefault(); return; }
+    if (DRAG) { e.preventDefault(); cancelDrag(); return; }
+    if (typing) { if (t.id === 'rangeInput') { t.value = ''; t.classList.remove('bad'); rangeHint(null); t.blur(); } return; }
+    if (S.hl) { setHighlight(null); return; }
+    clearSel();
+    return;
+  }
+  if (S.mode !== 'workspace' || typing || DRAG || MARQ) return;
+  if (mod && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+  if (mod && k === 'y') { e.preventDefault(); redo(); return; }
+  if (mod && k === 'a') { e.preventDefault(); selectAll(); return; }
+  if (mod && k === 'd') { e.preventDefault(); if (S.sel.size) duplicateSel(); return; }
+  if (mod && k === 'o') { e.preventDefault(); pickFiles(null); return; }
+  if (mod || e.altKey) return;
+  if (t && t.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { if (S.sel.size) { e.preventDefault(); deleteSel(); } return; }
+  if (k === 'r') { if (S.sel.size) { e.preventDefault(); rotateSel(e.shiftKey ? -90 : 90); } return; }
+  if (e.key === '?') { e.preventDefault(); showShortcuts(); return; }
+  if (k === '+' || k === '=') { e.preventDefault(); setZoom(S.zoom + 10); return; }
+  if (k === '-' || k === '_') { e.preventDefault(); setZoom(S.zoom - 10); return; }
+  if (e.key.startsWith('Arrow')) { e.preventDefault(); moveCursor(e.key, e.shiftKey); return; }
+  if (e.key === 'Home' || e.key === 'End') {
+    e.preventDefault();
+    const p = e.key === 'Home' ? S.pages[0] : S.pages[S.pages.length - 1];
+    if (p) { if (e.shiftKey && S.anchor) selectRange(S.anchor, p.id); else setSel([p.id], p.id); S.cursor = p.id; scrollToPage(p.id); }
+    return;
+  }
+  if (e.key === 'Enter' || e.key === ' ') {
+    const id = (S.cursor && S.sel.has(S.cursor)) ? S.cursor : selectedInOrder()[0]?.id;
+    if (id) { e.preventDefault(); openPreview(id); }
+  }
+}
+function moveCursor(key, shift) {
+  if (!S.pages.length || !LAY) return;
+  let cur = S.cursor && NUM.has(S.cursor) ? S.cursor : (S.anchor && NUM.has(S.anchor) ? S.anchor : null);
+  let nextId = null;
+  if (!cur) nextId = (key === 'ArrowLeft' || key === 'ArrowUp') ? S.pages[S.pages.length - 1].id : S.pages[0].id;
+  else if (key === 'ArrowLeft' || key === 'ArrowRight') {
+    const i = pageIndex(cur) + (key === 'ArrowLeft' ? -1 : 1);
+    nextId = S.pages[clamp(i, 0, S.pages.length - 1)].id;
+  } else {
+    const rows = LAY.rows.filter((r) => r.t === 'cards');
+    const ri = rows.findIndex((r) => r.items.some((it) => it.key === cur));
+    const cx = LAY.pos.get(cur).x;
+    const rr = rows[ri + (key === 'ArrowUp' ? -1 : 1)];
+    if (!rr) nextId = key === 'ArrowUp' ? S.pages[0].id : S.pages[S.pages.length - 1].id;
+    else {
+      let best = null, bd = Infinity;
+      for (const it of rr.items) if (it.t === 'page') { const d = Math.abs(it.x - cx); if (d < bd) { bd = d; best = it.key; } }
+      nextId = best;
+    }
+  }
+  if (!nextId) return;
+  if (shift && S.anchor && NUM.has(S.anchor)) selectRange(S.anchor, nextId);
+  else setSel([nextId], nextId);
+  S.cursor = nextId;
+  scrollToPage(nextId);
+}
+
+/* ================= start over ================= */
+function startOver() {
+  closePreview();
+  closeMenu();
+  for (const s of S.sources.values()) { try { s.doc.destroy(); } catch (e) { /* ignore */ } }
+  S.sources.clear(); S.srcOrder = [];
+  S.pages = []; S.sel.clear(); S.anchor = null; S.cursor = null; S.hl = null;
+  S.undo = []; S.redo = [];
+  setDocTitle('');
+  S.colorCursor = 0;
+  clearThumbs();
+  unmountAll();
+  NUM = new Map(); DIVS = null; COUNTS = new Map();
+  CANVAS.classList.remove('hl');
+  Store.clear();
+  for (const t of TOASTS.values()) t.close(true);
+  showLanding();
+}
+
+/* ================= page preview ================= */
+let PV = null;
+function openPreview(id) {
+  if (!NUM.has(id) || DRAG) return;
+  if (PV) { pvShow(id); return; }
+  closeMenu(); hideGapPlus();
+  const num = h('div', { class: 'pv-num' });
+  const src = h('div', { class: 'pv-src' });
+  const close = h('button', { class: 'btn ibtn', title: 'Close (Esc)', 'aria-label': 'Close preview' }, icon('x'));
+  const top = h('div', { class: 'pv-top' }, num, src, h('div', { class: 'grow' }), close);
+  const page = h('div', { class: 'pv-page' });
+  const prev = h('button', { class: 'pv-nav l', 'aria-label': 'Previous page', title: 'Previous page (←)' }, icon('chevL'));
+  const next = h('button', { class: 'pv-nav r', 'aria-label': 'Next page', title: 'Next page (→)' }, icon('chevR'));
+  const stage = h('div', { class: 'pv-stage' }, page, prev, next);
+  const bt = (ic, label, fn, cls, title) => { const b = h('button', { class: 'btn' + (cls ? ' ' + cls : ''), title: title || label }, icon(ic), h('span', { class: 'lbl' }, label)); b.addEventListener('click', fn); return b; };
+  const bar = h('div', { class: 'pv-bar' }, h('div', { class: 'inner' },
+    bt('rotL', 'Rotate left', () => pvRotate(-90), '', 'Rotate left (Shift+R)'),
+    bt('rotR', 'Rotate right', () => pvRotate(90), '', 'Rotate right (R)'),
+    h('span', { class: 'sep' }),
+    bt('copy', 'Duplicate', pvDuplicate, '', 'Duplicate (' + MOD + '+D)'),
+    h('span', { class: 'sep' }),
+    bt('trash', 'Delete', pvDelete, 'danger', 'Delete (Del)')));
+  const root = h('div', { class: 'pv', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Page preview', tabindex: '-1' }, top, stage, bar);
+  close.addEventListener('click', closePreview);
+  prev.addEventListener('click', () => pvStep(-1));
+  next.addEventListener('click', () => pvStep(1));
+  stage.addEventListener('click', (e) => { if (e.target === stage) closePreview(); });
+  document.body.append(root);
+  PV = { root, num, src, page, prev, next, stage, id: null, p: null, gen: 0, task: null, hi: null, ph: null, tk: null, lastIdx: 0 };
+  pvShow(id);
+  root.focus();
+}
+function closePreview() {
+  if (!PV) return;
+  const id = PV.id;
+  try { PV.task?.cancel(); } catch (e) { /* ignore */ }
+  PV.root.remove();
+  PV = null;
+  if (id && NUM.has(id) && S.mode === 'workspace') {
+    if (!S.sel.has(id)) setSel([id], id);
+    S.cursor = id;
+    scrollToPage(id);
+  }
+  WS.focus({ preventScroll: true });
+}
+function pvShow(id) {
+  const p = S.pages.find((q) => q.id === id);
+  if (!p) return;
+  PV.id = id; PV.p = p; PV.lastIdx = pageIndex(id);
+  PV.gen++;
+  try { PV.task?.cancel(); } catch (e) { /* ignore */ }
+  PV.task = null;
+  pvUpdateMeta();
+  pvLayout();
+  PV.page.textContent = '';
+  PV.hi = null; PV.ph = null;
+  PV.tk = p.kind === 'page' ? thumbKey(p) : null;
+  if (p.kind === 'blank') {
+    PV.page.append(h('div', { class: 'blank-label' }, 'Blank page'));
+    return;
+  }
+  pvThumbReady();
+  pvRenderHi();
+}
+function pvUpdateMeta() {
+  if (!PV || !PV.p) return;
+  const p = PV.p, n = NUM.get(p.id), total = S.pages.length;
+  PV.num.replaceChildren('Page ' + n, h('span', null, ' of ' + total));
+  const s = p.kind === 'page' ? S.sources.get(p.src) : null;
+  const [w, hh] = visDims(p);
+  const mm = (v) => Math.round(v / 72 * 25.4);
+  if (s) PV.src.replaceChildren(h('span', { class: 'dot', style: { '--c': s.color } }), h('span', { class: 'n' }, s.name), h('span', { class: 'm' }, 'p. ' + (p.idx + 1) + ' of ' + s.numPages));
+  else PV.src.replaceChildren(h('span', { class: 'dot', style: { '--c': 'transparent', boxShadow: 'inset 0 0 0 1.5px #8E9498' } }), h('span', { class: 'n' }, 'Blank page'), h('span', { class: 'm' }, mm(w) + ' × ' + mm(hh) + ' mm'));
+  const i = pageIndex(p.id);
+  PV.prev.disabled = i <= 0;
+  PV.next.disabled = i >= total - 1;
+}
+function pvBox() {
+  const p = PV.p;
+  const [vw, vh] = visDims(p);
+  const aw = Math.max(100, PV.stage.clientWidth - 160), ah = Math.max(100, PV.stage.clientHeight - 16);
+  const s = Math.min(aw / vw, ah / vh);
+  return { w: Math.round(vw * s), h: Math.round(vh * s), s };
+}
+function pvLayout() {
+  const b = pvBox();
+  PV.page.style.width = b.w + 'px';
+  PV.page.style.height = b.h + 'px';
+  PV.box = b;
+}
+function pvThumbReady() {
+  if (!PV || !PV.tk || PV.hi) return;
+  const c = THUMB.cache.get(PV.tk);
+  if (!c || !c.url) return;
+  const p = PV.p;
+  const [bw, bh] = baseDims(p);
+  const g = sheetGeom(bw, bh, p.rot, PV.box.w, PV.box.h);
+  if (!PV.ph) {
+    PV.ph = h('div', { class: 'pv-sheet' }, h('img', { alt: '' }));
+    PV.page.prepend(PV.ph);
+  }
+  Object.assign(PV.ph.style, { width: g.sw + 'px', height: g.sh + 'px', left: g.sl + 'px', top: g.st + 'px', transform: p.rot ? 'rotate(' + p.rot + 'deg)' : '' });
+  PV.ph.firstChild.src = c.url;
+}
+async function pvRenderHi() {
+  const gen = PV.gen, p = PV.p, b = PV.box;
+  const d = Math.min(2.5, window.devicePixelRatio || 1);
+  try {
+    const { canvas } = await renderPageCanvas(p.src, p.idx, p.rot, b.w * d, b.h * d, { onTask: (t) => { if (PV && PV.gen === gen) PV.task = t; } });
+    if (!PV || PV.gen !== gen) return;
+    canvas.setAttribute('aria-label', 'Page ' + NUM.get(p.id));
+    PV.page.append(canvas);
+    PV.hi = canvas;
+    if (PV.ph) setTimeout(() => { if (PV && PV.hi === canvas && PV.ph) { PV.ph.remove(); PV.ph = null; } }, 60);
+  } catch (e) {
+    if (!PV || PV.gen !== gen || (e && e.name === 'RenderingCancelledException')) return;
+    if (!PV.ph) PV.page.append(h('div', { class: 'blank-label' }, 'This page couldn’t be displayed'));
+  }
+}
+function pvStep(d) {
+  if (!PV) return;
+  const i = pageIndex(PV.id) + d;
+  if (i < 0 || i >= S.pages.length) return;
+  pvShow(S.pages[i].id);
+}
+function pvRotate(delta) { if (PV) rotatePages([PV.id], delta); }
+function pvDuplicate() { if (PV) duplicatePages([PV.id], { select: false }); }
+function pvDelete() { if (PV) deletePages([PV.id]); }
+function pvAfterChange() {
+  if (!PV) return;
+  if (!S.pages.length) { closePreview(); return; }
+  const p = S.pages.find((q) => q.id === PV.id);
+  if (!p) { pvShow(S.pages[clamp(PV.lastIdx, 0, S.pages.length - 1)].id); return; }
+  if (p !== PV.p) pvShow(p.id);
+  else { PV.lastIdx = pageIndex(p.id); pvUpdateMeta(); }
+}
+function pvKey(e) {
+  const mod = e.ctrlKey || e.metaKey;
+  const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (e.key === 'Escape') { e.preventDefault(); if (!closeMenu()) closePreview(); return; }
+  if (mod && k === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+  if (mod && k === 'y') { e.preventDefault(); redo(); return; }
+  if (mod && k === 'd') { e.preventDefault(); pvDuplicate(); return; }
+  if (mod || e.altKey) return;
+  if (e.target && e.target.tagName === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); pvStep(-1); }
+  else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); pvStep(1); }
+  else if (e.key === 'Home') { e.preventDefault(); if (S.pages[0]) pvShow(S.pages[0].id); }
+  else if (e.key === 'End') { e.preventDefault(); if (S.pages.length) pvShow(S.pages[S.pages.length - 1].id); }
+  else if (k === 'r') { e.preventDefault(); pvRotate(e.shiftKey ? -90 : 90); }
+  else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); pvDelete(); }
+  else if (e.key === 'Tab') {
+    const f = [...PV.root.querySelectorAll('button')].filter((b) => !b.disabled);
+    const i = f.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+  }
+}
+let pvResizeT = 0;
+window.addEventListener('resize', () => {
+  if (!PV) return;
+  clearTimeout(pvResizeT);
+  pvResizeT = setTimeout(() => { if (PV) pvShow(PV.id); }, 150);
+});
+
+/* ================= export ================= */
+let EXPORTING = false;
+async function ensureExportLibs(needZip) {
+  const jobs = [];
+  if (!window.PDFLib) jobs.push(loadScript(CDN.pdflib));
+  if (needZip && !window.JSZip) jobs.push(loadScript(CDN.jszip));
+  await Promise.all(jobs);
+  if (!window.PDFLib || (needZip && !window.JSZip)) throw Object.assign(new Error('libs'), { libs: true });
+}
+function prefetchExportLibs() {
+  const go = () => { loadScript(CDN.pdflib).catch(() => {}); loadScript(CDN.jszip).catch(() => {}); };
+  if ('requestIdleCallback' in window) requestIdleCallback(go, { timeout: 4000 }); else setTimeout(go, 2500);
+}
+function libDoc(src) {
+  if (!src.lib) {
+    src.lib = SyCrypto.loadPdfLib(window.PDFLib, src.bytes, src.password || '');
+    src.lib.catch(() => { src.libFail = true; });
+  }
+  return src.lib;
+}
+const normRot = (a) => ((a % 360) + 360) % 360;
+
+async function buildPdf(pages, ctx, title) {
+  const L = window.PDFLib;
+  const out = await L.PDFDocument.create();
+  const need = new Map();
+  for (const p of pages) if (p.kind === 'page') { if (!need.has(p.src)) need.set(p.src, []); need.get(p.src).push(p.idx); }
+  const copied = new Map(), raster = new Set();
+  for (const [sid, idxs] of need) {
+    const src = S.sources.get(sid);
+    let doc = null;
+    if (!src.libFail) { try { doc = await libDoc(src); } catch (e) { doc = null; } }
+    if (doc) {
+      try { copied.set(sid, await out.copyPages(doc, idxs)); continue; } catch (e) { /* fall back to images */ }
+    }
+    raster.add(sid);
+    ctx.raster.add(src.name);
+  }
+  const cursor = new Map();
+  for (const p of pages) {
+    if (p.kind === 'blank') {
+      const pg = out.addPage([p.w, p.h]);
+      if (p.rot) pg.setRotation(L.degrees(p.rot));
+      continue;
+    }
+    if (raster.has(p.src)) { await addRasterPage(out, p); continue; }
+    const j = cursor.get(p.src) || 0;
+    cursor.set(p.src, j + 1);
+    const pg = copied.get(p.src)[j];
+    const base = normRot(pg.getRotation().angle || 0);
+    out.addPage(pg);
+    const total = normRot(base + p.rot);
+    if (total !== base) pg.setRotation(L.degrees(total));
+  }
+  if (title) out.setTitle(title);
+  out.setProducer('PDF Switchyard');
+  out.setCreator('PDF Switchyard');
+  return out.save();
+}
+async function addRasterPage(out, p) {
+  const L = window.PDFLib;
+  const src = S.sources.get(p.src);
+  const d = srcDims(src, p.idx);
+  const scale = Math.min(2.5, 2600 / Math.max(d.w, d.h));
+  const { canvas } = await renderPageCanvas(p.src, p.idx, 0, 0, 0, { scale, print: true });
+  const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.9));
+  canvas.width = canvas.height = 0;
+  const img = await out.embedJpg(new Uint8Array(await blob.arrayBuffer()));
+  const pg = out.addPage([d.w, d.h]);
+  pg.drawImage(img, { x: 0, y: 0, width: d.w, height: d.h });
+  if (p.rot) pg.setRotation(L.degrees(p.rot));
+}
+function safeName(s) {
+  return (s || '').replace(/\s*:\s*/g, ' - ').replace(/[\\/*?"<>|\u0000-\u001f]+/g, '-').replace(/\s+/g, ' ').trim().slice(0, 120).trim() || 'Document';
+}
+// Workspace page numbers as compact ranges: [1,3,4,5] -> "1,3-5"; a pair stays a list: [2,3] -> "2,3".
+function compactRanges(nums) {
+  const n = [...new Set(nums)].sort((a, b) => a - b), out = [];
+  for (let i = 0; i < n.length; i++) {
+    let j = i;
+    while (j + 1 < n.length && n[j + 1] === n[j] + 1) j++;
+    out.push(j > i + 1 ? n[i] + '-' + n[j] : j === i + 1 ? n[i] + ',' + n[j] : String(n[i]));
+    i = j;
+  }
+  return out.join(',');
+}
+function stemFor(pages) {
+  const srcs = new Set(pages.filter((p) => p.kind === 'page').map((p) => p.src));
+  if (!srcs.size) return 'Blank pages';
+  if (srcs.size === 1) return S.sources.get([...srcs][0]).name.replace(/\.pdf$/i, '');
+  return 'Merged';
+}
+function setExportBusy(on) {
+  for (const id of ['expSelBtn', 'expSelMore', 'expAllBtn', 'expAllMore']) $(id).toggleAttribute('aria-busy', on);
+  if (on) for (const id of ['expSelBtn', 'expSelMore', 'expAllBtn', 'expAllMore']) $(id).disabled = true;
+  else updateToolbar();
+}
+async function exportPages(scope, mode) {
+  if (EXPORTING) { toast('An export is already running.'); return; }
+  const pages = scope === 'sel' ? selectedInOrder() : S.pages.slice();
+  if (!pages.length) return;
+  closeMenu();
+  EXPORTING = true;
+  setExportBusy(true);
+  const n = pages.length;
+  const t = toast(bold('Preparing ', plural(n, 'page'), '…'), { spin: true, key: 'export' });
+  const ctx = { raster: new Set() };
+  try {
+    const many = mode === 'each' && n > 1;
+    await ensureExportLibs(many);
+    const title = docTitle() ? safeName(docTitle()) : '';
+    const stem = safeName(stemFor(pages));
+    const width = Math.max(2, String(S.pages.length).length);
+    const posOf = (p) => NUM.get(p.id) || 1;
+    const numOf = (p) => String(posOf(p)).padStart(width, '0');
+    const isAll = pages.length === S.pages.length && pages.every((p, i) => p === S.pages[i]);
+    const rangeTag = () => { const r = compactRanges(pages.map(posOf)); return r.length <= 80 ? 'p' + r : plural(pages.length, 'page'); };
+    let name, blob;
+    if (!many) {
+      t.update(bold('Building ', n === 1 ? 'a 1-page PDF' : 'a ' + n + '-page PDF', '…'), { spin: true });
+      await raf();
+      if (title) name = mode === 'each' ? title + ' (p' + posOf(pages[0]) + ')' : isAll ? title : title + ' (' + rangeTag() + ')';
+      const bytes = await buildPdf(pages, ctx, title ? name : null);
+      if (title) name += '.pdf';
+      else name = mode === 'each' ? stem + ' p' + numOf(pages[0]) + '.pdf' : scope === 'sel' ? stem + ' (selected pages).pdf' : stem + ' (arranged).pdf';
+      blob = new Blob([bytes], { type: 'application/pdf' });
+    } else {
+      const zip = new window.JSZip();
+      for (let i = 0; i < n; i++) {
+        if (i % 3 === 0) { t.update(bold('Building page ', (i + 1) + ' of ' + n, '…'), { spin: true }); await wait(0); }
+        const one = title ? title + ' (p' + posOf(pages[i]) + ')' : stem + ' p' + numOf(pages[i]);
+        const bytes = await buildPdf([pages[i]], ctx, title ? one : null);
+        zip.file(one + '.pdf', bytes);
+      }
+      t.update('Packing the ZIP…', { spin: true });
+      blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' });
+      name = title ? title + ' (' + rangeTag() + ').zip' : stem + ' (pages).zip';
+    }
+    t.close(true);
+    if (ctx.raster.size) toast('Pages from ' + [...ctx.raster].map((x) => '“' + x + '”').join(', ') + ' were saved as images, because that file’s structure couldn’t be copied directly.', { timeout: 9000 });
+    if (await saveFile(name, blob)) noteExport();
+  } catch (e) {
+    t.close(true);
+    toast(e && e.libs ? 'The export tools couldn’t load. Check your connection, then try again.' : 'Export failed. ' + ((e && e.message) || 'Something went wrong while building the PDF.'), { err: true, timeout: 9000 });
+  } finally {
+    EXPORTING = false;
+    setExportBusy(false);
+  }
+}
+
+/* ---- saving ---- */
+let DLP = null;
+const hasHost = () => !!(window.claude && typeof window.claude.use === 'function');
+function downloadsCap() {
+  if (!DLP) DLP = hasHost() ? Promise.resolve().then(() => window.claude.use('downloads')).catch(() => null) : Promise.resolve(null);
+  return DLP;
+}
+async function saveFile(name, blob) {
+  const d = await downloadsCap();
+  if (d) {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const r = await d.save({ filename: name, data: blob });
+        if (r && r.status === 'saved') toast(bold('Saved ', name));
+        return true;
+      } catch (e) {
+        const c = e && e.code;
+        if (c === 'rate_limited' && attempt < 4) { await wait(1200 + attempt * 800); continue; }
+        if (c === 'declined') toast('Export cancelled. Nothing was saved.');
+        else if (c === 'rate_limited') toast('Another save is still waiting for your confirmation. Finish that one, then export again.', { timeout: 7000 });
+        else if (c === 'too_large') toast('That file is too large to save here. Try exporting fewer pages at a time, or export them as individual pages.', { err: true, timeout: 9000 });
+        else if (c === 'rejected_extension' || c === 'extension_not_enabled') toast('This view can\u2019t save ' + (/\.zip$/i.test(name) ? 'ZIP' : 'PDF') + ' files.', { err: true, timeout: 8000 });
+        else if (c === 'bad_request' || c === 'transform_error') toast('The file couldn\u2019t be handed over for saving. Please try again.', { err: true, timeout: 8000 });
+        else toast('Saving files isn\u2019t available in this view.', { err: true, timeout: 8000 });
+        return false;
+      }
+    }
+  }
+  if (hasHost()) { toast('Saving files isn\u2019t available in this view.', { err: true, timeout: 8000 }); return false; }
+  const url = URL.createObjectURL(blob);
+  const a = h('a', { href: url, download: name, style: { display: 'none' } });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  toast(bold('Downloaded ', name));
+  return true;
+}
+
+/* ================= local session recovery (IndexedDB) ================= */
+const Store = {
+  ok: typeof indexedDB !== 'undefined',
+  dbp: null, timer: 0, chain: Promise.resolve(), warned: false, pending: false,
+  open() {
+    if (this.dbp) return this.dbp;
+    this.dbp = new Promise((res, rej) => {
+      let r;
+      try { r = indexedDB.open('pdf-switchyard', 1); } catch (e) { rej(e); return; }
+      r.onupgradeneeded = () => {
+        const db = r.result;
+        if (!db.objectStoreNames.contains('sources')) db.createObjectStore('sources', { keyPath: 'id' });
+        if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta');
+      };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+      r.onblocked = () => rej(new Error('blocked'));
+    });
+    this.dbp.catch(() => { this.ok = false; });
+    return this.dbp;
+  },
+  async run(stores, mode, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const tx = db.transaction(stores, mode);
+      let out;
+      tx.oncomplete = () => res(out);
+      tx.onerror = () => rej(tx.error);
+      tx.onabort = () => rej(tx.error || new Error('aborted'));
+      const r = fn(tx);
+      if (r && 'onsuccess' in r) r.onsuccess = () => { out = r.result; };
+    });
+  },
+  getSession() { return this.run(['meta'], 'readonly', (tx) => tx.objectStore('meta').get('session')); },
+  getSources() { return this.run(['sources'], 'readonly', (tx) => tx.objectStore('sources').getAll()); },
+  async write() {
+    const refd = new Set();
+    for (const p of S.pages) if (p.kind === 'page') refd.add(p.src);
+    for (const id of refd) {
+      const s = S.sources.get(id);
+      if (!s || s.stored) continue;
+      await this.run(['sources'], 'readwrite', (tx) => tx.objectStore('sources').put({ id: s.id, name: s.name, color: s.color, numPages: s.numPages, blob: new Blob([s.bytes], { type: 'application/pdf' }) }));
+      s.stored = true;
+    }
+    const keys = await this.run(['sources'], 'readonly', (tx) => tx.objectStore('sources').getAllKeys());
+    const drop = (keys || []).filter((k) => !refd.has(k));
+    if (drop.length) {
+      await this.run(['sources'], 'readwrite', (tx) => { const st = tx.objectStore('sources'); for (const k of drop) st.delete(k); });
+      for (const k of drop) { const s = S.sources.get(k); if (s) s.stored = false; }
+    }
+    const session = {
+      v: 1, savedAt: Date.now(),
+      pages: S.pages.map((p) => ({ id: p.id, kind: p.kind, src: p.src, idx: p.idx, rot: p.rot, w: p.w, h: p.h })),
+      srcOrder: S.srcOrder.filter((id) => refd.has(id)),
+      zoom: S.zoom, showOrig: S.showOrig, title: S.title,
+      colorCursor: S.colorCursor, pageSeq: S.pageSeq, srcSeq: S.srcSeq,
+    };
+    await this.run(['meta'], 'readwrite', (tx) => tx.objectStore('meta').put(session, 'session'));
+  },
+  save() {
+    this.pending = false;
+    this.chain = this.chain.then(() => this.write()).catch((e) => {
+      if (!this.warned) {
+        this.warned = true;
+        const full = e && (e.name === 'QuotaExceededError' || /quota/i.test(e.message || ''));
+        toast(full ? 'This browser’s storage is full, so the workspace can’t be kept for recovery after a refresh.' : 'The workspace couldn’t be kept for recovery after a refresh.', { timeout: 7000 });
+      }
+    });
+    return this.chain;
+  },
+  clear() {
+    clearTimeout(this.timer);
+    this.pending = false;
+    for (const s of S.sources.values()) s.stored = false;
+    if (!this.ok) return Promise.resolve();
+    this.chain = this.chain.then(() => this.run(['sources', 'meta'], 'readwrite', (tx) => { tx.objectStore('sources').clear(); tx.objectStore('meta').clear(); })).catch(() => {});
+    return this.chain;
+  },
+};
+function scheduleSave() {
+  if (!Store.ok || S.mode !== 'workspace' || S.restoring) return;
+  Store.pending = true;
+  clearTimeout(Store.timer);
+  Store.timer = setTimeout(() => Store.save(), 500);
+}
+function flushSave() {
+  if (Store.pending && Store.ok) { clearTimeout(Store.timer); Store.save(); }
+}
+
+let RESTORE = null;
+async function checkRestore() {
+  if (!Store.ok) { markNoRecovery(); return; }
+  let sess;
+  try { sess = await Store.getSession(); } catch (e) { markNoRecovery(); return; }
+  if (!sess || !Array.isArray(sess.pages) || !sess.pages.length || S.mode !== 'landing' || S.busy) return;
+  const docs = new Set(sess.pages.filter((p) => p.kind === 'page').map((p) => p.src)).size;
+  RESTORE = sess;
+  $('restoreMeta').textContent = (sess.title ? '\u201c' + sess.title + '\u201d \u00b7 ' : '') + (docs ? plural(docs, 'document') + ' · ' : '') + plural(sess.pages.length, 'page') + ' · ' + agoText(sess.savedAt);
+  $('restore').hidden = false;
+}
+function agoText(t) {
+  if (!t) return 'saved earlier';
+  const s = (Date.now() - t) / 1000;
+  if (s < 90) return 'saved just now';
+  if (s < 3600) return 'saved ' + Math.round(s / 60) + ' min ago';
+  const d = new Date(t), today = new Date();
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === today.toDateString()) return 'saved today at ' + time;
+  return 'saved ' + d.toLocaleDateString([], { day: 'numeric', month: 'short' }) + ' at ' + time;
+}
+function markNoRecovery() {
+  Store.ok = false;
+  const f = document.querySelector('.sb-foot span:last-child');
+  if (f) f.textContent = 'Files stay in this browser tab. Recovery after a refresh isn’t available here.';
+}
+async function restoreSession() {
+  const sess = RESTORE;
+  if (!sess || S.busy) return;
+  RESTORE = null;
+  $('restore').hidden = true;
+  S.busy++;
+  setDropBusy(true, 'Restoring your workspace…');
+  S.restoring = true;
+  const skipped = [];
+  try {
+    const rows = await Store.getSources();
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    S.srcSeq = Math.max(S.srcSeq, sess.srcSeq || 0);
+    S.pageSeq = Math.max(S.pageSeq, sess.pageSeq || 0);
+    S.colorCursor = sess.colorCursor || 0;
+    const order = sess.srcOrder && sess.srcOrder.length ? sess.srcOrder : [...byId.keys()];
+    for (const id of order) {
+      const r = byId.get(id);
+      if (!r) continue;
+      setDropBusy(true, 'Opening ' + r.name + '…');
+      try {
+        const bytes = new Uint8Array(await r.blob.arrayBuffer());
+        const { doc, password } = await openPdf(bytes, r.name, null);
+        await makeSource(r.name, bytes, doc, password, { id, color: r.color });
+      } catch (e) { skipped.push(r.name); }
+    }
+    S.pages = sess.pages.filter((p) => p.kind === 'blank' || S.sources.has(p.src)).map((p) => (p.kind === 'blank'
+      ? { id: p.id, kind: 'blank', src: null, idx: 0, rot: p.rot || 0, w: p.w, h: p.h }
+      : { id: p.id, kind: 'page', src: p.src, idx: p.idx, rot: p.rot || 0 }));
+    if (sess.zoom) S.zoom = clamp(sess.zoom, ZMIN, ZMAX);
+    setShowOrig(!!sess.showOrig);
+    setDocTitle(sess.title || '');
+  } catch (e) {
+    skipped.push('the saved workspace');
+  }
+  S.restoring = false;
+  S.busy--;
+  if (!S.pages.length) {
+    setDropBusy(false);
+    toast('The previous workspace couldn’t be restored.', { err: true });
+    Store.clear();
+    return;
+  }
+  S.undo = []; S.redo = [];
+  enterWorkspace();
+  afterChange({ anim: false });
+  if (skipped.length) toast('Skipped ' + skipped.map((x) => '“' + x + '”').join(', ') + '. Its pages were left out.', { timeout: 8000 });
+  else toast(bold('Restored ', plural(S.pages.length, 'page'), ''), { timeout: 2600 });
+}
+function discardSession() {
+  RESTORE = null;
+  $('restore').hidden = true;
+  Store.clear();
+}
+
+/* ================= support, about & privacy, analytics ================= */
+function openSupport() {
+  closeMenu();
+  if (!CFG.supportUrl) { toast('The support link hasn\u2019t been set up yet.', { timeout: 4000 }); return; }
+  window.open(CFG.supportUrl, '_blank', 'noopener,noreferrer');
+}
+const extLink = (href, text) => h('a', { href, target: '_blank', rel: 'noopener noreferrer' }, text);
+function analyticsOn() { return !!CFG.cloudflareAnalyticsToken; }
+function showAbout() {
+  closeMenu();
+  const support = CFG.supportService || 'the support page';
+  const privacy = h('ul', null,
+    h('li', null, h('b', null, 'Your files never leave your device. '), 'PDFs are opened, arranged and rebuilt inside your browser. Nothing is uploaded to a server.'),
+    h('li', null, 'So you can pick up after a refresh, your current workspace is kept in this browser\u2019s storage on your device. ', h('b', null, 'Start over'), ' deletes it. Passwords for protected PDFs are never stored.'),
+    h('li', null, 'The page loads its PDF tools from cdnjs and jsDelivr, and its fonts from Google Fonts. As with any web page, those services see your IP address. They never see your documents.'),
+    analyticsOn()
+      ? h('li', null, 'Visits are counted with Cloudflare Web Analytics, which uses no cookies and doesn\u2019t follow you across other sites.')
+      : h('li', null, 'There are no ads, cookies or tracking.'),
+    CFG.supportUrl ? h('li', null, 'The Support button opens ' + support + ', which has its own privacy policy.') : null,
+  );
+  const credits = h('p', { class: 'credits' }, 'Built with ',
+    extLink('https://mozilla.github.io/pdf.js/', 'PDF.js'), ' (Apache License 2.0), ',
+    extLink('https://pdf-lib.js.org/', 'pdf-lib'), ' (MIT) and ',
+    extLink('https://stuk.github.io/jszip/', 'JSZip'), ' (MIT). Typefaces: Newsreader, Hanken Grotesk and DM Mono (SIL Open Font License).');
+  const foot = h('p', { class: 'meta' }, 'Version ' + CFG.version,
+    CFG.contactEmail ? [' \u00b7 Questions or feedback: ', h('a', { href: 'mailto:' + CFG.contactEmail }, CFG.contactEmail)] : null);
+  const body = h('div', { class: 'about-body' },
+    h('p', { class: 'lead' }, 'Merge, reorder, split and organise PDF pages in one private workspace.'),
+    h('h4', null, 'Privacy'), privacy,
+    h('h4', null, 'Credits'), credits,
+    foot);
+  showDialog({
+    title: 'About PDF Switchyard', icon: 'info', body, cls: 'about',
+    actions: [
+      { label: 'Support this tool', cls: 'outline support', value: 'support' },
+      { label: 'Done', cls: 'primary', primary: true, value: true },
+    ],
+  }).then((v) => { if (v === 'support') openSupport(); });
+}
+function loadAnalytics() {
+  if (!analyticsOn() || hasHost() || !/^https?:$/.test(location.protocol)) return;
+  const s = document.createElement('script');
+  s.defer = true;
+  s.setAttribute('data-cf-beacon', JSON.stringify({ token: CFG.cloudflareAnalyticsToken }));
+  s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+  document.head.append(s);
+}
+// After a few successful exports, an occasional gentle reminder (at most once a month).
+function noteExport() {
+  try {
+    const n = (parseInt(localStorage.getItem('sy.exports'), 10) || 0) + 1;
+    localStorage.setItem('sy.exports', String(n));
+    if (!CFG.supportUrl || n < 3) return;
+    const last = parseInt(localStorage.getItem('sy.nudged'), 10) || 0;
+    if (Date.now() - last < 30 * 864e5) return;
+    localStorage.setItem('sy.nudged', String(Date.now()));
+    setTimeout(() => toast('Finding PDF Switchyard useful? You can support its development.', { action: { label: 'Support', fn: openSupport }, timeout: 10000, key: 'nudge' }), 1400);
+  } catch (e) { /* storage blocked */ }
+}
+function initSite() {
+  $('supportLand').addEventListener('click', openSupport);
+  $('supportBtn').addEventListener('click', openSupport);
+  $('aboutLand').addEventListener('click', showAbout);
+  loadAnalytics();
+}
+
+/* ================= landing <-> workspace ================= */
+function setDropBusy(on, text) {
+  const dz = $('dropzone');
+  dz.classList.toggle('busy', !!on);
+  dz.setAttribute('aria-busy', String(!!on));
+  if (text) $('busyText').textContent = text;
+}
+function enterWorkspace() {
+  if (S.mode === 'workspace') return;
+  S.mode = 'workspace';
+  RESTORE = null;
+  $('restore').hidden = true;
+  const land = $('landing'), wsp = $('workspace');
+  wsp.hidden = false;
+  WS.scrollTop = 0;
+  if (!REDUCED) {
+    wsp.classList.add('entering');
+    land.classList.add('leaving');
+    setTimeout(() => { land.hidden = true; land.classList.remove('leaving'); wsp.classList.remove('entering'); setDropBusy(false); }, 280);
+  } else { land.hidden = true; setDropBusy(false); }
+  positionSelbar();
+  updateToolbar();
+}
+function showLanding() {
+  S.mode = 'landing';
+  GAP.locked = false; hideGapPlus();
+  endFileDrag();
+  $('workspace').hidden = true;
+  const land = $('landing');
+  land.hidden = false;
+  land.classList.remove('leaving');
+  land.scrollTop = 0;
+  setDropBusy(false);
+  $('empty').hidden = true;
+  $('rangeInput').value = '';
+  rangeHint(null);
+  setDocTitle('');
+  LAY = null;
+  CANVAS.style.height = '0px';
+  let pref = null;
+  try { pref = localStorage.getItem('sy.sidebar'); } catch (e) { /* ignore */ }
+  if (pref == null) setSidebar(false, { auto: true });
+  updateToolbar();
+  updateSelbar();
+  $('chooseBtn').focus({ preventScroll: true });
+}
+
+/* ================= opening files ================= */
+let PICK_AT = null;
+function pickFiles(k) {
+  if (MODAL) return;
+  if (S.mode === 'landing' && S.busy) return;
+  PICK_AT = k == null ? null : k;
+  const fi = $('fileInput');
+  fi.value = '';
+  fi.click();
+}
+const IMPORTQ = [];
+let IMPORTING = null;
+function importFiles(files, at) {
+  files = [...(files || [])];
+  if (!files.length) return;
+  IMPORTQ.push({ files, at: at == null ? null : at });
+  if (!IMPORTING) IMPORTING = (async () => {
+    while (IMPORTQ.length) {
+      const job = IMPORTQ.shift();
+      try { await importBatch(job.files, job.at); } catch (e) { console.error(e); }
+    }
+  })().finally(() => { IMPORTING = null; });
+}
+const quote = (s) => '\u201c' + s + '\u201d';
+function nameList(arr) {
+  const q = arr.map(quote);
+  if (q.length <= 2) return q.join(' and ');
+  return q.slice(0, 2).join(', ') + ' and ' + plural(q.length - 2, 'other file');
+}
+async function importBatch(files, at) {
+  const onLanding = S.mode === 'landing';
+  if (onLanding && RESTORE) discardSession();
+  const pdfs = [], notPdf = [], failed = [], skipped = [];
+  for (const f of files) {
+    if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') pdfs.push(f);
+    else notPdf.push(f.name);
+  }
+  if (!pdfs.length) {
+    toast(notPdf.length === 1 ? quote(notPdf[0]) + ' isn\u2019t a PDF, so it was skipped.' : 'Only PDF files can be added. ' + nameList(notPdf) + ' were skipped.', { err: true, timeout: 6500 });
+    return;
+  }
+  S.busy++;
+  let t = null;
+  const say = (msg) => {
+    if (onLanding) setDropBusy(true, msg);
+    else if (t) t.update(msg, { spin: true });
+    else t = toast(msg, { spin: true, key: 'import' });
+  };
+  const added = [];
+  try {
+    say(pdfs.length === 1 ? 'Opening ' + pdfs[0].name + '\u2026' : 'Opening ' + pdfs.length + ' PDFs\u2026');
+    try { await pdfReady(); } catch (e) {
+      toast('The PDF engine couldn\u2019t load. Check your connection, then try again.', { err: true, timeout: 9000 });
+      return;
+    }
+    for (let i = 0; i < pdfs.length; i++) {
+      const f = pdfs[i];
+      say('Opening ' + f.name + (pdfs.length > 1 ? ' (' + (i + 1) + ' of ' + pdfs.length + ')' : '') + '\u2026');
+      let bytes;
+      try { bytes = new Uint8Array(await f.arrayBuffer()); } catch (e) { failed.push(f.name); continue; }
+      if (!looksLikePdf(bytes)) { notPdf.push(f.name); continue; }
+      try {
+        const { doc, password } = await openPdf(bytes, f.name, null);
+        if (!doc.numPages) { try { doc.destroy(); } catch (e) { /* ignore */ } failed.push(f.name); continue; }
+        added.push(await makeSource(f.name, bytes, doc, password));
+      } catch (e) {
+        if (e && e.cancelled) skipped.push(f.name);
+        else failed.push(f.name);
+      }
+    }
+  } finally {
+    S.busy--;
+    if (t) t.close(true);
+  }
+  const problems = [];
+  if (notPdf.length) problems.push(nameList(notPdf) + (notPdf.length === 1 ? ' isn\u2019t a PDF' : ' aren\u2019t PDFs'));
+  if (failed.length) problems.push(nameList(failed) + ' couldn\u2019t be opened (the file may be damaged)');
+  if (skipped.length) problems.push(nameList(skipped) + ' ' + (skipped.length === 1 ? 'was' : 'were') + ' skipped without a password');
+  if (!added.length) {
+    if (onLanding) setDropBusy(false);
+    if (problems.length) toast(problems.join('. ') + '.', { err: !skipped.length || failed.length + notPdf.length > 0, timeout: 8000 });
+    return;
+  }
+  const newPages = [];
+  for (const src of added) for (let i = 0; i < src.numPages; i++) newPages.push({ id: newPageId(), kind: 'page', src: src.id, idx: i, rot: 0 });
+  const first = S.mode === 'landing';
+  if (first) enterWorkspace();
+  const k = at == null ? S.pages.length : clamp(at, 0, S.pages.length);
+  const label = added.length === 1 ? 'Add ' + added[0].name : 'Add ' + added.length + ' PDFs';
+  commit(label, () => { S.pages = [...S.pages.slice(0, k), ...newPages, ...S.pages.slice(k)]; }, { anim: !first, flash: first ? null : newPages.map((p) => p.id) });
+  if (first) { S.undo = []; updateToolbar(); }
+  maybeAutoSidebar();
+  if (!first) scrollToPage(newPages[0].id, { force: at != null, center: at != null });
+  const what = added.length === 1 ? bold('Added ', added[0].name, ' \u00b7 ' + plural(newPages.length, 'page'))
+    : bold('Added ', plural(added.length, 'PDF'), ' \u00b7 ' + plural(newPages.length, 'page'));
+  if (problems.length) toast(problems.join('. ') + '.', { timeout: 8000 });
+  if (!first) toast(what, { key: 'op', action: { label: 'Undo', fn: undo } });
+}
+
+/* ================= document name ================= */
+const cleanTitle = (v) => (v || '').replace(/\s+/g, ' ').trim().replace(/\.pdf$/i, '').trim();
+function docTitle() { return S.title; }
+let MEASURE = null;
+function fitTitle() {
+  const ti = $('titleInput');
+  const cs = getComputedStyle(ti);
+  if (!MEASURE) MEASURE = document.createElement('canvas').getContext('2d');
+  MEASURE.font = cs.fontStyle + ' ' + (ti.value ? cs.fontWeight : '400') + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+  const w = MEASURE.measureText(ti.value || ti.placeholder).width;
+  ti.parentElement.style.flexBasis = Math.ceil(clamp(w + 8 + 28 + 6, 96, 300)) + 'px';
+}
+function updateTitleUI() {
+  const ti = $('titleInput');
+  ti.parentElement.classList.toggle('untitled', !ti.value.trim());
+  fitTitle();
+}
+function setDocTitle(v) {
+  S.title = cleanTitle(v);
+  const ti = $('titleInput');
+  if (document.activeElement !== ti) ti.value = S.title;
+  updateTitleUI();
+}
+function initTitle() {
+  const ti = $('titleInput');
+  let orig = '';
+  ti.addEventListener('focus', () => { orig = ti.value; });
+  ti.addEventListener('input', () => {
+    S.title = cleanTitle(ti.value);
+    updateTitleUI();
+    scheduleSave();
+  });
+  ti.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); ti.blur(); }
+    else if (e.key === 'Escape') {
+      e.preventDefault(); e.stopPropagation();
+      ti.value = orig; S.title = cleanTitle(orig); scheduleSave();
+      ti.blur();
+    }
+  });
+  ti.addEventListener('blur', () => { ti.value = S.title; updateTitleUI(); });
+  updateTitleUI();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitle).catch(() => {});
+}
+
+/* ================= start-up ================= */
+function readPrefs() {
+  try {
+    const z = parseInt(localStorage.getItem('sy.zoom'), 10);
+    if (z >= ZMIN && z <= ZMAX) S.zoom = z;
+    S.showOrig = localStorage.getItem('sy.orig') === '1';
+  } catch (e) { /* storage blocked */ }
+  CANVAS.classList.toggle('orig', S.showOrig);
+}
+function on(id, ev, fn) { $(id).addEventListener(ev, fn); }
+function init() {
+  fillIcons(document.body);
+  readPrefs();
+  $('zoomOut').title = 'Smaller thumbnails (\u2212)';
+  $('zoomIn').title = 'Larger thumbnails (+)';
+  $('sbDup').title = 'Duplicate (' + MOD + '+D)';
+
+  initTitle();
+  initSite();
+
+  // landing
+  on('chooseBtn', 'click', (e) => { e.stopPropagation(); pickFiles(null); });
+  on('dropzone', 'click', () => pickFiles(null));
+  on('restoreBtn', 'click', restoreSession);
+  on('discardBtn', 'click', discardSession);
+  on('fileInput', 'change', (e) => {
+    const files = [...e.target.files];
+    const at = PICK_AT; PICK_AT = null;
+    e.target.value = '';
+    importFiles(files, S.mode === 'workspace' ? at : null);
+  });
+
+  // toolbar
+  on('sidebarBtn', 'click', () => setSidebar(!S.sidebar));
+  on('undoBtn', 'click', undo);
+  on('redoBtn', 'click', redo);
+  const kbOpen = (e) => e.detail === 0;
+  on('viewBtn', 'click', (e) => toggleMenu($('viewBtn'), viewMenuItems, { kb: kbOpen(e) }));
+  on('zoomOut', 'click', () => setZoom(Math.ceil(S.zoom / 10) * 10 - 10));
+  on('zoomIn', 'click', () => setZoom(Math.floor(S.zoom / 10) * 10 + 10));
+  on('zoomVal', 'click', editZoom);
+  const ri = $('rangeInput');
+  ri.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyRange(); } });
+  ri.addEventListener('input', () => { ri.classList.remove('bad'); rangeHint(null); });
+  ri.addEventListener('blur', () => setTimeout(() => { rangeHint(null); if (!ri.value) ri.classList.remove('bad'); }, 150));
+  on('addBtn', 'click', () => pickFiles(null));
+  on('expSelBtn', 'click', () => exportPages('sel', 'one'));
+  on('expAllBtn', 'click', () => exportPages('all', 'one'));
+  on('expSelMore', 'click', (e) => toggleMenu($('expSelMore'), () => exportMenuItems('sel'), { alignRight: true, kb: kbOpen(e) }));
+  on('expAllMore', 'click', (e) => toggleMenu($('expAllMore'), () => exportMenuItems('all'), { alignRight: true, kb: kbOpen(e) }));
+  on('moreBtn', 'click', (e) => toggleMenu($('moreBtn'), moreMenuItems, { alignRight: true, kb: kbOpen(e) }));
+
+  // selection bar + empty state
+  on('sbRotL', 'click', () => rotateSel(-90));
+  on('sbRotR', 'click', () => rotateSel(90));
+  on('sbDup', 'click', duplicateSel);
+  on('sbBlank', 'click', (e) => { if (MENU && MENU.anchor === $('sbBlank')) closeMenu(); else openBlankMenu($('sbBlank'), kbOpen(e)); });
+  on('sbDel', 'click', deleteSel);
+  on('sbClear', 'click', () => { clearSel(); WS.focus({ preventScroll: true }); });
+  on('emptyUndo', 'click', undo);
+  on('emptyAdd', 'click', () => pickFiles(null));
+
+  // grid
+  WS.addEventListener('pointerdown', onGridPointerDown);
+  WS.addEventListener('dblclick', (e) => {
+    const card = e.target.closest('.card');
+    if (card && card._p && !card._expire && !e.shiftKey && !e.ctrlKey && !e.metaKey) openPreview(card._p.id);
+  });
+  WS.addEventListener('scroll', () => { requestSync(); if (!GAP.locked) hideGapPlus(); }, { passive: true });
+  WS.addEventListener('contextmenu', (e) => { if (DRAG) e.preventDefault(); });
+  initGapPlus();
+  initFileDrop();
+  document.addEventListener('keydown', onKeyDown);
+  let rsT = 0;
+  const onResize = () => {
+    positionSelbar();
+    if (S.mode !== 'workspace' || !LAY) return;
+    if (WS.clientWidth === LAY.W) return;
+    cancelAnimationFrame(rsT);
+    rsT = requestAnimationFrame(() => { if (!DRAG) render({ anim: false }); });
+  };
+  if ('ResizeObserver' in window) new ResizeObserver(onResize).observe(WS);
+  else window.addEventListener('resize', onResize);
+
+  // save on the way out
+  window.addEventListener('pagehide', flushSave);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
+
+  updateToolbar();
+  updateSelbar();
+  // warm up the engine, the save capability and the export libraries
+  pdfReady().catch(() => {});
+  downloadsCap();
+  prefetchExportLibs();
+  checkRestore();
+}
+init();
+
+})();
+</script>
+</body>
+</html>

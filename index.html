@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>TJ Home</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Everything TJ has made, in one place.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EFF5; --surface:#FFFFFF; --ink:#1C2B3A; --muted:#5E6C7B; --line:#CCD6E0; --tint:#F2F6FA;
+  --accent:#2F6FB5; --accent-ink:#FFFFFF; --signal:#E4572E; --blue:#2F7FD0; --green:#1E9E73; --soft:#DCE6F0;
+  --font:"Lexend", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  box-sizing:border-box;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#111A24; --surface:#1A2633; --ink:#E7EDF3; --muted:#9AA8B6; --line:#2F3E4E; --tint:#15202B;
+    --accent:#5C9BE0; --accent-ink:#0E1822; --soft:#2A3A4C}
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.page{max-width:1160px;margin:0 auto;padding:clamp(18px,3.5vw,36px) 16px 40px}
+
+.mast{display:flex;align-items:center;gap:clamp(16px,3vw,24px);margin-bottom:clamp(20px,3vw,30px)}
+.mark{flex:none;width:clamp(56px,7vw,72px);height:auto;display:block}
+.mast h1{margin:0;font-size:clamp(26px,3.4vw,34px);font-weight:600;letter-spacing:-.02em;line-height:1.1}
+.mast p{margin:6px 0 0;color:var(--muted);font-size:clamp(15px,1.8vw,18px)}
+
+section{margin-top:clamp(22px,3vw,32px)}
+section h2{margin:0 0 12px;font-size:14px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:12px;transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:var(--accent);box-shadow:0 8px 28px -14px rgba(30,60,100,.35)}
+.pic{height:96px;background:var(--tint);border:1px solid var(--line);border-radius:13px;display:grid;place-items:center;overflow:hidden}
+.pic svg{height:76px;width:auto;max-width:92%;display:block}
+.body{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;padding:0 4px 4px}
+.head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px}
+.card h3{margin:0;font-size:20px;font-weight:600;letter-spacing:-.015em;line-height:1.2}
+.card h3 a{text-decoration:none}
+.card h3 a::after{content:"";position:absolute;inset:0;border-radius:inherit}
+.kind{font-size:12.5px;font-weight:500;color:var(--accent);background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:0 10px}
+.card p{margin:0;color:var(--muted);font-size:14.5px}
+.go{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.go span:first-child{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:6px 16px;font-weight:600;font-size:14px}
+.card:hover .go span:first-child{filter:brightness(1.07)}
+footer{margin-top:36px;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion: reduce){.card{transition:none}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <img class="mark" src="logo.svg" alt="">
+    <div>
+      <h1>TJ Home</h1>
+      <p>Everything I've made, in one place.</p>
+    </div>
+  </header>
+  <main id="main"></main>
+  <footer>Pages marked “here” are hosted on this site. The rest open their own site.</footer>
+</div>
+
+<script>
+/* ---------- To add something new: add one line to APPS (and a picture to PICS if you like). ---------- */
+const SECTIONS = ['School', 'Tools', 'Cars and tracks', 'Personal'];
+const APPS = [
+  { s:'School', name:'PMU', kind:'Prep Maths Universe', pic:'pmu', url:'https://prep-maths-universe.netlify.app/',
+    text:'The prep creator plus the BarModel and TopHeavy board tools.' },
+  { s:'School', name:'Morning Slide', kind:'Form', pic:'slide', url:'https://morning-slide.netlify.app/',
+    text:'The live morning slide for the form: date, task, timetable and what’s on.' },
+  { s:'School', name:'Crooket', kind:'Quizzes', pic:'quiz', url:'https://crooket.netlify.app/',
+    text:'Quiz games for the class, without all the gamification.' },
+  { s:'School', name:'MusicLAMDA', kind:'Form', pic:'music', url:'https://music-lamda.netlify.app/',
+    text:'This week’s Music and LAMDA lessons, filtered by form.' },
+  { s:'School', name:'Wheel of Names', kind:'Form', pic:'wheel', url:'wheel-of-names/',
+    text:'End-of-prep spin with weighted entries and a projector window.' },
+  { s:'School', name:'Board Calculator', kind:'Board tool', pic:'calc', url:'board-calculator/',
+    text:'A big, clear calculator for the classroom board.' },
+
+  { s:'Tools', name:'PDF Switchyard', kind:'PDF', pic:'pdf', url:'pdf-switchyard/',
+    text:'Reorder, rotate, merge and split PDF pages, all in the browser.' },
+
+  { s:'Cars and tracks', name:'Simple Track Builder', kind:'Assetto Corsa', pic:'builder', url:'https://kodabigvoice.github.io/simple-track-builder/',
+    text:'Draw a circuit, add kerbs, barriers and run-off, and export it for Assetto Corsa.' },
+  { s:'Cars and tracks', name:'Hyde Park Circuit 3D', kind:'Lap', pic:'three', url:'hyde-park-3d/',
+    text:'A 3D lap of the Hyde Park Circuit on the minimum-time racing line.' },
+  { s:'Cars and tracks', name:'Hyde Park Lap Viewer', kind:'Lap', pic:'lap', url:'hyde-park-lap/',
+    text:'The racing line from above, with speed, braking and g-force traces.' },
+  { s:'Cars and tracks', name:'VIC Lap Viewer', kind:'Lap', pic:'vic', url:'vic-lap/',
+    text:'The simulated lap of VIC, version by version.' },
+  { s:'Cars and tracks', name:'Engine Note Lab', kind:'Sound', pic:'engine', url:'engine-note-lab/',
+    text:'Engine sounds made from maths. Tune a build, rev it and save it.' },
+  { s:'Cars and tracks', name:'Vobiscum Configurator', kind:'Vobiscum', pic:'car', url:'https://kodabigvoice.github.io/vobiscum-configurator/',
+    text:'Spec a Vobiscum: pick a model, trim and packages.' },
+
+  { s:'Personal', name:'Family Tree', kind:'Family', pic:'tree', url:'family-tree/',
+    text:'The family tree. Saved in this browser only, so keep a backup file.' },
+];
+
+const B = 'var(--blue)', G = 'var(--green)', R = 'var(--signal)', SOFT = 'var(--soft)', INK = 'currentColor';
+const PICS = {
+  pmu: `<svg viewBox="0 0 160 80"><rect x="8" y="22" width="26" height="36" rx="6" fill="${B}"/><rect x="38" y="22" width="26" height="36" rx="6" fill="${B}"/><rect x="68" y="22" width="26" height="36" rx="6" fill="${B}"/><rect x="98" y="22" width="26" height="36" rx="6" fill="${SOFT}"/><rect x="128" y="22" width="26" height="36" rx="6" fill="${SOFT}"/><path d="M8 16q0-6 6-6h56q6 0 6-6q0 6 6 6h66q6 0 6 6" fill="none" stroke="${R}" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  slide: `<svg viewBox="0 0 160 80"><rect x="14" y="6" width="132" height="68" rx="8" fill="${SOFT}"/><rect x="24" y="16" width="56" height="10" rx="3" fill="${B}"/><rect x="24" y="32" width="40" height="34" rx="4" fill="#fff"/><rect x="70" y="32" width="66" height="7" rx="3" fill="${G}"/><rect x="70" y="45" width="52" height="7" rx="3" fill="${G}" opacity=".6"/><rect x="70" y="58" width="60" height="7" rx="3" fill="${G}" opacity=".35"/><circle cx="125" cy="21" r="6" fill="${R}"/></svg>`,
+  quiz: `<svg viewBox="0 0 160 80"><rect x="10" y="8" width="66" height="30" rx="7" fill="${B}"/><rect x="84" y="8" width="66" height="30" rx="7" fill="${R}"/><rect x="10" y="42" width="66" height="30" rx="7" fill="${G}"/><rect x="84" y="42" width="66" height="30" rx="7" fill="#E9B23A"/><path d="M33 23l8 8 14-16" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  music: `<svg viewBox="0 0 160 80"><g fill="${B}"><ellipse cx="46" cy="60" rx="11" ry="8"/><ellipse cx="94" cy="52" rx="11" ry="8"/><path d="M55 60V14l50-8v46h-5V12l-40 6v42z"/></g><rect x="116" y="18" width="34" height="9" rx="4" fill="${G}"/><rect x="116" y="33" width="26" height="9" rx="4" fill="${G}" opacity=".6"/><rect x="116" y="48" width="30" height="9" rx="4" fill="${G}" opacity=".35"/></svg>`,
+  wheel: `<svg viewBox="0 0 160 80"><g transform="translate(80 43)"><path d="M0 0V-34A34 34 0 0 1 29.4-17z" fill="${B}"/><path d="M0 0L29.4-17A34 34 0 0 1 29.4 17z" fill="${G}"/><path d="M0 0L29.4 17A34 34 0 0 1 0 34z" fill="#E9B23A"/><path d="M0 0V34A34 34 0 0 1-29.4 17z" fill="${R}"/><path d="M0 0L-29.4 17A34 34 0 0 1-29.4-17z" fill="${B}" opacity=".55"/><path d="M0 0L-29.4-17A34 34 0 0 1 0-34z" fill="${G}" opacity=".55"/><circle r="7" fill="#fff"/></g><path d="M72 0h16l-8 12z" fill="${INK}"/></svg>`,
+  calc: `<svg viewBox="0 0 160 80"><rect x="48" y="4" width="64" height="72" rx="9" fill="${SOFT}"/><rect x="55" y="11" width="50" height="16" rx="4" fill="#fff"/><text x="100" y="24" text-anchor="end" font-size="12" font-weight="600" fill="#1C2B3A" font-family="Lexend,sans-serif">3.14</text><g fill="${B}"><rect x="55" y="32" width="14" height="11" rx="3"/><rect x="73" y="32" width="14" height="11" rx="3"/><rect x="55" y="47" width="14" height="11" rx="3"/><rect x="73" y="47" width="14" height="11" rx="3"/><rect x="55" y="62" width="32" height="9" rx="3"/></g><rect x="91" y="32" width="14" height="39" rx="3" fill="${R}"/></svg>`,
+  pdf: `<svg viewBox="0 0 160 80"><rect x="14" y="10" width="38" height="52" rx="4" fill="#fff" stroke="${B}" stroke-width="2"/><rect x="61" y="18" width="38" height="52" rx="4" fill="#fff" stroke="${R}" stroke-width="2" transform="rotate(-6 80 44)"/><rect x="108" y="10" width="38" height="52" rx="4" fill="#fff" stroke="${G}" stroke-width="2"/><g stroke="${SOFT}" stroke-width="3" stroke-linecap="round"><path d="M21 22h24M21 30h20M115 22h24M115 30h18"/></g><text x="80" y="50" text-anchor="middle" font-size="12" font-weight="700" fill="${R}" font-family="Lexend,sans-serif" transform="rotate(-6 80 44)">PDF</text></svg>`,
+  builder: `<svg viewBox="0 0 160 80"><path d="M30 60C10 60 10 22 34 20s30 14 52 8 48-16 52 6-8 26-40 26z" fill="none" stroke="#3B4A5A" stroke-width="9" stroke-linejoin="round"/><path d="M30 60C10 60 10 22 34 20s30 14 52 8 48-16 52 6-8 26-40 26z" fill="none" stroke="#fff" stroke-width="1.2" stroke-dasharray="4 5"/><path d="M128 31a12 12 0 0 1 8 10" fill="none" stroke="${R}" stroke-width="4" stroke-dasharray="4 4"/><circle cx="34" cy="20" r="5" fill="${B}"/><circle cx="98" cy="60" r="5" fill="${B}"/></svg>`,
+  three: `<svg viewBox="0 0 160 80"><path d="M20 62L60 30h50l32 32z" fill="${G}" opacity=".35"/><path d="M36 58C46 44 70 36 92 38s38 10 36 20" fill="none" stroke="#3B4A5A" stroke-width="7" stroke-linecap="round"/><path d="M36 58C46 44 70 36 92 38s38 10 36 20" fill="none" stroke="${R}" stroke-width="1.6"/><rect x="58" y="16" width="16" height="16" fill="${B}"/><path d="M58 16l6-6h16l-6 6zM74 16l6-6v16l-6 6z" fill="${B}" opacity=".6"/><circle cx="92" cy="38" r="4" fill="#E9B23A"/></svg>`,
+  lap: `<svg viewBox="0 0 160 80"><path d="M10 64L30 26 52 50 76 14 100 44 124 22 150 56" fill="none" stroke="${B}" stroke-width="3" stroke-linejoin="round"/><path d="M10 70h140" stroke="${SOFT}" stroke-width="2"/><path d="M10 52L30 40 52 58 76 30 100 52 124 36 150 62" fill="none" stroke="${R}" stroke-width="2" stroke-dasharray="3 3" stroke-linejoin="round"/></svg>`,
+  vic: `<svg viewBox="0 0 160 80"><path d="M24 58C14 40 26 14 52 18l40 6c24 4 46 10 44 28s-28 14-50 10-46 14-62-4z" fill="none" stroke="#3B4A5A" stroke-width="8" stroke-linejoin="round"/><path d="M24 58C14 40 26 14 52 18l40 6c24 4 46 10 44 28s-28 14-50 10-46 14-62-4z" fill="none" stroke="${R}" stroke-width="1.6"/><circle cx="52" cy="18" r="4.5" fill="#E9B23A"/></svg>`,
+  engine: `<svg viewBox="0 0 160 80"><path d="M6 34q8-26 16 0t16 0 16 0 16 0 16 0 16 0 16 0" fill="none" stroke="${B}" stroke-width="3"/><path d="M6 34q4-14 8 0t8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0 8 0" fill="none" stroke="${R}" stroke-width="2" opacity=".75"/><g transform="translate(132 72) scale(.8)"><path d="M-22 0A22 22 0 0 1 22 0" fill="none" stroke="${SOFT}" stroke-width="5"/><path d="M0 0L14-14" stroke="${INK}" stroke-width="3" stroke-linecap="round"/></g></svg>`,
+  car: `<svg viewBox="0 0 160 80"><path d="M12 54c0-10 8-14 20-16l22-14c8-5 18-6 30-6h18c10 0 20 6 28 16l14 4c6 2 8 6 8 12v4H12z" fill="${B}"/><path d="M60 26h26v14H44zM92 26h10c6 0 12 6 16 14H92z" fill="#fff" opacity=".85"/><circle cx="42" cy="60" r="11" fill="#1C2B3A"/><circle cx="42" cy="60" r="5" fill="${SOFT}"/><circle cx="122" cy="60" r="11" fill="#1C2B3A"/><circle cx="122" cy="60" r="5" fill="${SOFT}"/></svg>`,
+  tree: `<svg viewBox="0 0 160 80"><g stroke="${INK}" stroke-width="2" opacity=".5" fill="none"><path d="M60 18h40M80 18v14M40 32h80M40 32v12M80 32v12M120 32v12M40 54v6h40v-6"/></g><g fill="#B5763A"><rect x="44" y="8" width="20" height="16" rx="4"/><rect x="96" y="8" width="20" height="16" rx="4" fill="#C9935E"/><rect x="30" y="42" width="20" height="14" rx="4"/><rect x="70" y="42" width="20" height="14" rx="4" fill="#C9935E"/><rect x="110" y="42" width="20" height="14" rx="4"/><rect x="50" y="62" width="20" height="14" rx="4" fill="#C9935E"/></g></svg>`,
+};
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const host = u => /^https?:/.test(u) ? (u.includes('netlify.app') ? 'Netlify' : 'GitHub') : 'here';
+document.getElementById('main').innerHTML = SECTIONS.map(sec => {
+  const list = APPS.filter(a => a.s === sec);
+  if (!list.length) return '';
+  return `<section><h2>${esc(sec)}</h2><div class="grid">${list.map(a => `
+    <article class="card">
+      <div class="pic" aria-hidden="true">${PICS[a.pic] || ''}</div>
+      <div class="body">
+        <div class="head"><h3><a href="${esc(a.url)}">${esc(a.name)}</a></h3><span class="kind">${esc(a.kind)}</span></div>
+        <p>${esc(a.text)}</p>
+        <div class="go"><span>Open</span><span>${esc(host(a.url))}</span></div>
+      </div>
+    </article>`).join('')}</div></section>`;
+}).join('');
+</script>
+</body>
+</html>
