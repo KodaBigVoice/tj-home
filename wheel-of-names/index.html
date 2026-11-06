@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wheel of Names</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="fontLink" rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap">
+
+<!-- Stage styles: shared by the laptop preview and the projector window -->
+<style id="stageCss">
+.stage{position:absolute;inset:0;container-type:size;overflow:hidden;color:#f4f1e6;
+  background:radial-gradient(ellipse 80% 70% at 50% 52%, #2b5246 0%, #1d3a31 55%, #142a23 100%);
+  font-family:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.st-title{position:absolute;top:3.4cqh;left:4cqw;right:4cqw;text-align:center;font-weight:800;
+  font-size:6cqh;letter-spacing:-.01em;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-reveal{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,22,18,.6);
+  backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .35s ease}
+.st-reveal.show{opacity:1}
+.st-card{background:#f4f1e6;color:#142a23;border-radius:3.2cqh;padding:4.5cqh 7cqw 5cqh;text-align:center;
+  border-bottom:1.8cqh solid var(--c,#f2b632);transform:scale(.55) rotate(-3deg);
+  transition:transform .55s cubic-bezier(.2,1.5,.4,1);max-width:88cqw;box-shadow:0 3cqh 8cqh rgba(0,0,0,.35)}
+.st-reveal.show .st-card{transform:scale(1) rotate(0)}
+.st-label{font-size:3.6cqh;font-weight:500;opacity:.65;margin-bottom:.6cqh}
+.st-name{font-size:17cqh;font-weight:800;line-height:1.02;white-space:nowrap;letter-spacing:-.02em}
+@media (prefers-reduced-motion:reduce){.st-card{transition:none}}
+</style>
+
+<style>
+:root{--paper:#e9eeeb;--panel:#f8faf8;--ink:#17231e;--muted:#5d6b65;--line:#cfd8d3;
+  --board:#1d3a31;--brass:#f2b632;--brass-d:#c98f12;--red:#b9412f}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:15px;line-height:1.4}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brass);outline-offset:2px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;background:var(--board);color:#f4f1e6}
+.brand{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;font-size:22px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.brand svg{width:28px;height:28px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.live{display:none;align-items:center;gap:6px;font-size:14px;color:#cfe3da}
+.live.on{display:flex}
+.live i{width:9px;height:9px;border-radius:50%;background:#5ee08f;box-shadow:0 0 0 3px rgba(94,224,143,.25)}
+
+.btn{border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 14px;font-weight:700;font-size:14px;line-height:1.2}
+.btn:hover{border-color:var(--muted)}
+.btn.brass{background:var(--brass);border-color:var(--brass-d);color:#2a1d00}
+.btn.brass:hover{background:#f6c454}
+.btn.ghost-dark{background:transparent;border-color:rgba(244,241,230,.35);color:#f4f1e6}
+.btn.ghost-dark:hover{border-color:#f4f1e6}
+.btn.danger{background:var(--red);border-color:var(--red);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+.layout{display:grid;grid-template-columns:minmax(380px,46%) 1fr;gap:24px;padding:24px;align-items:start}
+.left{position:sticky;top:16px;display:flex;flex-direction:column;gap:14px}
+.preview{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.08),0 10px 30px rgba(23,35,30,.18)}
+.spin{width:100%;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:26px;font-weight:800;padding:14px;border-radius:14px;
+  background:var(--brass);border:2px solid var(--brass-d);color:#2a1d00;display:flex;align-items:center;justify-content:center;gap:12px}
+.spin:hover:not(:disabled){background:#f6c454}
+.spin kbd{font-family:inherit;font-size:13px;font-weight:700;border:1.5px solid rgba(42,29,0,.35);border-radius:6px;padding:2px 7px}
+.settings{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.row label{font-weight:700}
+.title-input{flex:1;max-width:280px;border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff}
+.totals{color:var(--muted);font-size:14px}
+
+.right-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.right-head h2{margin:0;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;font-weight:800;letter-spacing:-.01em}
+.right-head h2 span{color:var(--muted);font-weight:500;font-size:18px;margin-left:6px}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.grid.locked{pointer-events:none;opacity:.55}
+.card{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--c);border-radius:10px;padding:8px 8px 8px 10px}
+.card.off{border-left-color:var(--line);background:#eef2f0}
+.card.off .name{color:var(--muted);text-decoration:line-through}
+.name{flex:1;min-width:0;border:1.5px solid transparent;border-radius:7px;padding:6px 7px;background:transparent;font-weight:700;font-size:16px}
+.name:hover{border-color:var(--line)}
+.name:focus{border-color:var(--muted);background:#fff;outline:none}
+.stepper{display:flex;align-items:center;border:1.5px solid var(--line);border-radius:9px;overflow:hidden;background:#fff;flex-shrink:0}
+.stepper button{border:0;background:transparent;width:32px;height:34px;font-size:19px;font-weight:700;line-height:1}
+.stepper button:hover{background:var(--paper)}
+.stepper input{width:34px;border:0;border-left:1.5px solid var(--line);border-right:1.5px solid var(--line);text-align:center;font-weight:700;font-size:16px;height:34px;padding:0;background:#fff}
+.stepper input:focus{outline:none;background:#fff6dd}
+.del{border:0;background:transparent;width:30px;height:34px;border-radius:7px;color:var(--muted);font-size:17px;flex-shrink:0}
+.del:hover{background:#f6dcd7;color:var(--red)}
+
+.empty{border:2px dashed var(--line);border-radius:14px;padding:40px 24px;text-align:center;color:var(--muted)}
+.empty p{margin:0 0 14px}
+
+.modal-back{position:fixed;inset:0;background:rgba(15,27,22,.5);display:none;place-items:center;padding:20px;z-index:20}
+.modal-back.open{display:grid}
+.modal{background:var(--panel);border-radius:16px;padding:22px 24px;width:min(520px,100%);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal h3{margin:0 0 8px;font-family:'Bricolage Grotesque',system-ui,sans-serif;font-size:24px;font-weight:800;letter-spacing:-.01em}
+.modal .body{color:var(--muted);margin-bottom:18px}
+.modal .body ul{margin:8px 0 0;padding-left:20px;max-height:160px;overflow:auto;color:var(--ink)}
+.modal textarea{width:100%;min-height:220px;border:1.5px solid var(--line);border-radius:10px;padding:10px;resize:vertical;background:#fff;color:var(--ink)}
+.modal .btns{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);background:var(--ink);color:#fff;border-radius:10px;padding:10px 14px;
+  display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:.25s;z-index:30}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{background:transparent;border:1.5px solid rgba(255,255,255,.4);border-radius:7px;color:#fff;padding:3px 10px;font-weight:700}
+
+@media (min-width:901px){.modal-back{justify-items:end;padding-right:max(24px,8vw)}}
+@media (max-width:900px){.layout{grid-template-columns:1fr}.left{position:static}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="17" r="13" fill="#f2b632"/><path d="M16 17V4a13 13 0 0 1 11.3 6.5z" fill="#2b5246"/><path d="M16 17l11.3-6.5A13 13 0 0 1 22.5 28.3z" fill="#f4f1e6"/><circle cx="16" cy="17" r="3" fill="#1d3a31"/></svg>
+    Wheel of Names
+  </div>
+  <div class="top-actions">
+    <span class="live" id="liveTag"><i></i>On the projector</span>
+    <button class="btn ghost-dark" id="stopBtn" hidden>Stop presenting</button>
+    <button class="btn brass" id="presentBtn">Present</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="left">
+    <div class="preview" id="preview" aria-label="Projector preview"></div>
+    <button class="spin" id="spinBtn">Spin <kbd>Space</kbd></button>
+    <div class="settings">
+      <div class="row">
+        <label for="titleInput">Title on screen</label>
+        <input class="title-input" id="titleInput" maxlength="60">
+      </div>
+      <div class="row">
+        <label for="defInput">Default entries per pupil</label>
+        <div class="stepper">
+          <button id="defMinus" aria-label="Decrease default">−</button>
+          <input id="defInput" inputmode="numeric" aria-label="Default entries">
+          <button id="defPlus" aria-label="Increase default">+</button>
+        </div>
+      </div>
+      <div class="totals" id="totals"></div>
+    </div>
+  </section>
+
+  <section class="right">
+    <div class="right-head">
+      <h2>Pupils<span id="pupilCount"></span></h2>
+      <div class="tools">
+        <button class="btn" id="pasteBtn">Paste names</button>
+        <button class="btn" id="sortBtn">Sort A–Z</button>
+        <button class="btn" id="resetBtn">Reset counts</button>
+        <button class="btn brass" id="addBtn">+ Add new</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" hidden>
+      <p>No names yet. Paste your form list and each pupil goes on the wheel with the default number of entries.</p>
+      <button class="btn brass" id="emptyPaste">Paste names</button>
+    </div>
+  </section>
+</main>
+
+<div class="modal-back" id="modalBack"><div class="modal" role="dialog" aria-modal="true" id="modal"></div></div>
+<div class="toast" id="toast"><span id="toastMsg"></span><button id="toastUndo" hidden>Undo</button></div>
+
+<!-- Stage library: runs in this window (preview) and is copied into the projector window -->
+<script type="text/plain" id="stageLib">
+function createStage(root){
+  var doc = root.ownerDocument, win = doc.defaultView, TAU = Math.PI * 2;
+  root.innerHTML = '<div class="stage"><canvas></canvas><div class="st-title"></div>' +
+    '<div class="st-reveal"><div class="st-card"><div class="st-label">The wheel picked</div><div class="st-name"></div></div></div></div>';
+  var stageEl = root.firstChild, canvas = stageEl.querySelector('canvas'), ctx = canvas.getContext('2d');
+  var titleEl = stageEl.querySelector('.st-title'), revealEl = stageEl.querySelector('.st-reveal');
+  var cardEl = stageEl.querySelector('.st-card'), nameEl = stageEl.querySelector('.st-name');
+  var entries = [], rot = 0, anim = null, kick = 0, lastIdx = -1, dirty = true, W = 0, H = 0, dpr = 1;
+  var FONT = "'Bricolage Grotesque','Segoe UI',system-ui,sans-serif";
+
+  function mod(a, m){ return ((a % m) + m) % m; }
+  function resize(){
+    var r = stageEl.getBoundingClientRect();
+    dpr = win.devicePixelRatio || 1; W = r.width * dpr; H = r.height * dpr;
+    canvas.width = Math.max(1, Math.round(W)); canvas.height = Math.max(1, Math.round(H)); dirty = true;
+  }
+  new win.ResizeObserver(resize).observe(stageEl);
+  if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function(){ dirty = true; });
+
+  function geom(){
+    var top = H * 0.12, avail = H - top - H * 0.04;
+    var R = Math.min(avail / 2 - H * 0.03, W * 0.42);
+    return { cx: W / 2, cy: top + avail / 2 + H * 0.02, R: Math.max(10, R) };
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    var g = geom(), cx = g.cx, cy = g.cy, R = g.R, n = entries.length;
+    // shadow ring
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy + R * 0.025, R * 1.035, 0, TAU);
+    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fill(); ctx.restore();
+    if (!n){
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fillStyle = 'rgba(244,241,230,.06)'; ctx.fill();
+      ctx.setLineDash([R * 0.04, R * 0.03]); ctx.lineWidth = R * 0.012; ctx.strokeStyle = 'rgba(244,241,230,.4)'; ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(244,241,230,.75)'; ctx.font = '600 ' + Math.round(R * 0.09) + 'px ' + FONT;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Add names to fill the wheel', cx, cy);
+      drawPointer(cx, cy, R); return;
+    }
+    var seg = TAU / n;
+    for (var i = 0; i < n; i++){
+      var a0 = -Math.PI / 2 + rot + i * seg;
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, a0, a0 + seg); ctx.closePath();
+      ctx.fillStyle = entries[i].color; ctx.fill();
+    }
+    if (n > 1){
+      ctx.lineWidth = Math.max(1, R * (n > 80 ? 0.002 : 0.005)); ctx.strokeStyle = 'rgba(20,42,35,.55)';
+      for (var j = 0; j < n; j++){
+        var a = -Math.PI / 2 + rot + j * seg;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.stroke();
+      }
+    }
+    // labels
+    var hub = R * 0.14, outer = R * 0.93, maxW = outer - hub - R * 0.05;
+    var chord = 2 * (R * 0.7) * Math.sin(Math.min(seg, Math.PI) / 2);
+    var base = Math.min(R * 0.085, chord * 0.62);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var k = 0; k < n; k++){
+      var e = entries[k], size = base;
+      ctx.font = '700 ' + size + 'px ' + FONT;
+      var w = ctx.measureText(e.name).width;
+      if (w > maxW) { size = size * maxW / w; ctx.font = '700 ' + size + 'px ' + FONT; }
+      if (size < 3 * dpr) continue;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(-Math.PI / 2 + rot + (k + 0.5) * seg);
+      ctx.fillStyle = e.text; ctx.fillText(e.name, outer, 0); ctx.restore();
+    }
+    // rim
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.lineWidth = R * 0.035; ctx.strokeStyle = '#142a23'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, R * 1.017, 0, TAU); ctx.lineWidth = R * 0.008; ctx.strokeStyle = 'rgba(244,241,230,.35)'; ctx.stroke();
+    // hub
+    ctx.beginPath(); ctx.arc(cx, cy, hub, 0, TAU); ctx.fillStyle = '#f4f1e6'; ctx.fill();
+    ctx.lineWidth = R * 0.02; ctx.strokeStyle = '#142a23'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, hub * 0.38, 0, TAU); ctx.fillStyle = '#f2b632'; ctx.fill();
+    drawPointer(cx, cy, R);
+  }
+
+  function drawPointer(cx, cy, R){
+    var px = cx, py = cy - R - R * 0.02, s = R * 0.085;
+    ctx.save(); ctx.translate(px, py - s * 0.6); ctx.rotate(-kick * 0.35);
+    ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = s * 0.4; ctx.shadowOffsetY = s * 0.12;
+    ctx.beginPath(); ctx.moveTo(-s * 0.75, -s * 0.55); ctx.lineTo(s * 0.75, -s * 0.55); ctx.lineTo(0, s * 1.25); ctx.closePath();
+    ctx.fillStyle = '#f2b632'; ctx.fill(); ctx.shadowColor = 'transparent';
+    ctx.lineWidth = s * 0.14; ctx.strokeStyle = '#142a23'; ctx.lineJoin = 'round'; ctx.stroke();
+    ctx.restore();
+  }
+
+  function ease(t){ return 1 - Math.pow(1 - t, 4); }
+  function loop(){
+    if (anim){
+      var t = (Date.now() - anim.start) / anim.dur;
+      if (t >= 1){ rot = mod(anim.to, TAU); anim = null; }
+      else if (t > 0){ rot = anim.from + (anim.to - anim.from) * ease(t); }
+      dirty = true;
+      if (entries.length){
+        var idx = Math.floor(mod(-rot, TAU) / (TAU / entries.length));
+        if (idx !== lastIdx){ lastIdx = idx; kick = 1; }
+      }
+    }
+    if (kick > 0.01){ kick *= 0.82; dirty = true; } else if (kick) { kick = 0; dirty = true; }
+    if (dirty && W){ dirty = false; draw(); }
+    win.requestAnimationFrame(loop);
+  }
+  win.requestAnimationFrame(loop);
+
+  return {
+    setEntries: function(list){ entries = list.map(function(e){ return { name: e.name, color: e.color, text: e.text }; }); dirty = true; },
+    setTitle: function(s){ titleEl.textContent = s || ''; },
+    setRotation: function(r){ if (!anim){ rot = r; dirty = true; } },
+    spin: function(from, to, start, dur){ anim = { from: from, to: to, start: start, dur: dur }; },
+    showReveal: function(name, color){
+      nameEl.textContent = name; cardEl.style.setProperty('--c', color);
+      nameEl.style.fontSize = '17cqh';
+      var max = stageEl.clientWidth * 0.76, w = nameEl.scrollWidth;
+      if (w > max) nameEl.style.fontSize = (17 * max / w).toFixed(2) + 'cqh';
+      revealEl.classList.add('show');
+    },
+    hideReveal: function(){ revealEl.classList.remove('show'); }
+  };
+}
+</script>
+<script>
+// Load the stage library into this window
+(function(){ var s = document.createElement('script'); s.textContent = document.getElementById('stageLib').textContent; document.head.appendChild(s); })();
+
+const KEY = 'wheelOfNames.v1';
+const TAU = Math.PI * 2;
+const $ = id => document.getElementById(id);
+const mod = (a, m) => ((a % m) + m) % m;
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clampCount = v => Math.max(0, Math.min(20, Math.round(Number(v) || 0)));
+
+let state = load() || { title: 'End of prep spin', defaultCount: 3, pupils: [] };
+let rot = 0, spinning = false, currentSpin = null, revealShown = null, presenterWin = null, entries = [];
+let modalCancel = null, toastTimer = null, undoFn = null;
+
+function load(){ try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.pupils)) return s; } catch(e){} return null; }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+
+// ---------- colours ----------
+function colourFor(i){
+  const h = (i * 137.508 + 160) % 360, s = 0.6, l = 0.56;
+  const f = n => { const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  const rgb = [f(0), f(8), f(4)];
+  const lin = c => c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  const lum = 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
+  return { bg: `hsl(${h.toFixed(1)} ${s*100}% ${l*100}%)`, fg: lum > 0.32 ? '#142a23' : '#ffffff' };
+}
+
+// Round-robin so each pupil's entries are spread around the wheel
+function buildEntries(){
+  const ps = state.pupils.map((p, i) => ({ ...p, i })).filter(p => p.name.trim() && p.count > 0);
+  const max = Math.max(0, ...ps.map(p => p.count)), out = [];
+  for (let k = 0; k < max; k++) for (const p of ps) if (p.count > k) {
+    const c = colourFor(p.i); out.push({ pid: p.id, name: p.name.trim(), color: c.bg, text: c.fg });
+  }
+  return out;
+}
+
+// ---------- stages ----------
+const previewStage = createStage($('preview'));
+function presenterOk(){ return presenterWin && !presenterWin.closed && presenterWin.stage; }
+function forStages(fn){ fn(previewStage); if (presenterOk()) { try { fn(presenterWin.stage); } catch(e){} } }
+
+function refreshWheel(){
+  if (spinning) return;
+  entries = buildEntries();
+  forStages(s => { s.setEntries(entries); s.setTitle(state.title); });
+  const onWheel = state.pupils.filter(p => p.name.trim() && p.count > 0).length;
+  $('totals').textContent = `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} on the wheel from ${onWheel} ${onWheel === 1 ? 'pupil' : 'pupils'}`;
+  $('pupilCount').textContent = state.pupils.length ? state.pupils.length : '';
+  $('spinBtn').disabled = !entries.length || spinning;
+}
+
+// ---------- grid ----------
+function renderGrid(){
+  const grid = $('grid');
+  $('empty').hidden = state.pupils.length > 0;
+  grid.innerHTML = state.pupils.map((p, i) => `
+    <div class="card ${p.count === 0 ? 'off' : ''}" data-id="${p.id}" style="--c:${colourFor(i).bg}">
+      <input class="name" value="${esc(p.name)}" placeholder="Name" aria-label="Pupil name">
+      <div class="stepper">
+        <button data-act="minus" aria-label="One fewer entry">−</button>
+        <input class="cnt" inputmode="numeric" value="${p.count}" aria-label="Entries for ${esc(p.name)}">
+        <button data-act="plus" aria-label="One more entry">+</button>
+      </div>
+      <button class="del" data-act="del" title="Delete" aria-label="Delete ${esc(p.name)}">✕</button>
+    </div>`).join('');
+  grid.classList.toggle('locked', spinning);
+}
+function pupilFromEl(el){ const card = el.closest('.card'); return card && state.pupils.find(p => p.id === card.dataset.id); }
+
+$('grid').addEventListener('click', e => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  const p = pupilFromEl(btn); if (!p) return;
+  const act = btn.dataset.act;
+  if (act === 'minus' || act === 'plus'){
+    p.count = clampCount(p.count + (act === 'plus' ? 1 : -1));
+    const card = btn.closest('.card');
+    card.querySelector('.cnt').value = p.count; card.classList.toggle('off', p.count === 0);
+    save(); refreshWheel();
+  } else if (act === 'del'){
+    const idx = state.pupils.indexOf(p);
+    state.pupils.splice(idx, 1); save(); renderGrid(); refreshWheel();
+    toast(`Deleted ${p.name || 'pupil'}`, () => { state.pupils.splice(idx, 0, p); save(); renderGrid(); refreshWheel(); });
+  }
+});
+$('grid').addEventListener('input', e => {
+  const p = pupilFromEl(e.target); if (!p) return;
+  if (e.target.classList.contains('name')){ p.name = e.target.value; save(); refreshWheel(); }
+});
+$('grid').addEventListener('change', e => {
+  const p = pupilFromEl(e.target); if (!p) return;
+  if (e.target.classList.contains('cnt')){
+    p.count = clampCount(e.target.value); e.target.value = p.count;
+    e.target.closest('.card').classList.toggle('off', p.count === 0); save(); refreshWheel();
+  }
+  if (e.target.classList.contains('name')){ p.name = e.target.value.trim(); e.target.value = p.name; save(); refreshWheel(); }
+});
+$('grid').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('input')) e.target.blur();
+});
+
+$('addBtn').onclick = () => {
+  state.pupils.push({ id: uid(), name: '', count: state.defaultCount }); save(); renderGrid(); refreshWheel();
+  const inputs = $('grid').querySelectorAll('.name'); const last = inputs[inputs.length - 1];
+  last.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); last.focus();
+};
+$('sortBtn').onclick = () => { state.pupils.sort((a, b) => a.name.localeCompare(b.name, 'en-GB', { sensitivity: 'base' })); save(); renderGrid(); refreshWheel(); };
+$('resetBtn').onclick = () => {
+  if (!state.pupils.length) return;
+  modal({ title: 'Reset counts?', body: `Every pupil goes back to ${state.defaultCount} ${state.defaultCount === 1 ? 'entry' : 'entries'}, including anyone taken off the wheel.`,
+    buttons: [ { label: 'Cancel', cancel: true }, { label: 'Reset counts', kind: 'brass', run: () => { state.pupils.forEach(p => p.count = state.defaultCount); save(); renderGrid(); refreshWheel(); } } ] });
+};
+
+// ---------- paste ----------
+function parseNames(text){
+  let parts = text.split(/\r?\n|\t/);
+  if (parts.filter(s => s.trim()).length === 1 && text.includes(',')) parts = text.split(',');
+  return parts.map(s => s.replace(/^\s*\d+[.)]\s+/, '').trim()).filter(Boolean);
+}
+function openPaste(){
+  const hasNames = state.pupils.length > 0;
+  modal({ title: 'Paste names', body: '<p style="margin:0 0 10px">One name per line. A column copied from a spreadsheet works too.</p><textarea id="pasteArea" placeholder="Amelia&#10;Ben&#10;Charlie"></textarea>',
+    buttons: [
+      { label: 'Cancel', cancel: true },
+      ...(hasNames ? [{ label: 'Replace current list', run: () => addNames(true) }] : []),
+      { label: hasNames ? 'Add to list' : 'Add to wheel', kind: 'brass', run: () => addNames(false) }
+    ] });
+  setTimeout(() => $('pasteArea').focus(), 30);
+}
+function addNames(replace){
+  const names = parseNames($('pasteArea').value);
+  if (replace) state.pupils = [];
+  const seen = new Set(state.pupils.map(p => p.name.trim().toLowerCase()));
+  let added = 0, skipped = 0;
+  for (const n of names){
+    const k = n.toLowerCase(); if (seen.has(k)) { skipped++; continue; }
+    seen.add(k); state.pupils.push({ id: uid(), name: n, count: state.defaultCount }); added++;
+  }
+  save(); renderGrid(); refreshWheel();
+  toast(`Added ${added} ${added === 1 ? 'name' : 'names'}` + (skipped ? `, skipped ${skipped} already on the list` : ''));
+}
+$('pasteBtn').onclick = openPaste; $('emptyPaste').onclick = openPaste;
+
+// ---------- settings ----------
+$('titleInput').value = state.title;
+$('titleInput').addEventListener('input', e => { state.title = e.target.value; save(); forStages(s => s.setTitle(state.title)); });
+$('defInput').value = state.defaultCount;
+function changeDefault(nv){
+  nv = Math.max(1, Math.min(20, Math.round(Number(nv) || 1)));
+  const old = state.defaultCount;
+  if (nv === old){ $('defInput').value = old; return; }
+  const custom = state.pupils.filter(p => p.count !== old);
+  const apply = all => {
+    state.pupils.forEach(p => { if (all || p.count === old) p.count = nv; });
+    state.defaultCount = nv; $('defInput').value = nv; save(); renderGrid(); refreshWheel();
+  };
+  if (!custom.length) return apply(true);
+  modal({ title: `Change default to ${nv}?`,
+    body: `${custom.length} ${custom.length === 1 ? 'pupil has' : 'pupils have'} a count that isn't the current default of ${old}:<ul>${custom.map(p => `<li>${esc(p.name || 'Unnamed')} (${p.count})</li>`).join('')}</ul>`,
+    buttons: [
+      { label: 'Cancel', cancel: true, run: () => { $('defInput').value = old; } },
+      { label: `Set everyone to ${nv}`, run: () => apply(true) },
+      { label: 'Keep their counts', kind: 'brass', run: () => apply(false) }
+    ] });
+}
+$('defMinus').onclick = () => changeDefault(state.defaultCount - 1);
+$('defPlus').onclick = () => changeDefault(state.defaultCount + 1);
+$('defInput').addEventListener('change', e => changeDefault(e.target.value));
+$('defInput').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+
+// ---------- spinning ----------
+function rand(){ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; }
+function spin(){
+  if (spinning || modalCancel || !entries.length) return;
+  const n = entries.length, seg = TAU / n, idx = Math.floor(rand() * n);
+  const target = -(idx + 0.15 + rand() * 0.7) * seg;
+  const from = rot, to = from + (5 + Math.floor(rand() * 3)) * TAU + mod(target - from, TAU);
+  const start = Date.now() + 40, dur = 7000;
+  spinning = true; currentSpin = [from, to, start, dur];
+  forStages(s => { s.hideReveal(); s.spin(from, to, start, dur); });
+  $('spinBtn').disabled = true; $('grid').classList.add('locked');
+  setTimeout(() => {
+    rot = mod(to, TAU); spinning = false; currentSpin = null;
+    $('grid').classList.remove('locked');
+    showWinner(entries[idx]);
+  }, dur + 120);
+}
+function showWinner(e){
+  const p = state.pupils.find(x => x.id === e.pid);
+  revealShown = { name: e.name, color: e.color };
+  forStages(s => s.showReveal(e.name, e.color));
+  const done = fn => () => { if (fn) fn(); revealShown = null; forStages(s => s.hideReveal()); save(); renderGrid(); refreshWheel(); };
+  const c = p ? p.count : 0;
+  const buttons = [{ label: 'Keep all entries', cancel: true, run: done() }];
+  if (p && c > 1) buttons.push({ label: 'Remove this entry', run: done(() => p.count -= 1) });
+  if (p) buttons.push({ label: c > 1 ? `Remove all ${c} entries` : 'Take them off the wheel', kind: 'brass', run: done(() => p.count = 0) });
+  modal({ title: e.name, body: `${c} ${c === 1 ? 'entry' : 'entries'} on the wheel. What should happen to them?`, buttons });
+}
+$('spinBtn').onclick = spin;
+
+function handleKey(key, target){
+  if (modalCancel) return false;
+  if (target && target.matches && target.matches('input, textarea')) return false;
+  if ([' ', 'Enter', 'PageDown', 'ArrowRight', 'ArrowDown'].includes(key)){ spin(); return true; }
+  return false;
+}
+document.addEventListener('keydown', e => { if (handleKey(e.key, e.target)) e.preventDefault(); });
+
+// ---------- presenter window ----------
+function presenterHtml(){
+  const css = $('stageCss').textContent, lib = $('stageLib').textContent, font = $('fontLink').href;
+  return `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>${esc(state.title || 'Wheel of Names')}</title>
+<link rel="stylesheet" href="${font}"><style>${css}
+html,body{margin:0;height:100%;background:#142a23;overflow:hidden}
+#root{position:fixed;inset:0}
+.hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#f4f1e6;font:600 15px 'Segoe UI',sans-serif;padding:8px 14px;border-radius:9px;transition:opacity .4s}
+:fullscreen .hint{opacity:0}
+body.full{cursor:none}
+</style></head><body><div id="root"></div><div class="hint">Click to go full screen. Space or a clicker spins.</div>
+<script>${lib}<\/script><script>
+window.stage = createStage(document.getElementById('root'));
+document.addEventListener('click', function(){ if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(function(){}); });
+document.addEventListener('fullscreenchange', function(){ document.body.classList.toggle('full', !!document.fullscreenElement); });
+document.addEventListener('keydown', function(e){ if (window.opener && !window.opener.closed && window.opener.presenterKey(e.key)) e.preventDefault(); });
+if (window.opener) window.opener.presenterReady();
+<\/script></body></html>`;
+}
+window.presenterReady = function(){
+  if (!presenterOk()) return;
+  const s = presenterWin.stage;
+  s.setEntries(entries); s.setTitle(state.title); s.setRotation(rot);
+  if (currentSpin) s.spin(...currentSpin);
+  if (revealShown) s.showReveal(revealShown.name, revealShown.color);
+  updatePresentUi();
+};
+window.presenterKey = key => handleKey(key, null);
+
+async function present(){
+  if (presenterWin && !presenterWin.closed){ presenterWin.focus(); return; }
+  presenterWin = window.open('', 'wheelOfNamesPresenter', 'popup,width=1280,height=720');
+  if (!presenterWin){ toast('The projector window was blocked. Allow pop-ups for this page, then press Present again.'); return; }
+  presenterWin.document.open(); presenterWin.document.write(presenterHtml()); presenterWin.document.close();
+  updatePresentUi();
+  // Move it onto the extended screen when the browser allows it
+  try {
+    if ('getScreenDetails' in window){
+      const sd = await window.getScreenDetails();
+      const ext = sd.screens.find(sc => sc !== sd.currentScreen);
+      if (ext && presenterWin && !presenterWin.closed){
+        presenterWin.moveTo(ext.availLeft, ext.availTop);
+        presenterWin.resizeTo(ext.availWidth, ext.availHeight);
+      }
+    }
+  } catch(e){}
+}
+function stopPresenting(){ if (presenterWin && !presenterWin.closed) presenterWin.close(); presenterWin = null; updatePresentUi(); }
+function updatePresentUi(){
+  const on = !!(presenterWin && !presenterWin.closed);
+  $('liveTag').classList.toggle('on', on); $('stopBtn').hidden = !on;
+  $('presentBtn').textContent = on ? 'Show projector window' : 'Present';
+}
+$('presentBtn').onclick = present; $('stopBtn').onclick = stopPresenting;
+setInterval(() => { if (presenterWin && presenterWin.closed){ presenterWin = null; updatePresentUi(); } }, 1000);
+window.addEventListener('beforeunload', () => { if (presenterWin && !presenterWin.closed) presenterWin.close(); });
+
+// ---------- modal & toast ----------
+function modal({ title, body, buttons }){
+  const m = $('modal');
+  m.innerHTML = `<h3>${esc(title)}</h3><div class="body">${body}</div><div class="btns"></div>`;
+  const row = m.querySelector('.btns');
+  const close = () => { $('modalBack').classList.remove('open'); modalCancel = null; };
+  buttons.forEach(b => {
+    const el = document.createElement('button'); el.className = 'btn' + (b.kind ? ' ' + b.kind : ''); el.textContent = b.label;
+    el.onclick = () => { close(); if (b.run) b.run(); };
+    row.appendChild(el);
+    if (b.cancel) modalCancel = () => { close(); if (b.run) b.run(); };
+  });
+  $('modalBack').classList.add('open');
+  const primary = row.querySelector('.brass') || row.lastChild; primary.focus();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && modalCancel) { e.preventDefault(); modalCancel(); } }, true);
+
+function toast(msg, undo){
+  $('toastMsg').textContent = msg; undoFn = undo || null; $('toastUndo').hidden = !undo;
+  $('toast').classList.add('show'); clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $('toast').classList.remove('show'); undoFn = null; }, undo ? 6000 : 3500);
+}
+$('toastUndo').onclick = () => { if (undoFn) undoFn(); undoFn = null; $('toast').classList.remove('show'); };
+
+// ---------- start ----------
+renderGrid(); refreshWheel(); updatePresentUi();
+</script>
+</body>
+</html>

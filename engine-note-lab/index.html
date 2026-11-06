@@ -1,0 +1,1216 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{box-sizing:border-box}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<title>Engine Note Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: dash row (revs | gear | pedals) over the bench (build | exhaust); spectrum and engine notes below the fold; engine library in a drawer */
+:root{
+  --bg:#E9ECEF; --panel:#F7F8F9; --ink:#121A24; --muted:#5B6674; --line:#CBD2DA;
+  --accent:#C8372D; --bankA:#2160C4; --bankB:#C27509; --grid:rgba(18,26,36,.08); --spec:rgba(18,26,36,.78); --field:#FFFFFF;
+  --go:#1C6440; --go-soft:rgba(28,100,64,.14); --stop:#B23B36; --stop-soft:rgba(178,59,54,.13); --scrim:rgba(10,14,20,.38);
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1318; --panel:#151C24; --ink:#E3E8ED; --muted:#8A96A4; --line:#29333F;
+  --accent:#E8574C; --bankA:#5E95F0; --bankB:#EAA43E; --grid:rgba(227,232,237,.07); --spec:rgba(227,232,237,.82); --field:#0F151C;
+  --go:#3B9A66; --go-soft:rgba(59,154,102,.18); --stop:#D9574F; --stop-soft:rgba(217,87,79,.16); --scrim:rgba(0,0,0,.55); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1318; --panel:#151C24; --ink:#E3E8ED; --muted:#8A96A4; --line:#29333F;
+  --accent:#E8574C; --bankA:#5E95F0; --bankB:#EAA43E; --grid:rgba(227,232,237,.07); --spec:rgba(227,232,237,.82); --field:#0F151C;
+  --go:#3B9A66; --go-soft:rgba(59,154,102,.18); --stop:#D9574F; --stop-soft:rgba(217,87,79,.16); --scrim:rgba(0,0,0,.55); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+.wrap{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+button,select,input,textarea{font:inherit;color:inherit}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:5px 12px;cursor:pointer;font-weight:500;font-size:12.5px}
+.btn:hover{border-color:var(--muted)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.solid{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-family:var(--f-display);font-size:18px;letter-spacing:.06em;text-transform:uppercase;padding:7px 20px;border-radius:8px;min-width:150px}
+:is(.btn,.eng,.seg button,.pad,input,select,textarea,.menu):focus-visible{outline:2px solid var(--bankA);outline-offset:2px}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.menu{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:500}
+.burger{display:inline-flex;flex-direction:column;gap:3px}.burger i{display:block;width:16px;height:2px;background:var(--ink);border-radius:1px}
+.cur{display:flex;flex-direction:column;min-width:0;flex:1}
+.cur b{font-family:var(--f-display);font-weight:700;font-size:28px;line-height:1;letter-spacing:.01em;overflow-wrap:anywhere}
+.cur span{font-family:var(--f-mono);font-size:11.5px;color:var(--muted)}
+.brand{font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.label{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+.ph{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+
+/* dash */
+.dash{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.62fr) minmax(0,1.35fr);gap:12px}
+.tach .num{display:flex;align-items:baseline;gap:10px}
+.tach .rpm{font-family:var(--f-display);font-weight:700;font-size:76px;line-height:.88;font-variant-numeric:tabular-nums}
+.tach .unit{font-family:var(--f-display);font-size:17px;letter-spacing:.1em;color:var(--muted)}
+.limiter{font-family:var(--f-display);font-weight:700;font-size:14px;letter-spacing:.14em;color:#fff;background:var(--accent);border-radius:4px;padding:2px 8px;margin-left:auto;align-self:center;visibility:hidden}
+.limiter.on{visibility:visible}
+.bar{position:relative;height:14px;border-radius:3px;background:var(--grid);overflow:hidden;margin-top:12px}
+.bar .fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--ink)}
+.bar .red{position:absolute;inset:0 0 0 auto;background:var(--accent);opacity:.35}
+.ticks{position:relative;height:17px;font-family:var(--f-mono);font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ticks span{position:absolute;top:3px;transform:translateX(-50%)}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));gap:8px;margin-top:8px}
+.ro b{display:block;font-family:var(--f-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.ro span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.gearp{display:flex;flex-direction:column;gap:8px}
+.gearp .gnum{display:flex;align-items:baseline;gap:14px}
+.gearp .gear{font-family:var(--f-display);font-weight:700;font-size:76px;line-height:.88;font-variant-numeric:tabular-nums}
+.gearp .mph b{display:block;font-family:var(--f-display);font-weight:600;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.gearp .mph span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.gearp .shifts{display:flex;gap:6px}.gearp .shifts .btn{flex:1;padding:7px 6px}
+.gearp.off .gear,.gearp.off .mph{opacity:.35}
+.pedals .ph{margin-bottom:8px}
+.padrow{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:10px}
+.pad{position:relative;overflow:hidden;border:2px solid var(--go);background:var(--go-soft);color:var(--go);border-radius:10px;min-height:112px;cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.pad .lvl{position:absolute;inset:auto 0 0 0;height:0;background:var(--go);pointer-events:none}
+.pad .big,.pad .hint{position:relative;pointer-events:none}
+.pad .big{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:.06em;text-transform:uppercase}
+.pad .hint{font-size:11.5px;opacity:.85}
+.pad.hi{color:#fff}
+.pad.brake{border-color:var(--stop);background:var(--stop-soft);color:var(--stop)}
+.pad.brake .lvl{background:var(--stop)}
+.pad.brake.hi{color:#fff}
+.pad:disabled{opacity:.35;cursor:default}
+.keys{font-size:11.5px;color:var(--muted);margin:8px 0 0}
+.keys kbd{font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px;background:var(--field)}
+
+/* bench */
+.bench{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:12px;align-items:start}
+.bgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 16px;grid-auto-flow:row dense}
+.span2{grid-column:span 2}
+.tagc{font-family:var(--f-mono);font-size:11px;color:var(--accent);overflow-wrap:anywhere}
+.saveform{display:flex;gap:6px;margin-bottom:10px}
+.saveform input{flex:1;min-width:0}
+.ctl{min-width:0}
+.ctl label,.ctl .lab{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;font-weight:500;margin-bottom:4px}
+.ctl output{font-family:var(--f-mono);font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--ink);margin:4px 0 0}
+select,.txt{width:100%;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:13px}
+.txt.mono{font-family:var(--f-mono)}
+.txt.bad{border-color:var(--accent)}
+.err{font-size:11.5px;color:var(--accent);margin:2px 0 0}
+.err:empty{display:none}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:4px 10px;cursor:pointer;font-size:12.5px;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.seg.full{display:flex}.seg.full button{flex:1}
+.exh{display:flex;flex-direction:column;gap:11px}
+.res{font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:3px}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:12.5px}
+.check input{margin-top:3px;accent-color:var(--ink)}
+.check.off{opacity:.45}
+.mini{border:0;background:none;color:var(--bankA);font-size:11.5px;padding:0;cursor:pointer;text-decoration:underline}
+
+/* lower */
+.lower{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;align-items:start}
+canvas{display:block;width:100%;height:210px}
+.small{font-size:12px;color:var(--muted);margin:6px 0 0}
+.about{display:grid;grid-template-columns:minmax(0,1fr) 170px;gap:14px}
+.about h2{font-family:var(--f-display);font-weight:700;font-size:22px;margin:0 0 2px;line-height:1.1}
+.about .sub{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);margin:0 0 8px}
+.about p{margin:0;max-width:62ch;font-size:13px}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:10px 0 0;font-size:12px}
+.facts dt{color:var(--muted)} .facts dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.dialbox svg{width:100%;height:auto}
+.intervals{font-family:var(--f-mono);font-size:11px;line-height:1.55}
+.intervals div{display:flex;gap:6px;align-items:baseline}
+.sw{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:40}
+.drawer{position:fixed;top:0;bottom:0;left:0;width:min(330px,92vw);background:var(--panel);border-right:1px solid var(--line);z-index:41;overflow-y:auto;
+  padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(20px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));
+  box-shadow:0 10px 40px rgba(0,0,0,.25);transform:translateX(-104%);transition:transform .18s ease;visibility:hidden}
+.drawer.open{transform:none;visibility:visible}
+.drawer .dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.drawer .label.grp{margin:14px 0 4px}
+.engines{display:flex;flex-direction:column;gap:2px}
+.eng{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:0 8px;text-align:left;border:1px solid transparent;background:transparent;border-radius:8px;padding:5px 10px;cursor:pointer;width:100%}
+.eng:hover{border-color:var(--line)}
+.eng .nm{font-family:var(--f-display);font-weight:600;font-size:18px;line-height:1.15;min-width:0;overflow-wrap:anywhere}
+.eng .key{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.eng .fo{grid-column:1/-1;font-family:var(--f-mono);font-size:10.5px;color:var(--muted)}
+.eng[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.eng[aria-pressed="true"] .fo,.eng[aria-pressed="true"] .key{color:var(--bg);opacity:.75}
+.saved{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px}
+.del{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:6px}
+.del:hover{color:var(--accent)} .del.confirm{color:#fff;background:var(--accent)}
+.empty{font-size:12.5px;color:var(--muted);margin:0}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+textarea{width:100%;min-height:90px;background:var(--field);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-family:var(--f-mono);font-size:11px;resize:vertical}
+.ok{font-size:11.5px;color:var(--muted);margin:4px 0 0}
+
+@media (max-width:1150px){
+  .dash{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+  .pedals{grid-column:1/-1}
+  .lower{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:880px){
+  .bench{grid-template-columns:minmax(0,1fr)}
+  .bgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .dash{grid-template-columns:minmax(0,1fr)}
+  .tach .rpm,.gearp .gear{font-size:60px}
+  .about{grid-template-columns:minmax(0,1fr)}
+  .brand{display:none}
+}
+@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
+</style>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Engine library" aria-hidden="true">
+  <div class="dh"><p class="label">Engines</p><button class="btn" id="dclose">Close</button></div>
+  <div id="presets"></div>
+  <p class="label grp">My engines</p>
+  <div class="engines" id="saved"></div>
+  <div class="tools" style="margin-top:10px"><button class="btn" id="exp">Export</button><button class="btn" id="imp">Import</button></div>
+  <div id="io" hidden style="margin-top:8px">
+    <textarea id="iotext" aria-label="Engine data" spellcheck="false"></textarea>
+    <div class="tools" style="margin-top:6px"><button class="btn solid" id="ioload" hidden>Load engines</button><button class="btn" id="ioclose">Close</button></div>
+    <p class="ok" id="iomsg"></p>
+  </div>
+</aside>
+
+<div class="wrap">
+  <header class="top">
+    <button class="menu" id="menu" aria-controls="drawer" aria-expanded="false"><span class="burger" aria-hidden="true"><i></i><i></i><i></i></span>Engines</button>
+    <div class="cur"><b id="curname">Audi R8</b><span id="curorder">V10 · 1-6-5-10-2-7-3-8-4-9</span></div>
+    <p class="brand">Engine Note Lab</p>
+    <button class="btn primary" id="start">Start engine</button>
+  </header>
+
+  <section class="dash">
+    <div class="panel tach">
+      <div class="num">
+        <span class="rpm" id="rpm">0</span><span class="unit">RPM</span>
+        <span class="limiter" id="limiter">LIMITER</span>
+      </div>
+      <div class="bar"><div class="red" id="redzone"></div><div class="fill" id="fill"></div></div>
+      <div class="ticks" id="ticks"></div>
+      <div class="readouts">
+        <div class="ro"><b id="ffreq">0 Hz</b><span>Firing freq.</span></div>
+        <div class="ro"><b id="thr">0%</b><span>Throttle</span></div>
+        <div class="ro" id="r-boost" hidden><b id="boost">0.0</b><span>Boost bar</span></div>
+      </div>
+    </div>
+    <div class="panel gearp off" id="gearp">
+      <div class="gnum">
+        <span class="gear" id="gear">N</span>
+        <div class="mph"><b id="mph">0</b><span>mph</span></div>
+      </div>
+      <div class="shifts"><button class="btn" id="dn" disabled>Shift down</button><button class="btn" id="up" disabled>Shift up</button></div>
+      <label class="check"><input type="checkbox" id="auto"><span>Auto-shift</span></label>
+    </div>
+    <div class="panel pedals">
+      <div class="ph">
+        <p class="label">Pedals</p>
+        <div class="seg" id="mode">
+          <button aria-pressed="true" data-v="free">Free rev</button>
+          <button aria-pressed="false" data-v="drive">Drive</button>
+          <button aria-pressed="false" data-v="hold">Hold RPM</button>
+        </div>
+      </div>
+      <div class="padrow" id="padrow">
+        <button class="pad" id="pad" aria-label="Throttle pedal"><span class="lvl" id="padlvl"></span><span class="big">Throttle</span><span class="hint">Press higher for more</span></button>
+        <button class="pad brake" id="brake" aria-label="Brake pedal" disabled><span class="lvl" id="brklvl"></span><span class="big">Brake</span><span class="hint">Drive only</span></button>
+      </div>
+      <p class="keys" id="keys"><kbd>Space</kbd> full throttle · hold <kbd>W</kbd> to squeeze on · <kbd>B</kbd> brake · <kbd>E</kbd>/<kbd>Q</kbd> shift</p>
+      <div id="holdctl" hidden style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px">
+        <div class="ctl"><label for="rpmset">Engine speed <output id="o-rpm">4000 rpm</output></label><input type="range" id="rpmset" min="600" max="9000" step="10" value="4000"></div>
+        <div class="ctl"><label for="load">Load <output id="o-load">60%</output></label><input type="range" id="load" min="0" max="100" value="60"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bench">
+    <div class="panel">
+      <div class="ph">
+        <div style="display:flex;align-items:baseline;gap:10px;min-width:0;flex-wrap:wrap"><p class="label">Build</p><span class="tagc" id="customtag"></span></div>
+        <button class="btn" id="savebtn">Save engine</button>
+      </div>
+      <div class="saveform" id="saveform" hidden>
+        <input class="txt" id="savename" type="text" maxlength="40" placeholder="Name, e.g. My R8" autocomplete="off">
+        <button class="btn solid" id="saveok">Save</button><button class="btn" id="savecancel">Cancel</button>
+      </div>
+      <div class="bgrid">
+        <div class="ctl span2"><span class="lab">Layout</span><div class="seg full" id="b-layout">
+          <button data-v="inline" aria-pressed="true">Inline</button><button data-v="V" aria-pressed="false">V</button><button data-v="flat" aria-pressed="false">Flat</button></div></div>
+        <div class="ctl"><label for="b-n">Cylinders</label><select id="b-n"></select></div>
+        <div class="ctl"><label for="b-disp">Capacity <output id="o-disp">2.5 L</output></label><input type="range" id="b-disp" min="0.5" max="8" step="0.1" value="2.5"></div>
+        <div class="ctl"><label for="b-idle">Idle <output id="o-idle">850</output></label><input type="range" id="b-idle" min="500" max="5000" step="10" value="850"></div>
+        <div class="ctl"><label for="b-red">Redline <output id="o-red">7100</output></label><input type="range" id="b-red" min="4000" max="20000" step="50" value="7100"></div>
+        <div class="ctl span2" id="w-crank" hidden><span class="lab">Crank</span><div class="seg full" id="b-crank"></div></div>
+        <div class="ctl" id="w-bank" hidden><label for="b-bank">Bank angle <output id="o-bank">90°</output></label><input type="range" id="b-bank" min="15" max="120" step="1" value="90"></div>
+        <div class="ctl span2"><label for="b-order">Firing order</label><input class="txt mono" id="b-order" type="text" inputmode="numeric" autocomplete="off" spellcheck="false"><p class="err" id="b-err"></p></div>
+        <div class="ctl"><label for="b-rev" title="How fast it revs. Auto works it out from cylinder size and redline.">Rev response <output id="o-rev">Auto</output></label><input type="range" id="b-rev" min="0.3" max="4" step="0.05" value="1"><button class="mini" id="b-revauto" hidden>Back to auto</button></div>
+        <div class="ctl"><label for="b-mis" title="How unequal the exhaust runners are. 0% is perfect tubular headers.">Runner mismatch <output id="o-mis">35%</output></label><input type="range" id="b-mis" min="0" max="100" value="35"></div>
+        <div class="ctl"><label for="b-var" title="Small differences in each cylinder's burn and timing.">Cylinder variation <output id="o-var">45%</output></label><input type="range" id="b-var" min="0" max="100" value="45"></div>
+        <div class="ctl"><span class="lab">Induction</span><div class="seg full" id="b-ind"><button data-v="na" aria-pressed="true">NA</button><button data-v="turbo" aria-pressed="false">Turbo</button></div></div>
+        <div class="ctl span2" id="w-valve" hidden><label for="b-valve">Lift-off valve</label>
+          <select id="b-valve"><option value="recirc">Recirculating (quiet)</option><option value="bov">Blow-off valve (pssh)</option><option value="flutter">No valve (flutter)</option></select></div>
+      </div>
+    </div>
+    <div class="panel exh">
+      <p class="label">Exhaust</p>
+      <div class="ctl"><label for="pipe">Pipe length <output id="o-pipe">2.4 m</output></label><input type="range" id="pipe" min="0.6" max="4" step="0.05" value="2.4"><div class="res" id="res"></div></div>
+      <div class="ctl"><label for="muffle" title="0% is an open pipe, 100% a quiet road silencer.">Muffler <output id="o-muffle">35%</output></label><input type="range" id="muffle" min="0" max="100" value="35"></div>
+      <div class="ctl"><label for="crackle" title="Pops on lift-off at high revs, bark on full-throttle upshifts.">Overrun crackle <output id="o-crackle">35%</output></label><input type="range" id="crackle" min="0" max="100" value="35"></div>
+      <div class="ctl" id="w-tvol" hidden><label for="tvol">Turbo sounds <output id="o-tvol">40%</output></label><input type="range" id="tvol" min="0" max="100" value="40"></div>
+      <label class="check" id="c-merge"><input type="checkbox" id="merge"><span>Merge banks (X-pipe)</span></label>
+      <div class="ctl"><label for="vol">Volume <output id="o-vol">60%</output></label><input type="range" id="vol" min="0" max="100" value="60"></div>
+    </div>
+  </section>
+
+  <section class="lower">
+    <div class="panel">
+      <div class="ph">
+        <p class="label">Spectrum</p>
+        <div class="seg" id="axis"><button aria-pressed="true" data-v="order">Engine orders</button><button aria-pressed="false" data-v="hz">Hz</button></div>
+      </div>
+      <canvas id="spec"></canvas>
+      <p class="small" id="spechint">Orders are multiples of crank speed, so peaks stay put as revs change. The I5 lives at 2.5, the V10 at 5.</p>
+    </div>
+    <div class="panel about">
+      <div>
+        <p class="label" style="margin-bottom:8px">Why it sounds like this</p>
+        <h2 id="n-name">Audi R8</h2>
+        <p class="sub" id="n-order"></p>
+        <p id="n-text"></p>
+        <dl class="facts" id="n-facts"></dl>
+      </div>
+      <div class="dialbox">
+        <svg id="dial" viewBox="-8 -8 256 256" role="img" aria-label="Firing pattern dial"></svg>
+        <div class="intervals" id="intervals"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script id="dsp-src">
+// ---------- Firing-order defaults by layout and cylinder count ----------
+const ORDERS = {
+  inline: { 2:[1,2], 3:[1,3,2], 4:[1,3,4,2], 5:[1,2,4,5,3], 6:[1,5,3,6,2,4], 8:[1,6,2,5,8,3,7,4] },
+  V: { 2:[1,2], 4:[1,3,2,4], 6:[1,4,2,5,3,6], 8:[1,5,3,7,4,8,2,6], 10:[1,6,5,10,2,7,3,8,4,9], 12:[1,7,5,11,3,9,6,12,2,8,4,10] },
+  flat: { 2:[1,2], 4:[1,3,2,4], 6:[1,6,2,4,3,5] }
+};
+const CROSS_V8 = [1,5,4,8,6,3,7,2];
+const GEARS = [3.6, 2.4, 1.8, 1.42, 1.17, 0.98, 0.82], FINAL = 3.5, WHEEL_R = 0.33;
+
+// ---------- Presets ----------
+const ENGINES = [
+  { id:'i4', group:'road', name:'Inline-4', layout:'inline', n:4, disp:2.0, order:[1,3,4,2], idle:850, redline:7000, mis:0.3, vari:0.4, pipe:2.2, muffle:0.4, crackle:0.25,
+    text:'Fires every 180°, exactly twice per crank turn. That is a whole-number order with even spacing, so the note is clean and buzzy. This is the baseline hot-hatch sound before any sound engineering.' },
+  { id:'i5', group:'road', name:'Inline-5', layout:'inline', n:5, disp:2.5, order:[1,2,4,5,3], idle:850, redline:7100, mis:0.35, vari:0.45, pipe:2.4, muffle:0.35, crackle:0.35,
+    text:'Fires every 144°, which is 2.5 pulses per crank turn. The pulses never line up with the crank’s own rotation, so the pattern only repeats every two turns. That half-order is the off-beat warble.' },
+  { id:'i6', group:'road', name:'Inline-6', layout:'inline', n:6, disp:3.0, order:[1,5,3,6,2,4], idle:750, redline:7200, mis:0.25, vari:0.3, pipe:2.4, muffle:0.4, crackle:0.25,
+    text:'Fires every 120°, three times per turn. Perfectly balanced and even, which gives the smooth straight-six rasp.' },
+  { id:'b4', group:'road', name:'Boxer-4', layout:'flat', n:4, disp:2.5, order:[1,3,2,4], merge:true, hdrMs:[0,1.6,0.5,2.1], idle:800, redline:6800, mis:0.2, vari:0.5, pipe:2.3, muffle:0.4, crackle:0.2,
+    text:'Firing is an even 180°, but unequal-length headers delay some pulses on their way to the collector. They arrive unevenly, and that timing smear is the rumble. The effect changes with revs because the delay is fixed in time, not crank angle.' },
+  { id:'v2', group:'road', name:'V-twin 45°', layout:'V', n:2, bank:45, crank:'odd', disp:1.8, order:[1,2], idle:950, redline:5800, mis:0.2, vari:0.6, pipe:1.6, muffle:0.45, crackle:0.3, gain:0.7, merge:true,
+    text:'Two cylinders on a shared crankpin fire 405° then 315° apart. Big, slow, lopsided pulses with a long gap: potato-potato.' },
+  { id:'v8c', group:'road', name:'V8 cross-plane', layout:'V', n:8, bank:90, crank:'cross', disp:6.2, order:CROSS_V8, idle:650, redline:6500, mis:0.5, vari:0.45, pipe:2.6, muffle:0.35, crackle:0.3,
+    text:'The engine fires every 90°, but each bank sees gaps of 180°, 270°, 180° and 90°. With separate exhausts per bank, that unevenness is the burble. Tick "merge banks" to hear it smooth out.' },
+  { id:'v8f', group:'road', name:'V8 flat-plane', layout:'V', n:8, bank:90, crank:'flat', disp:4.0, order:[1,5,3,7,4,8,2,6], idle:1000, redline:9000, mis:0.2, vari:0.3, pipe:2.0, muffle:0.3, crackle:0.3,
+    text:'Banks alternate perfectly, so each bank fires every 180°, like an inline-4. Even, sharp and high-pitched: the scream.' },
+  { id:'v10', group:'road', name:'V10 90° odd-fire', layout:'V', n:10, bank:90, crank:'odd', disp:5.2, order:[1,6,5,10,2,7,3,8,4,9], idle:900, redline:8700, mis:0.3, vari:0.35, pipe:2.2, muffle:0.3, crackle:0.3,
+    text:'Shared crankpins with banks 90° apart give uneven 90° and 54° gaps between firings. Each bank on its own still fires every 144° (90 + 54), exactly like an inline-5. So it is two I5s on one crank, offset by 54° rather than an even 72°.' },
+  { id:'v12', group:'road', name:'V12 60°', layout:'V', n:12, bank:60, crank:'even', disp:6.5, order:[1,7,5,11,3,9,6,12,2,8,4,10], idle:900, redline:8500, mis:0.25, vari:0.3, pipe:2.2, muffle:0.3, crackle:0.3,
+    text:'Fires every 60°, six times per turn. Each bank behaves like a straight-six, and the overlapping pulses blend into a smooth, high wail.' },
+
+  { id:'audi-r8', group:'mine', name:'Audi R8', layout:'V', n:10, bank:90, crank:'odd', disp:5.2, order:[1,6,5,10,2,7,3,8,4,9], idle:1230, redline:8200, mis:0.49, vari:0.56, pipe:3.8, muffle:0.68, crackle:0.4, merge:true,
+    text:'Your R8 tune. The odd-fire 90° V10 fires with 90° and 54° gaps, and each bank still fires every 144° like an inline-5. A long, well-silenced pipe with the banks merged gives the deep body under the wail.' },
+  { id:'audi-rs3', group:'mine', name:'Audi RS3', layout:'inline', n:5, disp:2.5, order:[1,2,4,5,3], idle:1010, redline:7700, mis:0.57, vari:0.41, pipe:2.4, muffle:0.59, crackle:0.35,
+    text:'Your RS3 tune. The 1-2-4-5-3 inline-5 with strongly unequal runners. The half-order warble plus uneven pulse arrival gets close to that engine’s off-beat howl.' },
+  { id:'classic-i4', group:'mine', name:'Classic I4', layout:'inline', n:4, disp:2.0, order:[1,3,4,2], idle:1030, redline:7000, mis:0.6, vari:0.44, pipe:2.25, muffle:0.74, crackle:0.25,
+    text:'Your build. A plain inline-4 with very unequal runners and a heavy silencer. The uneven arrival of the pulses roughs up the even 180° firing into an older, lumpier four-cylinder.' },
+  { id:'v4-2l', group:'mine', name:'2L V4', layout:'V', n:4, bank:60, crank:'even', disp:2.0, order:[1,3,2,4], idle:1030, redline:7900, mis:0.45, vari:0.44, pipe:1.8, muffle:0.54, crackle:0.12,
+    text:'Your build. A 2-litre 60° V4 that fires every 180° like an inline-4, but each bank fires only once per turn into its own exhaust. Compare it with Classic I4: same capacity and firing rate, different beat.' },
+  { id:'motogp-v4', group:'mine', name:'MotoGP V4', layout:'V', n:4, bank:90, crank:'odd', disp:1.0, order:[1,3,2,4], idle:1030, redline:10500, mis:0.31, vari:0.44, pipe:1.8, muffle:0.09, crackle:0.25,
+    text:'Your build. A 1-litre V4 with shared crankpins and banks 90° apart, so the cylinders fire in pairs, 90° then 270°. Close-paired firing is the idea behind the "big bang" engines used in MotoGP. Almost no silencing, like a race pipe.' },
+
+  { id:'f1-v10', group:'f1', name:'F1 V10 3.0 (2000s)', layout:'V', n:10, bank:90, crank:'even', disp:3.0, order:[1,6,5,10,2,7,3,8,4,9], idle:4500, redline:19000, mis:0.12, vari:0.18, pipe:0.9, muffle:0.02, crackle:0.15,
+    text:'Ten 300 cc cylinders revving to 19,000 rpm, so the engine fires almost 1,600 times a second. Tiny, light pistons let it rev very fast, and short, equal-length exhausts with no silencer keep every pulse sharp: the mid-2000s shriek.' },
+  { id:'f1-v8', group:'f1', name:'F1 V8 2.4 (2006–13)', layout:'V', n:8, bank:90, crank:'flat', disp:2.4, order:[1,5,3,7,4,8,2,6], idle:4000, redline:18000, mis:0.12, vari:0.18, pipe:0.9, muffle:0.02, crackle:0.2,
+    text:'A flat-plane V8 rev-limited to 18,000 rpm in its later years. Each bank fires every 180° like a tiny inline-4 with 300 cc cylinders, which gives a harder, rasping scream than the V10.' },
+  { id:'f1-v6', group:'f1', name:'F1 V6 1.6 turbo (2014–)', layout:'V', n:6, bank:90, crank:'even', disp:1.6, order:[1,4,2,5,3,6], idle:4000, redline:13000, mis:0.3, vari:0.25, pipe:1.6, muffle:0.2, crackle:0.1, merge:true, ind:'turbo', valve:'recirc',
+    text:'A 1.6-litre 90° V6 with one large turbo. The rules allow 15,000 rpm, but fuel-flow limits mean the useful power runs out around 10,500–12,000, so that is where they live. It fires three times per turn, and the turbine soaks up and smooths the pulses, which is why these sound deeper and fatter than the V10s and V8s before them.' }
+];
+const GROUPS = [['road', 'Road and classic'], ['mine', 'Your builds'], ['f1', 'Formula 1']];
+// smaller cylinders and higher redlines rev faster
+function autoRev(sp){ const cc = sp.disp * 1000 / sp.n; return Math.min(4, Math.max(0.3, Math.pow(500 / cc, 0.5) * Math.pow(sp.redline / 7500, 0.6))); }
+
+const hash = (c, k) => { const s = Math.sin(c * 12.9898 + k * 78.233) * 43758.5453; return (s - Math.floor(s)) * 2 - 1; };
+function bankOf(sp, c){
+  if (sp.layout === 'inline') return 0;
+  if (sp.layout === 'flat' && sp.n === 4) return c % 2 ? 0 : 1;
+  return c <= sp.n / 2 ? 0 : 1;
+}
+// crank angle (0-720) at which each position in the firing order fires
+function firingAngles(sp){
+  const n = sp.n;
+  const odd = sp.layout === 'V' && (sp.crank === 'odd' || n === 2);
+  if (!odd) return sp.order.map((_, i) => i * 720 / n);
+  const ba = sp.bank || 90;
+  const iv = n === 2 ? [360 + ba, 360 - ba] : [ba, 1440 / n - ba];
+  const out = []; let a = 0;
+  for (let i = 0; i < n; i++){ out.push(a); a += iv[i % 2]; }
+  return out;
+}
+function buildCfg(sp){
+  const n = sp.n, banks = sp.layout === 'inline' ? 1 : 2;
+  const angles = firingAngles(sp);
+  const cc = sp.disp * 1000 / n;
+  const hdrLen = 0.55 + 0.25 * Math.min(1, cc / 700);
+  const cyls = sp.order.map((c, i) => ({
+    c, a: angles[i], bank: bankOf(sp, c),
+    hdrMs: sp.hdrMs ? sp.hdrMs[c - 1] || 0 : 0,
+    run: hdrLen * (1 + 0.35 * sp.mis * hash(c, 1)),
+    g: 1 + 0.10 * sp.vari * hash(c, 2),
+    wv: 1 + 0.12 * sp.vari * hash(c, 3),
+    tv: 1.6 * sp.vari * hash(c, 4)
+  })).sort((x, y) => x.a - y.a);
+  cyls.forEach((cy, i) => cy.ci = i);
+  return { cyls, banks, n, idle: sp.idle, redline: sp.redline, rev: sp.revX != null ? sp.revX : autoRev(sp), disp: sp.disp, fscale: sp.redline / 8000,
+    turbo: sp.ind === 'turbo', valve: sp.valve || 'recirc',
+    dur: 68 * Math.pow(cc / 500, 0.12),
+    gain: Math.pow(4 / n, 0.35) * Math.pow(cc / 500, 0.4) * (sp.gain || 1), intake: 1 };
+}
+
+// ---------- Sound engine (runs in the audio thread) ----------
+class EngineDSP {
+  constructor(sr){
+    this.sr = sr; this.n = 0; this.theta = 0; this.idx = 0;
+    this.rpm = 0; this.state = 'off'; this.crankT = 0; this.crankDur = 0.8; this.catchT = 9; this.flare = 0; this.stEnv = 0; this.stRpm = 0; this.stPh = 0; this.stPh2 = 0; this.off = 0; this.thrS = 0; this.thT = 0; this.prevTh = 0; this.cut = false; this.seed = 22222;
+    this.pulses = []; this.cfg = null;
+    this.p = { mode:'free', thr:0, depth:1, rpmSet:4000, load:0.6, pipe:2.4, muffle:0.35, merge:false, crackle:0.35, brake:0, auto:false, turboVol:0.4 };
+    this.gear = 1; this.v = 0; this.slip = true; this.shiftT = 0; this.blipT = 0; this.barkT = 0; this.ovrT = 99; this.popRate = 0;
+    this.ts = 0; this.bovEnv = 0; this.wPh = 0; this.flPh = 0; this.bLp = 0; this.f2Lo = 0; this.f2Bp = 0; this.hsLo = 0; this.hsBp = 0;
+    this.rBuf = []; for (let i = 0; i < 16; i++) this.rBuf.push(new Float32Array(2048));
+    this.rLp = new Float32Array(16); this.rIn = new Float32Array(16); this.rD = new Float32Array(16);
+    this.pBuf = [new Float32Array(16384), new Float32Array(16384)]; this.pLp = [0, 0];
+    this.w = 0; this.pD = 0;
+    this.m1 = [0, 0]; this.m2 = [0, 0]; this.dp = [0, 0]; this.dcx = [0, 0]; this.dcy = [0, 0];
+    this.svLo = 0; this.svBp = 0; this.mLp = 0;
+  }
+  rnd(){ let x = this.seed; x ^= x << 13; x ^= x >>> 17; x ^= x << 5; this.seed = x >>> 0; return this.seed / 4294967296; }
+  gauss(){ return (this.rnd() + this.rnd() + this.rnd() - 1.5) * 2; }
+  ratio(){ return GEARS[this.gear - 1] * FINAL * (this.cfg ? this.cfg.fscale : 1); }
+  mph(){ return this.p.mode === 'drive' ? this.v * 2.23694 : 0; }
+  msg(d){
+    if (d.engine){
+      const fresh = !this.cfg || d.reset;
+      this.cfg = d.engine;
+      if (fresh || d.engine.n !== this._n){ this.pulses.length = 0; this.idx = 0; this.theta = 0; }
+      else { this.idx = 0; while (this.idx < d.engine.cyls.length && this.theta >= d.engine.cyls[this.idx].a) this.idx++; }
+      this._n = d.engine.n;
+      for (const q of this.pulses) if (q.ci >= d.engine.n) q.ci = 0;
+      if (this.state === 'run') this.rpm = Math.min(Math.max(this.rpm, d.engine.idle * 0.9), d.engine.redline);
+      if (!d.engine.turbo) this.ts = 0;
+    }
+    if (d.params){
+      if (d.params.mode && d.params.mode !== this.p.mode){ this.gear = 1; this.off = 0; this.v = 0; this.slip = true; }
+      Object.assign(this.p, d.params);
+    }
+    if (d.shift) this.shift(d.shift);
+    if (d.ignition === 'start' && this.cfg && (this.state === 'off' || this.state === 'stop')){
+      this.state = 'crank'; this.crankT = 0; this.crankDur = 0.55 + 0.3 * this.rnd() + 0.02 * this.cfg.n;
+      this.gear = 1; this.v = 0; this.slip = true; this.off = 0;
+    }
+    if (d.ignition === 'stop' && (this.state === 'crank' || this.state === 'run')) this.state = 'stop';
+  }
+  shift(dir){
+    if (this.p.mode !== 'drive' || !this.cfg || this.shiftT > 0) return;
+    const ng = this.gear + dir;
+    if (ng < 1 || ng > GEARS.length) return;
+    const rOld = GEARS[this.gear - 1], rNew = GEARS[ng - 1];
+    if (this.slip){ this.gear = ng; return; }
+    const newRpm = this.rpm * rNew / rOld;
+    if (dir < 0 && newRpm > this.cfg.redline * 1.02) return; // would over-rev
+    const heard = this.rpm + this.off;
+    this.gear = ng; this.rpm = newRpm;
+    if (newRpm < this.cfg.idle * 0.95) this.slip = true;
+    this.off = heard - this.rpm;               // sound glides to the new revs over ~0.1 s
+    if (dir > 0){ this.shiftT = 0.08; if (this.thrS > 0.5) this.barkT = 0.12; }
+    else { this.blipT = 0.14; this.barkT = 0.18; }
+  }
+  status(){ return { state:this.state, rpm:this.rpm + this.off, thr:this.thrS, cut:this.cut, gear:this.gear, mph:this.mph(), ts:this.ts }; }
+  physics(dt){
+    const p = this.p, c = this.cfg, red = c.redline, idle = c.idle;
+    const K = 7000 * c.rev, K2 = 5000 * c.rev;
+    const tc = r => 1 - 0.35 * (r - 0.55) * (r - 0.55);
+    const drag = (r, th) => 0.15 + 0.5 * r * r + 0.3 * (1 - th) * r;
+    const boostT = c.turbo ? 0.72 + 0.75 * this.ts : 1;      // turbo engines are weak off-boost, strong on it
+    if (this.state !== 'run'){
+      if (this.state === 'crank'){
+        // starter turning the engine: crank speed sags into each compression stroke
+        this.crankT += dt;
+        const spin = Math.min(1, this.crankT / 0.12);
+        const base = (150 + 300 / Math.sqrt(c.disp + 0.5)) * spin;
+        this.rpm = Math.max(15, base * (1 - 0.3 * Math.cos(2 * Math.PI * this.phase())));
+        if (this.crankT >= this.crankDur){ this.state = 'run'; this.catchT = 0; this.flare = 1; }
+      } else if (this.state === 'stop'){
+        this.rpm -= (drag(this.rpm / red, 0) * K2 * 0.6 + 300) * dt;
+        if (this.rpm < 80){ this.rpm = 0; this.state = 'off'; }
+      } else this.rpm = 0;
+      this.cut = false; this.thT = 0; this.prevTh = 0; this.popRate = 0; this.off = 0;
+      this.ts *= Math.exp(-dt / 0.4);
+      this.thrS += (0 - this.thrS) * Math.min(1, dt * 25);
+      return;
+    }
+    this.catchT += dt;
+    if (this.catchT > 0.25) this.flare *= Math.exp(-dt / 0.55);
+    if (p.mode === 'free' || p.mode === 'drive'){
+      let user = p.thr * p.depth;
+      if (this.blipT > 0){ this.blipT -= dt; user = Math.max(user, 0.55); }
+      const ri = idle / red;
+      const bal = drag(ri, 0.1) * K2 / (K * tc(ri));
+      const idleE = idle * (1 + 0.7 * this.flare);
+      const idleThr = Math.min(1, Math.max(0, bal + (idleE - this.rpm) / 250));
+      const th = Math.max(user, idleThr);
+      if (this.rpm > red) this.cut = true;
+      else if (this.cut && this.rpm < red - 220) this.cut = false;
+      let shiftCut = false;
+      if (this.shiftT > 0){ this.shiftT -= dt; shiftCut = true; }
+      const off = this.cut || shiftCut;
+      const r = this.rpm / red;
+      const torque = off ? 0 : th * K * tc(r) * boostT;
+      const fric = drag(r, off ? 0 : th) * K2;
+      if (p.mode === 'drive'){
+        const R = this.ratio(), k = 60 / (2 * Math.PI) * R / WHEEL_R;   // rpm per m/s in this gear
+        const Tmax = 120 * c.disp, v = this.v;
+        const F = v > 0.05 ? 0.55 * v * v + 180 + 11000 * (+p.brake || 0) : 0;
+        if (!this.slip){
+          const J = 1 + 256 / (R * R);
+          const load = K * (F * WHEEL_R / R) / Tmax;
+          this.rpm += (torque - fric - load) / J * dt;
+          this.v = this.rpm / k;
+          if (this.rpm < idle * 0.95) this.slip = true;        // clutch opens near idle
+        } else {
+          const uth = Math.max(p.thr * p.depth, this.blipT > 0 ? 0.55 : 0);
+          const target = Math.min(red * 0.9, idle * (1 + 0.7 * this.flare) + uth * 0.42 * red);
+          if (!off) this.rpm += (target - this.rpm) * Math.min(1, dt * 6);
+          else this.rpm -= fric * dt;
+          const clutchT = uth > 0.05 ? (0.3 + 0.7 * uth) * Tmax * boostT : (p.brake ? 0 : 0.05 * Tmax);
+          const drive = Math.min(14000, clutchT * R / WHEEL_R);
+          this.v = Math.max(0, v + (drive - F - (p.brake && v <= 0.05 ? drive : 0)) / 1600 * dt);
+          if (this.v * k >= Math.max(idle * 0.95, this.rpm - 60)){ this.slip = false; this.rpm = this.v * k; }
+        }
+        if (p.auto && this.shiftT <= 0){
+          if (this.rpm > red * 0.97 && this.gear < GEARS.length && th > 0.3) this.shift(1);
+          else if (!this.slip && this.rpm < red * 0.33 && this.gear > 1 && this.rpm * GEARS[this.gear - 2] / GEARS[this.gear - 1] < red * 0.8) this.shift(-1);
+        }
+      } else {
+        this.rpm += (torque - fric) * dt;
+      }
+      this.thT = off ? 0 : th;
+    } else {
+      const tgt = Math.min(Math.max(p.rpmSet, 400), red);
+      this.rpm += (tgt - this.rpm) * Math.min(1, dt * 3);
+      this.cut = false; this.thT = p.load;
+    }
+    if (this.rpm < 200) this.rpm = 200;
+    this.off *= Math.exp(-dt / 0.05);
+    // turbo spool: lags at low revs, needs throttle and exhaust flow
+    if (c.turbo){
+      const rr = this.rpm / red;
+      const tgt = Math.min(1, Math.max(0, this.thT * (rr * 1.6 - 0.15)));
+      const tau = tgt > this.ts ? 0.25 + 0.7 * (1 - rr) : 0.3;
+      if (this.prevTh > 0.4 && this.thT < 0.1 && this.ts > 0.35 && c.valve !== 'recirc') this.bovEnv = Math.min(1, this.ts * 1.2);
+      this.ts += (tgt - this.ts) * Math.min(1, dt / tau);
+    }
+    // overrun crackle: starts when you lift at high revs
+    if (this.prevTh > 0.35 && this.thT < 0.08 && !this.cut) this.ovrT = 0;
+    this.ovrT += dt;
+    const rr = this.rpm / red;
+    let rate = 0;
+    if (this.thT < 0.08 && rr > 0.3 && this.ovrT < 3.5) rate = 40 * p.crackle * rr * (1 - this.ovrT / 3.5);
+    if (this.barkT > 0){ this.barkT -= dt; rate += 110 * Math.min(1, p.crackle * 2); }
+    this.popRate = rate;
+    this.prevTh = this.thT;
+    this.thrS += (this.thT - this.thrS) * Math.min(1, dt * 25);
+  }
+  phase(){
+    const cy = this.cfg.cyls, t = this.theta;
+    let prev = cy[cy.length - 1].a - 720, next = cy[0].a + 720;
+    for (const q of cy){ if (q.a <= t && q.a > prev) prev = q.a; if (q.a > t && q.a < next) next = q.a; }
+    return (t - prev) / (next - prev);
+  }
+  fire(cy, ago){
+    const sr = this.sr, rpm = this.rpm + this.off, c = this.cfg;
+    if (this.state === 'off' || !(rpm > 0)) return;
+    if (this.state === 'crank' || this.state === 'stop'){
+      // compression puff with no combustion
+      const dT = Math.max(1e-4, this.rpm / 60 * 360 / sr);
+      this.pulses.push({ st: this.n - ago + cy.run / 520 * sr, tau: Math.min(sr * 0.03, 0.14 * c.dur * 2.2 / dT),
+        amp: c.gain * (this.state === 'crank' ? 0.1 : 0.05) * (0.8 + 0.4 * this.rnd()), ci: cy.ci, cr: 0.05 });
+      return;
+    }
+    if (this.catchT < 0.35 && this.rnd() < 0.5 * (1 - this.catchT / 0.35)) return;   // misfires while it catches
+    const dTheta = rpm / 60 * 360 / sr;
+    const tauDeg = 0.14 * c.dur * cy.wv * (1.15 - 0.3 * this.thrS);
+    const tau = Math.max(1, tauDeg / dTheta) * (1 + 0.6 * this.ts);   // the turbine smooths each pulse
+    const base = this.cut || this.shiftT > 0 ? 0.03 : (0.1 + 0.9 * this.thrS);
+    const amp = c.gain * cy.g * base * (1 - 0.3 * this.ts) * (1 + (0.05 + 0.1 * (1 - this.thrS)) * this.gauss());
+    const transport = (cy.run / 520 + cy.hdrMs * 0.001) * sr;
+    const delay = transport + (2 + cy.tv + 0.17 * this.gauss()) / dTheta;
+    this.pulses.push({ st: this.n - ago + delay, tau, amp, ci: cy.ci, cr: 0.35 * (0.4 + 0.6 * this.thrS) });
+  }
+  pop(){
+    const c = this.cfg, r = this.rnd();
+    this.pulses.push({ st: this.n, tau: this.sr * 0.00022 * (0.6 + 0.8 * this.rnd()), amp: c.gain * (0.5 + 1.6 * r * r) * 1.3,
+      ci: Math.floor(this.rnd() * c.n), cr: 1.6 });
+  }
+  read(buf, mask, d){
+    const pos = this.w - d, i = Math.floor(pos), f = pos - i;
+    const a = buf[i & mask], b = buf[(i + 1) & mask];
+    return a + (b - a) * f;
+  }
+  post(i, x, aM){
+    this.m1[i] += aM * (x - this.m1[i]); this.m2[i] += aM * (this.m1[i] - this.m2[i]);
+    const r = this.m2[i] - 0.9 * this.dp[i]; this.dp[i] = this.m2[i];
+    const y = r - this.dcx[i] + 0.996 * this.dcy[i]; this.dcx[i] = r; this.dcy[i] = y;
+    return y;
+  }
+  process(L, R, N){
+    const c = this.cfg;
+    if (!c){ for (let s = 0; s < N; s++){ L[s] = 0; R[s] = 0; } return; }
+    this.physics(N / this.sr);
+    const sr = this.sr, p = this.p, cyl = c.cyls, nC = cyl.length;
+    const rpmH = this.rpm + this.off;
+    const dTheta = rpmH / 60 * 360 / sr, C = 520;
+    for (let i = 0; i < nC; i++) this.rD[i] = Math.max(1, 2 * cyl[i].run / C * sr);
+    const pT = Math.max(2, 2 * p.pipe / C * sr);
+    if (this.pD === 0) this.pD = pT;
+    const mu = p.muffle, gP = 0.55 - 0.25 * mu, aP = 0.3 + 0.5 * (1 - mu);
+    const ts = this.ts;
+    const fc = (700 + 7500 * Math.pow(1 - mu, 1.7)) * (1 - 0.55 * ts), aM = 1 - Math.exp(-2 * Math.PI * fc / sr);
+    const dual = c.banks > 1 && !p.merge;
+    const rr = rpmH / c.redline;
+    const fi = Math.min(3500, 160 + 0.09 * rpmH), sf = 2 * Math.sin(Math.PI * fi / sr), sq = 0.4;
+    const inAmp = 0.10 * this.thrS * (0.3 + rr) * c.intake * (c.turbo ? 0.5 : 1), meAmp = 0.008 * rr * rr;
+    const outG = 2.6 * Math.pow(c.redline / Math.max(rpmH, 400), 0.45) * (1 + 0.8 * mu) * (c.banks > 1 ? 1.4 : 1);
+    // turbo voices
+    const wF = 1800 + 7200 * ts, wInc = 2 * Math.PI * wF / sr, wAmp = c.turbo ? 0.03 * p.turboVol * ts * ts * (0.25 + 0.75 * this.thrS) : 0;
+    const hF = Math.min(6000, 900 + 3000 * ts), hf = 2 * Math.sin(Math.PI * hF / sr), hAmp = c.turbo ? 0.05 * p.turboVol * ts * this.thrS : 0;
+    const bovDecay = Math.exp(-1 / ((c.valve === 'flutter' ? 0.55 : 0.32) * sr));
+    const f2 = 2 * Math.sin(Math.PI * 700 / sr);
+    const popP = this.popRate / sr;
+    // starter motor: gear-mesh and commutator whine that follows crank speed, then spins down after the engine catches
+    const cranking = this.state === 'crank';
+    if (cranking) this.stRpm = rpmH; else this.stRpm *= Math.exp(-N / sr / 0.25);
+    const fm = this.stRpm / 60 * 13, inc1 = 2 * Math.PI * fm * 11 / sr, inc2 = 2 * Math.PI * fm * 23 / sr;
+    const stDecay = Math.exp(-1 / (0.09 * sr)), stLoad = cranking ? 1.25 - 0.5 * Math.min(1, rpmH / 300) : 1, stAtk = 1 / (0.03 * sr);
+    const rb = this.rBuf, rl = this.rLp, ri = this.rIn, rD = this.rD, pb = this.pBuf, ps = this.pulses;
+    for (let s = 0; s < N; s++){
+      if (dTheta > 0){
+      this.theta += dTheta;
+      while (this.idx < nC && this.theta >= cyl[this.idx].a){ this.fire(cyl[this.idx], (this.theta - cyl[this.idx].a) / dTheta); this.idx++; }
+      if (this.theta >= 720){
+        this.theta -= 720; this.idx = 0;
+        while (this.idx < nC && this.theta >= cyl[this.idx].a){ this.fire(cyl[this.idx], (this.theta - cyl[this.idx].a) / dTheta); this.idx++; }
+      }
+      }
+      if (popP > 0 && this.rnd() < popP) this.pop();
+      for (let i = 0; i < nC; i++) ri[i] = 0;
+      let env = 0;
+      const n = this.n;
+      for (let k = ps.length - 1; k >= 0; k--){
+        const q = ps[k], t = n - q.st;
+        if (t < 0) continue;
+        const x = t / q.tau;
+        if (x > 7){ ps[k] = ps[ps.length - 1]; ps.pop(); continue; }
+        const sh = (1 - Math.exp(-8 * x)) * Math.exp(-x) * 1.45;
+        ri[q.ci] += q.amp * (sh + q.cr * (this.rnd() * 2 - 1) * Math.exp(-4 * x));
+        env += sh * q.amp;
+      }
+      // each cylinder's own runner: a short pipe with a partial negative reflection at the collector
+      let b0 = 0, b1 = 0;
+      const wm = this.w & 2047;
+      for (let i = 0; i < nC; i++){
+        rl[i] += 0.45 * (this.read(rb[i], 2047, rD[i]) - rl[i]);
+        const y = ri[i] - 0.4 * rl[i];
+        rb[i][wm] = y;
+        if (cyl[i].bank) b1 += y; else b0 += y;
+      }
+      // main pipe(s): quarter-wave resonator, closed at the engine end, open at the tail
+      this.pD += (pT - this.pD) * 0.0005;
+      let o0, o1;
+      const x0 = dual ? b0 : b0 + b1;
+      this.pLp[0] += aP * (this.read(pb[0], 16383, this.pD) - this.pLp[0]);
+      const y0 = x0 - gP * this.pLp[0]; pb[0][this.w & 16383] = y0;
+      o0 = this.post(0, y0, aM);
+      if (dual){
+        this.pLp[1] += aP * (this.read(pb[1], 16383, this.pD * 1.03) - this.pLp[1]);
+        const y1 = b1 - gP * this.pLp[1]; pb[1][this.w & 16383] = y1;
+        o1 = this.post(1, y1, aM);
+      } else o1 = o0;
+      // intake roar and mechanical noise
+      const envN = Math.min(1.5, env / c.gain);
+      const nz = this.rnd() * 2 - 1;
+      this.svLo += sf * this.svBp; const hi = nz - this.svLo - sq * this.svBp; this.svBp += sf * hi;
+      let extra = this.svBp * inAmp * (0.4 + 0.6 * envN);
+      const nz2 = this.rnd() * 2 - 1; this.mLp += 0.3 * (nz2 - this.mLp);
+      extra += (nz2 - this.mLp) * meAmp * (0.5 + 0.5 * envN);
+      if (c.turbo){
+        this.wPh += wInc; if (this.wPh > 6.2832) this.wPh -= 6.2832;
+        extra += Math.sin(this.wPh) * wAmp * (1 + 0.15 * Math.sin(this.wPh * 0.5007));
+        this.hsLo += hf * this.hsBp; const hh = nz2 - this.hsLo - 0.5 * this.hsBp; this.hsBp += hf * hh;
+        extra += this.hsBp * hAmp;
+        if (this.bovEnv > 0.0005){
+          if (c.valve === 'bov'){
+            const hn = nz - this.bLp; this.bLp += 0.25 * (nz - this.bLp);
+            extra += hn * this.bovEnv * 0.22 * p.turboVol;
+          } else {
+            this.flPh += 2 * Math.PI * (8 + 10 * this.bovEnv) / sr;
+            const m = Math.max(0, Math.sin(this.flPh)); const g3 = m * m * m;
+            this.f2Lo += f2 * this.f2Bp; const h2 = nz - this.f2Lo - 0.35 * this.f2Bp; this.f2Bp += f2 * h2;
+            extra += this.f2Bp * this.bovEnv * g3 * 0.35 * p.turboVol;
+          }
+          this.bovEnv *= bovDecay;
+        }
+      }
+      let st = 0;
+      if (cranking || this.stEnv > 0.001){
+        this.stEnv = cranking ? Math.min(1, this.stEnv + stAtk) : this.stEnv * stDecay;
+        this.stPh += inc1; if (this.stPh > 6.2832) this.stPh -= 6.2832;
+        this.stPh2 += inc2; if (this.stPh2 > 6.2832) this.stPh2 -= 6.2832;
+        st = (Math.sin(this.stPh) + 0.35 * Math.sin(2 * this.stPh) + 0.2 * Math.sin(3 * this.stPh) + 0.3 * Math.sin(this.stPh2) + 0.25 * nz) * this.stEnv * stLoad * 0.07;
+      }
+      const l = dual ? 0.58 * o0 + 0.42 * o1 : o0, r = dual ? 0.58 * o1 + 0.42 * o0 : o0;
+      L[s] = Math.tanh((l + extra) * outG) * 0.9 + st;
+      R[s] = Math.tanh((r + extra) * outG) * 0.9 + st;
+      this.w++; this.n++;
+    }
+  }
+}
+</script>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  let ctx = null, node = null, spNode = null, local = null, analyser = null, gain = null;
+  let status = { state: 'off', rpm: 0, thr: 0, cut: false, gear: 1, mph: 0, ts: 0 }, axis = 'order', offSince = 0;
+  const START = ENGINES.find(e => e.id === 'audi-r8');
+  let source = { kind: 'preset', id: START.id, name: START.name };
+  let spec = clone(START), cfg = buildCfg(spec);
+  const params = { mode:'free', thr:0, depth:1, rpmSet:4000, load:0.6, pipe:spec.pipe, muffle:spec.muffle, merge:!!spec.merge, crackle:spec.crackle, brake:0, auto:false, turboVol:0.4 };
+  const C = 520, KEY = 'engine-note-lab.engines.v1';
+  function clone(e){ return JSON.parse(JSON.stringify(e)); }
+  const live = () => status.state !== 'off';
+
+  const send = m => { if (node) node.port.postMessage(m); else if (local) local.msg(m); };
+  const setParams = o => { Object.assign(params, o); send({ params: o }); };
+  const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+  const LAYOUT_NAME = { inline: 'Inline', V: 'V', flat: 'Flat' };
+  const shortName = sp => `${sp.layout === 'inline' ? 'I' : sp.layout === 'flat' ? 'Flat-' : 'V'}${sp.n}`;
+
+  // ---------- storage ----------
+  let saved = [], storageOk = true;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '[]'); if (!Array.isArray(saved)) saved = []; } catch (e) { saved = []; }
+  function persist(){ try { localStorage.setItem(KEY, JSON.stringify(saved)); storageOk = true; } catch (e) { storageOk = false; } }
+  function clean(sp){ const o = clone(sp); ['custom','text','savedName','id','name','group','pipe','muffle','crackle','merge','rev','turboVol'].forEach(k => delete o[k]); return o; }
+
+  // ---------- drawer ----------
+  const drawer = $('#drawer'), scrim = $('#scrim'), menu = $('#menu');
+  function openDrawer(on){
+    drawer.classList.toggle('open', on); scrim.hidden = !on;
+    drawer.setAttribute('aria-hidden', !on); menu.setAttribute('aria-expanded', on);
+    if (on){ const cur = drawer.querySelector('.eng[aria-pressed="true"]') || drawer.querySelector('.eng'); if (cur) cur.focus(); }
+    else menu.focus();
+  }
+  menu.addEventListener('click', () => openDrawer(true));
+  $('#dclose').addEventListener('click', () => openDrawer(false));
+  scrim.addEventListener('click', () => openDrawer(false));
+
+  const presetBox = $('#presets'), savedList = $('#saved');
+  GROUPS.forEach(([gid, gname]) => {
+    const h = document.createElement('p'); h.className = 'label grp'; h.textContent = gname; presetBox.appendChild(h);
+    const box = document.createElement('div'); box.className = 'engines'; presetBox.appendChild(box);
+    ENGINES.forEach((e, i) => {
+      if (e.group !== gid) return;
+      const b = document.createElement('button');
+      b.className = 'eng'; b.dataset.id = e.id;
+      b.innerHTML = `<span class="nm">${esc(e.name)}</span><span class="key">${i < 9 ? i + 1 : ''}</span><span class="fo">${shortName(e)}${e.ind === 'turbo' ? ' turbo' : ''} · ${e.order.join('-')}</span>`;
+      b.addEventListener('click', () => loadPreset(e));
+      box.appendChild(b);
+    });
+  });
+  function renderSaved(){
+    if (!saved.length){
+      savedList.innerHTML = `<p class="empty">${storageOk ? 'Tune a build, then press Save engine to keep it here.' : 'This browser is blocking storage, so saves last until you close the page. Use Export to keep them.'}</p>`;
+      return;
+    }
+    savedList.innerHTML = saved.map((s, i) => `<div class="saved">
+      <button class="eng" data-i="${i}" aria-pressed="${source.kind === 'saved' && source.id === s.id && !spec.custom}"><span class="nm">${esc(s.name)}</span><span class="key"></span>
+        <span class="fo">${shortName(s.spec)}${s.spec.ind === 'turbo' ? ' turbo' : ''} · ${s.spec.order.join('-')}</span></button>
+      <button class="del" data-del="${i}" aria-label="Delete ${esc(s.name)}">Delete</button></div>`).join('');
+  }
+  savedList.addEventListener('click', e => {
+    const d = e.target.closest('[data-del]');
+    if (d){
+      if (!d.classList.contains('confirm')){ d.classList.add('confirm'); d.textContent = 'Sure?'; setTimeout(() => { if (d.isConnected){ d.classList.remove('confirm'); d.textContent = 'Delete'; } }, 2500); return; }
+      saved.splice(+d.dataset.del, 1); persist(); renderSaved(); return;
+    }
+    const b = e.target.closest('[data-i]');
+    if (b) loadSaved(saved[+b.dataset.i]);
+  });
+
+  // save form
+  $('#savebtn').addEventListener('click', () => {
+    $('#saveform').hidden = false;
+    $('#savename').value = source.kind === 'saved' ? source.name : (spec.custom ? `My ${shortName(spec)}` : `My ${spec.name}`);
+    $('#savename').focus(); $('#savename').select();
+  });
+  $('#savecancel').addEventListener('click', () => { $('#saveform').hidden = true; });
+  function doSave(){
+    const name = $('#savename').value.trim().slice(0, 40);
+    if (!name){ $('#savename').focus(); return; }
+    const entry = { id: Date.now().toString(36), name, spec: clean(spec), ex: { pipe: params.pipe, muffle: params.muffle, merge: params.merge, crackle: params.crackle, turboVol: params.turboVol } };
+    const at = saved.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+    if (at >= 0){ entry.id = saved[at].id; saved[at] = entry; } else saved.push(entry);
+    persist();
+    source = { kind: 'saved', id: entry.id, name };
+    spec.custom = false;
+    $('#saveform').hidden = true;
+    fillBuild(); updateNotes();
+  }
+  $('#saveok').addEventListener('click', doSave);
+  $('#savename').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); doSave(); } if (e.key === 'Escape') $('#saveform').hidden = true; });
+
+  // export / import
+  $('#exp').addEventListener('click', async () => {
+    const txt = JSON.stringify({ app: 'engine-note-lab', version: 1, engines: saved }, null, 1);
+    $('#io').hidden = false; $('#ioload').hidden = true; $('#iotext').value = txt; $('#iotext').readOnly = true;
+    $('#iotext').focus(); $('#iotext').select();
+    try { await navigator.clipboard.writeText(txt); $('#iomsg').textContent = `Copied ${saved.length} engine${saved.length === 1 ? '' : 's'} to the clipboard.`; }
+    catch (e) { $('#iomsg').textContent = 'Select the text above and copy it to keep a backup.'; }
+  });
+  $('#imp').addEventListener('click', () => {
+    $('#io').hidden = false; $('#ioload').hidden = false; $('#iotext').readOnly = false; $('#iotext').value = '';
+    $('#iomsg').textContent = 'Paste exported engine text above, then press Load engines.'; $('#iotext').focus();
+  });
+  $('#ioclose').addEventListener('click', () => { $('#io').hidden = true; });
+  $('#ioload').addEventListener('click', () => {
+    let data;
+    try { data = JSON.parse($('#iotext').value); } catch (e) { $('#iomsg').textContent = 'That text is not valid engine data. Paste the whole export, including the braces.'; return; }
+    const arr = Array.isArray(data) ? data : data && data.engines;
+    const good = (arr || []).filter(s => s && s.name && s.spec && ORDERS[s.spec.layout] && ORDERS[s.spec.layout][s.spec.n] && Array.isArray(s.spec.order) && s.spec.order.length === s.spec.n);
+    if (!good.length){ $('#iomsg').textContent = 'No engines found in that text.'; return; }
+    good.forEach(s => {
+      const e = { id: s.id || Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: String(s.name).slice(0, 40), spec: clean(s.spec), ex: s.ex || {} };
+      const at = saved.findIndex(x => x.name.toLowerCase() === e.name.toLowerCase());
+      if (at >= 0) saved[at] = e; else saved.push(e);
+    });
+    persist(); renderSaved();
+    $('#iomsg').textContent = `Loaded ${good.length} engine${good.length === 1 ? '' : 's'}.`;
+  });
+
+  // ---------- helpers ----------
+  function intervals(angles){
+    const a = [...angles].sort((x, y) => x - y);
+    return a.map((v, i) => ((a[(i + 1) % a.length] - v) + 720) % 720 || 720);
+  }
+  function fmtInt(arr){
+    const same = arr.every(v => Math.abs(v - arr[0]) < 0.01);
+    return same ? `every ${+arr[0].toFixed(1)}°` : arr.map(v => +v.toFixed(1)).join(' · ') + '°';
+  }
+  const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  function drawDial(){
+    const svg = $('#dial'), cx = 120, cy = 120, r = 88;
+    const pos = (a, rad) => { const t = (a / 720) * 2 * Math.PI - Math.PI / 2; return [cx + rad * Math.cos(t), cy + rad * Math.sin(t)]; };
+    let h = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--line)" stroke-width="2"/>`;
+    for (let a = 0; a < 720; a += 45){
+      const [x1, y1] = pos(a, r - (a % 180 === 0 ? 10 : 5)), [x2, y2] = pos(a, r);
+      h += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--muted)" stroke-width="${a % 180 === 0 ? 1.5 : 1}"/>`;
+    }
+    const dotR = cfg.n > 10 ? 9 : 10;
+    cfg.cyls.forEach(c => {
+      const [x, y] = pos(c.a, r + 16), [lx, ly] = pos(c.a, r);
+      const col = c.bank ? 'var(--bankB)' : 'var(--bankA)';
+      h += `<line x1="${lx}" y1="${ly}" x2="${x}" y2="${y}" stroke="${col}" stroke-width="2"/>`;
+      h += `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${col}"/>`;
+      h += `<text x="${x}" y="${y + 0.5}" fill="var(--panel)" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="13" text-anchor="middle" dominant-baseline="middle">${c.c}</text>`;
+    });
+    h += `<text x="${cx}" y="${cy - 4}" fill="var(--ink)" font-family="Barlow Condensed, sans-serif" font-weight="700" font-size="34" text-anchor="middle">${cfg.n / 2}</text>`;
+    h += `<text x="${cx}" y="${cy + 18}" fill="var(--muted)" font-family="IBM Plex Sans, sans-serif" font-size="12" text-anchor="middle">pulses per rev</text>`;
+    svg.innerHTML = h;
+    let out = `<div><span class="sw" style="background:var(--ink)"></span><span>${fmtInt(intervals(cfg.cyls.map(c => c.a)))}</span></div>`;
+    if (cfg.banks > 1) ['A', 'B'].forEach((nm, b) => {
+      const ang = cfg.cyls.filter(c => c.bank === b).map(c => c.a);
+      if (ang.length) out += `<div><span class="sw" style="background:var(--bank${nm})"></span><span>${nm}: ${ang.length > 1 ? fmtInt(intervals(ang)) : 'once per cycle'}</span></div>`;
+    });
+    $('#intervals').innerHTML = out;
+  }
+  function drawTicks(){
+    const step = spec.redline > 11000 ? 2000 : 1000;
+    const top = Math.ceil(spec.redline / step) * step + step;
+    window.__tachTop = top;
+    let h = '';
+    for (let v = 0; v <= top; v += step) h += `<span style="left:${v / top * 100}%">${v / 1000}</span>`;
+    $('#ticks').innerHTML = h;
+    $('#redzone').style.width = ((top - spec.redline) / top * 100) + '%';
+  }
+  function customText(){
+    const all = fmtInt(intervals(cfg.cyls.map(c => c.a)));
+    let t = `${LAYOUT_NAME[spec.layout]}-${spec.n} that fires ${all}, ${spec.n / 2} pulses per crank turn.`;
+    if (cfg.banks > 1){
+      const per = [0, 1].map(b => intervals(cfg.cyls.filter(c => c.bank === b).map(c => c.a)));
+      t += per.some(a => a.some(v => Math.abs(v - a[0]) > 0.01)) ? ' At least one bank fires unevenly, so separate bank exhausts will lope or burble.' : ' Each bank fires evenly on its own.';
+    }
+    if ((spec.n / 2) % 1) t += ' The half-order firing gives the off-beat warble.';
+    if (spec.ind === 'turbo') t += ' The turbine smooths each exhaust pulse, so it sounds deeper and more muted than the same engine without a turbo, with a whistle on top as boost builds.';
+    return t;
+  }
+  const displayName = () => spec.custom ? `Custom ${shortName(spec)}` : source.name;
+  function updateNotes(){
+    $('#curname').textContent = displayName();
+    $('#curorder').textContent = `${shortName(spec)}${spec.ind === 'turbo' ? ' turbo' : ''} · ${spec.disp.toFixed(1)} L · ${spec.order.join('-')}`;
+    $('#n-name').textContent = displayName();
+    $('#n-order').textContent = `Firing order ${spec.order.join('-')}`;
+    $('#n-text').textContent = (!spec.custom && source.kind === 'preset' && spec.text) ? spec.text : customText();
+    const cc = Math.round(spec.disp * 1000 / spec.n);
+    const facts = [
+      ['Capacity', `${spec.disp.toFixed(1)} L · ${cc} cc per cylinder`],
+      ['Firing', fmtInt(intervals(cfg.cyls.map(c => c.a)))],
+      ['Induction', spec.ind === 'turbo' ? 'Turbocharged' : 'Naturally aspirated'],
+      ['Idle / redline', `${spec.idle} / ${spec.redline} rpm`],
+      ['Rev response', `${cfg.rev.toFixed(2)}×${spec.revX != null ? '' : ' (auto)'}`],
+      ['At redline', Math.round(spec.redline / 60 * cfg.n / 2) + ' Hz']
+    ];
+    $('#n-facts').innerHTML = facts.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  }
+  function updateRes(){
+    const f = C / (4 * params.pipe);
+    $('#o-pipe').textContent = params.pipe.toFixed(2) + ' m';
+    $('#res').textContent = 'Resonances ' + [1, 3, 5, 7].map(k => Math.round(f * k)).join(', ') + ' Hz …';
+  }
+
+  // ---------- build sheet ----------
+  const counts = () => Object.keys(ORDERS[spec.layout]).map(Number);
+  function fillBuild(){
+    document.querySelectorAll('#b-layout button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === spec.layout));
+    $('#b-n').innerHTML = counts().map(k => `<option value="${k}"${k === spec.n ? ' selected' : ''}>${k}</option>`).join('');
+    const isV = spec.layout === 'V';
+    $('#w-crank').hidden = !isV || spec.n === 2;
+    if (isV && spec.n !== 2){
+      const opts = spec.n === 8 ? [['flat', 'Flat-plane'], ['cross', 'Cross-plane']] : [['even', 'Even-fire'], ['odd', 'Odd-fire']];
+      if (!opts.some(o => o[0] === spec.crank)) spec.crank = opts[0][0];
+      $('#b-crank').innerHTML = opts.map(([v, t]) => `<button data-v="${v}" aria-pressed="${v === spec.crank}">${t}</button>`).join('');
+    }
+    $('#w-bank').hidden = !(isV && (spec.n === 2 || spec.crank === 'odd'));
+    $('#b-bank').value = spec.bank || 90; $('#o-bank').textContent = (spec.bank || 90) + '°';
+    $('#b-order').value = spec.order.join('-'); $('#b-order').classList.remove('bad'); $('#b-err').textContent = '';
+    $('#b-disp').value = spec.disp; $('#o-disp').textContent = spec.disp.toFixed(1) + ' L';
+    $('#b-idle').value = spec.idle; $('#o-idle').textContent = spec.idle;
+    $('#b-red').value = spec.redline; $('#o-red').textContent = spec.redline;
+    const ar = autoRev(spec), rv = spec.revX != null ? spec.revX : ar;
+    $('#b-rev').value = rv; $('#o-rev').textContent = spec.revX != null ? rv.toFixed(2) + '×' : `Auto ${ar.toFixed(2)}×`;
+    $('#b-revauto').hidden = spec.revX == null;
+    $('#b-mis').value = Math.round(spec.mis * 100); $('#o-mis').textContent = Math.round(spec.mis * 100) + '%';
+    $('#b-var').value = Math.round(spec.vari * 100); $('#o-var').textContent = Math.round(spec.vari * 100) + '%';
+    const turbo = spec.ind === 'turbo';
+    document.querySelectorAll('#b-ind button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === (turbo ? 'turbo' : 'na')));
+    $('#w-valve').hidden = !turbo; $('#b-valve').value = spec.valve || 'recirc';
+    $('#r-boost').hidden = !turbo; $('#w-tvol').hidden = !turbo;
+    $('#customtag').textContent = spec.custom ? `custom · from ${source.name}` : (source.kind === 'saved' ? 'saved engine' : '');
+    presetBox.querySelectorAll('.eng').forEach(b => b.setAttribute('aria-pressed', !spec.custom && source.kind === 'preset' && b.dataset.id === source.id));
+    const multi = spec.layout !== 'inline';
+    $('#merge').disabled = !multi; $('#c-merge').classList.toggle('off', !multi);
+    renderSaved();
+  }
+  function defaultOrder(){
+    if (spec.layout === 'V' && spec.n === 8 && spec.crank === 'cross') return CROSS_V8.slice();
+    return ORDERS[spec.layout][spec.n].slice();
+  }
+  function edit(fn, opts = {}){
+    fn();
+    spec.custom = true;
+    if (opts.reorder){ spec.order = defaultOrder(); delete spec.hdrMs; }
+    if (opts.layout){ params.merge = false; $('#merge').checked = false; send({ params: { merge: false } }); }
+    apply(); fillBuild();
+  }
+  document.querySelectorAll('#b-layout button').forEach(b => b.addEventListener('click', () => edit(() => {
+    spec.layout = b.dataset.v;
+    if (!ORDERS[spec.layout][spec.n]) spec.n = counts().reduce((p, k) => Math.abs(k - spec.n) < Math.abs(p - spec.n) ? k : p);
+    if (spec.layout === 'V'){ spec.bank = spec.bank || 90; spec.crank = spec.n === 8 ? 'flat' : 'even'; }
+  }, { reorder: true, layout: true })));
+  $('#b-n').addEventListener('change', e => edit(() => { spec.n = +e.target.value; if (spec.layout === 'V') spec.crank = spec.n === 8 ? 'flat' : 'even'; }, { reorder: true }));
+  $('#b-crank').addEventListener('click', e => { const b = e.target.closest('button'); if (b) edit(() => { spec.crank = b.dataset.v; }, { reorder: spec.n === 8 }); });
+  $('#b-bank').addEventListener('input', e => edit(() => { spec.bank = +e.target.value; }));
+  $('#b-disp').addEventListener('input', e => edit(() => { spec.disp = +e.target.value; }));
+  $('#b-idle').addEventListener('input', e => edit(() => { spec.idle = +e.target.value; if (spec.idle > spec.redline - 2000) spec.redline = spec.idle + 2000; }));
+  $('#b-red').addEventListener('input', e => edit(() => { spec.redline = Math.max(+e.target.value, spec.idle + 2000); }));
+  $('#b-mis').addEventListener('input', e => edit(() => { spec.mis = e.target.value / 100; }));
+  $('#b-var').addEventListener('input', e => edit(() => { spec.vari = e.target.value / 100; }));
+  $('#b-rev').addEventListener('input', e => edit(() => { spec.revX = +e.target.value; }));
+  $('#b-revauto').addEventListener('click', () => edit(() => { delete spec.revX; }));
+  document.querySelectorAll('#b-ind button').forEach(b => b.addEventListener('click', () => edit(() => { spec.ind = b.dataset.v === 'turbo' ? 'turbo' : 'na'; if (!spec.valve) spec.valve = 'recirc'; })));
+  $('#b-valve').addEventListener('change', e => edit(() => { spec.valve = e.target.value; }));
+  function tryOrder(commit){
+    const el = $('#b-order');
+    const nums = el.value.split(/[^0-9]+/).filter(Boolean).map(Number);
+    const ok = nums.length === spec.n && new Set(nums).size === spec.n && nums.every(v => v >= 1 && v <= spec.n);
+    el.classList.toggle('bad', !ok);
+    $('#b-err').textContent = ok ? '' : `Use each cylinder 1–${spec.n} once, e.g. ${defaultOrder().join('-')}`;
+    if (ok && (commit || nums.join() !== spec.order.join())) edit(() => { spec.order = nums; });
+  }
+  $('#b-order').addEventListener('input', () => tryOrder(false));
+  $('#b-order').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); tryOrder(true); e.target.blur(); } });
+  $('#b-order').addEventListener('blur', () => { if (!$('#b-order').classList.contains('bad')) $('#b-order').value = spec.order.join('-'); });
+
+  function apply(){
+    cfg = buildCfg(spec);
+    const rs = $('#rpmset'); rs.min = spec.idle; rs.max = spec.redline;
+    if (params.rpmSet > spec.redline){ params.rpmSet = spec.redline; rs.value = spec.redline; $('#o-rpm').textContent = spec.redline + ' rpm'; send({ params: { rpmSet: spec.redline } }); }
+    drawDial(); drawTicks(); updateNotes();
+    send({ engine: cfg });
+  }
+  function setExhaust(ex){
+    params.pipe = ex.pipe ?? 2.2; params.muffle = ex.muffle ?? 0.35; params.merge = !!ex.merge; params.crackle = ex.crackle ?? 0.3;
+    if (ex.turboVol != null) params.turboVol = ex.turboVol;
+    $('#pipe').value = params.pipe;
+    $('#muffle').value = Math.round(params.muffle * 100); $('#o-muffle').textContent = Math.round(params.muffle * 100) + '%';
+    $('#crackle').value = Math.round(params.crackle * 100); $('#o-crackle').textContent = Math.round(params.crackle * 100) + '%';
+    $('#tvol').value = Math.round(params.turboVol * 100); $('#o-tvol').textContent = Math.round(params.turboVol * 100) + '%';
+    $('#merge').checked = params.merge;
+    updateRes();
+    send({ params: { pipe: params.pipe, muffle: params.muffle, merge: params.merge, crackle: params.crackle, turboVol: params.turboVol } });
+  }
+  function loadPreset(e){
+    source = { kind: 'preset', id: e.id, name: e.name };
+    spec = clone(e); spec.custom = false;
+    setExhaust(e); apply(); fillBuild();
+  }
+  function loadSaved(s){
+    source = { kind: 'saved', id: s.id, name: s.name };
+    spec = clean(s.spec); spec.custom = false;
+    setExhaust(s.ex || {}); apply(); fillBuild();
+  }
+
+  // ---------- audio and ignition ----------
+  async function initAudio(){
+    ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+    const shared = document.getElementById('dsp-src').textContent;
+    const src = shared + `
+class EngineProc extends AudioWorkletProcessor {
+  constructor(){ super(); this.d = new EngineDSP(sampleRate); this.k = 0; this.port.onmessage = e => this.d.msg(e.data); }
+  process(i, o){ const ch = o[0]; const L = ch[0], R = ch[1] || ch[0]; this.d.process(L, R, L.length);
+    if ((this.k += L.length) >= 1024){ this.k = 0; this.port.postMessage(this.d.status()); } return true; }
+}
+registerProcessor('engine-proc', EngineProc);`;
+    try {
+      const url = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+      await ctx.audioWorklet.addModule(url);
+      node = new AudioWorkletNode(ctx, 'engine-proc', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2] });
+      node.port.onmessage = e => { status = e.data; };
+    } catch (err) {
+      node = null;
+      local = new EngineDSP(ctx.sampleRate);
+      spNode = ctx.createScriptProcessor(1024, 1, 2);
+      spNode.onaudioprocess = ev => {
+        const L = ev.outputBuffer.getChannelData(0), R = ev.outputBuffer.getChannelData(1);
+        local.process(L, R, L.length); status = local.status();
+      };
+    }
+    gain = ctx.createGain(); gain.gain.value = volume();
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -6; comp.knee.value = 6; comp.ratio.value = 12; comp.attack.value = 0.003; comp.release.value = 0.15;
+    analyser = ctx.createAnalyser(); analyser.fftSize = 8192; analyser.smoothingTimeConstant = 0.55;
+    (node || spNode).connect(gain); gain.connect(comp); comp.connect(analyser); analyser.connect(ctx.destination);
+    send({ engine: cfg, reset: true, params: { ...params } });
+  }
+  const volume = () => { const v = +$('#vol').value / 100; return v * v; };
+  const startBtn = $('#start');
+  startBtn.addEventListener('click', async () => {
+    if (!ctx) await initAudio();
+    if (status.state === 'off' || status.state === 'stop'){
+      if (ctx.state !== 'running') await ctx.resume();
+      send({ ignition: 'start' }); status = { ...status, state: 'crank' }; offSince = 0;
+    } else {
+      send({ ignition: 'stop' }); status = { ...status, state: 'stop' };
+    }
+  });
+  const BTN = { off: 'Start engine', crank: 'Starting…', run: 'Stop engine', stop: 'Start engine' };
+
+  // ---------- pedals ----------
+  const pad = $('#pad'), brake = $('#brake');
+  const inp = { space: 0, ptr: 0, w: 0, brkKey: 0, brkPtr: 0 };
+  let wHeld = false;
+  function pedalAmount(el, y){
+    const r = el.getBoundingClientRect();
+    return Math.min(1, Math.max(0.08, (r.bottom - y) / (r.height * 0.85)));
+  }
+  function pedal(el, onAmt){
+    let down = false;
+    el.addEventListener('pointerdown', e => { if (el.disabled) return; e.preventDefault(); down = true; el.setPointerCapture(e.pointerId); onAmt(pedalAmount(el, e.clientY)); });
+    el.addEventListener('pointermove', e => { if (down) onAmt(pedalAmount(el, e.clientY)); });
+    const up = () => { down = false; onAmt(0); };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => el.addEventListener(ev, up));
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    el.addEventListener('keydown', e => { if (e.code === 'Space' || e.code === 'Enter') e.preventDefault(); });
+  }
+  pedal(pad, a => { inp.ptr = a; });
+  pedal(brake, a => { inp.brkPtr = a; });
+  function syncPedals(){
+    const thr = params.mode === 'hold' ? 0 : Math.max(inp.space, inp.ptr, inp.w);
+    const brk = params.mode === 'drive' ? Math.max(inp.brkKey, inp.brkPtr) : 0;
+    if (Math.abs(thr - params.thr) > 0.003 || (thr === 0 && params.thr !== 0)) setParams({ thr });
+    if (Math.abs(brk - params.brake) > 0.003 || (brk === 0 && params.brake !== 0)) setParams({ brake: brk });
+    $('#padlvl').style.height = (thr * 100) + '%'; pad.classList.toggle('hi', thr > 0.45);
+    $('#brklvl').style.height = (brk * 100) + '%'; brake.classList.toggle('hi', brk > 0.45);
+  }
+  $('#up').addEventListener('click', () => send({ shift: 1 }));
+  $('#dn').addEventListener('click', () => send({ shift: -1 }));
+  $('#auto').addEventListener('change', e => setParams({ auto: e.target.checked }));
+  const typing = t => (t.tagName === 'INPUT' && t.type === 'text') || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA';
+  window.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')){ openDrawer(false); return; }
+    if (typing(e.target) || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.code === 'Space'){ e.preventDefault(); inp.space = 1; return; }
+    if (e.code === 'KeyW'){ if (!e.repeat) wHeld = true; return; }
+    if (params.mode === 'drive'){
+      const onRange = e.target.type === 'range';
+      if (e.code === 'KeyE' || (e.code === 'ArrowUp' && !onRange)){ e.preventDefault(); if (!e.repeat) send({ shift: 1 }); return; }
+      if (e.code === 'KeyQ' || (e.code === 'ArrowDown' && !onRange)){ e.preventDefault(); if (!e.repeat) send({ shift: -1 }); return; }
+      if (e.code === 'KeyB'){ inp.brkKey = 1; return; }
+    }
+    const k = parseInt(e.key, 10);
+    if (k >= 1 && k <= 9) loadPreset(ENGINES[k - 1]);
+  });
+  window.addEventListener('keyup', e => {
+    if (e.code === 'Space'){ inp.space = 0; if (!typing(e.target)) e.preventDefault(); }
+    if (e.code === 'KeyW'){ wHeld = false; inp.w = 0; }
+    if (e.code === 'KeyB') inp.brkKey = 0;
+  });
+  const releaseAll = () => { inp.space = inp.ptr = inp.w = inp.brkKey = inp.brkPtr = 0; wHeld = false; };
+  window.addEventListener('blur', releaseAll);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
+
+  document.querySelectorAll('#mode button').forEach(b => b.addEventListener('click', () => {
+    const m = b.dataset.v;
+    document.querySelectorAll('#mode button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    $('#padrow').hidden = m === 'hold'; $('#keys').hidden = m === 'hold'; $('#holdctl').hidden = m !== 'hold';
+    brake.disabled = m !== 'drive'; brake.querySelector('.hint').textContent = m === 'drive' ? 'Press harder for more' : 'Drive only';
+    $('#gearp').classList.toggle('off', m !== 'drive');
+    $('#up').disabled = $('#dn').disabled = m !== 'drive';
+    releaseAll();
+    setParams({ mode: m, thr: 0, brake: 0 });
+  }));
+  document.querySelectorAll('#axis button').forEach(b => b.addEventListener('click', () => {
+    axis = b.dataset.v;
+    document.querySelectorAll('#axis button').forEach(x => x.setAttribute('aria-pressed', x === b));
+    $('#spechint').textContent = axis === 'order'
+      ? 'Orders are multiples of crank speed, so peaks stay put as revs change. The I5 lives at 2.5, the V10 at 5.'
+      : 'Plain frequency. Peaks slide right as revs rise.';
+  }));
+  $('#rpmset').addEventListener('input', e => { $('#o-rpm').textContent = e.target.value + ' rpm'; setParams({ rpmSet: +e.target.value }); });
+  $('#load').addEventListener('input', e => { $('#o-load').textContent = e.target.value + '%'; setParams({ load: e.target.value / 100 }); });
+  $('#pipe').addEventListener('input', e => { setParams({ pipe: +e.target.value }); updateRes(); });
+  $('#muffle').addEventListener('input', e => { $('#o-muffle').textContent = e.target.value + '%'; setParams({ muffle: e.target.value / 100 }); });
+  $('#crackle').addEventListener('input', e => { $('#o-crackle').textContent = e.target.value + '%'; setParams({ crackle: e.target.value / 100 }); });
+  $('#tvol').addEventListener('input', e => { $('#o-tvol').textContent = e.target.value + '%'; setParams({ turboVol: e.target.value / 100 }); });
+  $('#merge').addEventListener('change', e => { setParams({ merge: e.target.checked }); });
+  $('#vol').addEventListener('input', e => { $('#o-vol').textContent = e.target.value + '%'; if (gain) gain.gain.setTargetAtTime(volume(), ctx.currentTime, 0.03); });
+
+  // ---------- spectrum ----------
+  const cv = $('#spec'), g = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1, colors = {}, colorTick = 0, bins = null;
+  function resize(){ dpr = window.devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W * dpr; cv.height = H * dpr; }
+  new ResizeObserver(resize).observe(cv); resize();
+  function readColors(){ colors = { muted: css('--muted'), grid: css('--grid'), spec: css('--spec'), accent: css('--accent'), a: css('--bankA') }; }
+  readColors();
+  function drawSpectrum(){
+    if (++colorTick % 30 === 0) readColors();
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    const padL = 6, padB = 20, pw = W - padL * 2, ph = H - padB - 6;
+    const rot = Math.max(live() ? status.rpm : spec.idle, 120) / 60;
+    const lo = axis === 'order' ? 0.5 : 20, hi = axis === 'order' ? 24 : 8000;
+    const lx = v => padL + Math.log(v / lo) / Math.log(hi / lo) * pw;
+    g.font = '10.5px "IBM Plex Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'top';
+    const tk = axis === 'order' ? [0.5, 1, 2, 2.5, 3, 4, 5, 6, 8, 10, 12, 16, 20] : [20, 50, 100, 200, 500, 1000, 2000, 5000];
+    tk.forEach(v => {
+      const x = lx(v);
+      g.strokeStyle = colors.grid; g.lineWidth = 1; g.beginPath(); g.moveTo(x, 6); g.lineTo(x, 6 + ph); g.stroke();
+      g.fillStyle = colors.muted; g.fillText(axis === 'order' ? String(v) : (v >= 1000 ? v / 1000 + 'k' : String(v)), x, H - padB + 5);
+    });
+    for (let d = 1; d < 4; d++){ const y = 6 + ph * d / 4; g.strokeStyle = colors.grid; g.beginPath(); g.moveTo(padL, y); g.lineTo(padL + pw, y); g.stroke(); }
+    const ford = cfg.n / 2;
+    const mark = (o, col, dash, label) => {
+      const v = axis === 'order' ? o : o * rot; if (v < lo || v > hi) return;
+      const x = lx(v); g.save(); g.setLineDash(dash); g.strokeStyle = col; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(x, 6); g.lineTo(x, 6 + ph); g.stroke(); g.restore();
+      g.fillStyle = col; g.textAlign = 'left'; g.textBaseline = 'top'; g.fillText(label, x + 4, 8); g.textAlign = 'center';
+    };
+    if (cfg.banks > 1 && !params.merge) mark(ford / 2, colors.a, [4, 4], 'per bank');
+    mark(ford, colors.accent, [], 'firing');
+    if (!analyser || ctx.state !== 'running'){
+      g.fillStyle = colors.muted; g.font = '13px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('Start the engine to see its spectrum', W / 2, 6 + ph / 2);
+      return;
+    }
+    if (!bins || bins.length !== analyser.frequencyBinCount) bins = new Float32Array(analyser.frequencyBinCount);
+    analyser.getFloatFrequencyData(bins);
+    const binHz = ctx.sampleRate / analyser.fftSize, dbLo = -110, dbHi = -15;
+    g.beginPath(); g.moveTo(padL, 6 + ph);
+    for (let px = 0; px <= pw; px++){
+      const v = lo * Math.pow(hi / lo, px / pw);
+      const b = (axis === 'order' ? v * rot : v) / binHz, i = Math.floor(b), fr = b - i;
+      let db = dbLo;
+      if (i >= 0 && i + 1 < bins.length) db = bins[i] + (bins[i + 1] - bins[i]) * fr;
+      const t = Math.min(1, Math.max(0, (db - dbLo) / (dbHi - dbLo)));
+      g.lineTo(padL + px, 6 + ph - t * ph);
+    }
+    g.lineTo(padL + pw, 6 + ph); g.closePath();
+    g.fillStyle = colors.spec; g.globalAlpha = 0.16; g.fill(); g.globalAlpha = 1;
+    g.strokeStyle = colors.spec; g.lineWidth = 1.4; g.stroke();
+  }
+
+  // ---------- frame loop ----------
+  let last = performance.now();
+  function frame(now){
+    const dt = Math.min(0.1, (now - last) / 1000); last = now;
+    if (wHeld) inp.w = Math.min(1, inp.w + dt * 0.65);
+    syncPedals();
+    const rpm = live() ? status.rpm : 0;
+    $('#rpm').textContent = Math.round(rpm / 10) * 10;
+    $('#fill').style.width = Math.min(100, rpm / (window.__tachTop || 9000) * 100) + '%';
+    $('#ffreq').textContent = Math.round(rpm / 60 * cfg.n / 2) + ' Hz';
+    $('#thr').textContent = Math.round((live() ? status.thr : 0) * 100) + '%';
+    $('#boost').textContent = ((live() ? status.ts : 0) * 1.4).toFixed(1);
+    $('#limiter').classList.toggle('on', status.state === 'run' && status.cut);
+    $('#gear').textContent = params.mode === 'drive' && live() ? status.gear : 'N';
+    $('#mph').textContent = params.mode === 'drive' && live() ? Math.round(status.mph) : 0;
+    const label = BTN[status.state] || 'Start engine';
+    if (startBtn.textContent !== label) startBtn.textContent = label;
+    // let the audio thread rest once the engine has wound down
+    if (ctx && ctx.state === 'running' && status.state === 'off'){
+      if (!offSince) offSince = now; else if (now - offSince > 1500){ ctx.suspend(); offSince = 0; }
+    } else offSince = 0;
+    drawSpectrum();
+    requestAnimationFrame(frame);
+  }
+
+  loadPreset(START);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
