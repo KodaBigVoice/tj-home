@@ -14,7 +14,7 @@
   background:radial-gradient(ellipse 80% 70% at 50% 52%, #2b5246 0%, #1d3a31 55%, #142a23 100%);
   font-family:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-.st-title{position:absolute;top:3.4cqh;left:4cqw;right:4cqw;text-align:center;font-weight:800;
+.st-title{position:absolute;top:3.4cqh;left:22cqw;right:22cqw;text-align:center;font-weight:800;
   font-size:6cqh;letter-spacing:-.01em;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .st-reveal{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,22,18,.6);
   backdrop-filter:blur(5px);opacity:0;pointer-events:none;transition:opacity .35s ease}
@@ -25,13 +25,32 @@
 .st-reveal.show .st-card{transform:scale(1) rotate(0)}
 .st-label{font-size:3.6cqh;font-weight:500;opacity:.65;margin-bottom:.6cqh}
 .st-name{font-size:17cqh;font-weight:800;line-height:1.02;white-space:nowrap;letter-spacing:-.02em}
-@media (prefers-reduced-motion:reduce){.st-card{transition:none}}
+.st-minus{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.4);opacity:0;pointer-events:none;
+  background:#b9412f;color:#fff;border-radius:3cqh;padding:3cqh 6cqw 3.4cqh;text-align:center;white-space:nowrap;
+  box-shadow:0 0 0 1.2cqh rgba(255,255,255,.18),0 3cqh 8cqh rgba(0,0,0,.45);transition:opacity .25s ease,transform .45s cubic-bezier(.2,1.6,.4,1)}
+.st-minus.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.st-minus.show.bump{animation:stBump .45s ease}
+@keyframes stBump{0%,100%{transform:translate(-50%,-50%) rotate(0)}25%{transform:translate(-50%,-50%) rotate(-3deg) scale(1.06)}60%{transform:translate(-50%,-50%) rotate(2deg)}}
+.st-minus-main{font-size:15cqh;font-weight:800;line-height:1;letter-spacing:-.02em}
+.st-minus-main b{display:inline-block;margin-left:.3em;background:#fff;color:#b9412f;border-radius:.18em;padding:0 .18em}
+.st-minus-sub{font-size:3.8cqh;font-weight:500;opacity:.85;margin-top:1.4cqh}
+.st-timer{position:absolute;top:3.4cqh;right:3.4cqh;background:rgba(10,22,18,.55);border:.4cqh solid rgba(244,241,230,.25);
+  border-radius:2.4cqh;padding:1.4cqh 2.6cqh 1.8cqh;text-align:center;display:none}
+.st-timer.on{display:block}
+.st-timer-label{font-size:3cqh;font-weight:500;opacity:.75}
+.st-timer-time{font-size:11cqh;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.st-timer.paused .st-timer-time{opacity:.45}
+.st-timer.done{background:#f2b632;color:#142a23;border-color:#f2b632;animation:stFlash 1s ease-in-out 6}
+.st-timer.done .st-timer-label{opacity:1;font-weight:700}
+@keyframes stFlash{0%,100%{background:#f2b632;border-color:#f2b632;transform:scale(1)}50%{background:#b9412f;border-color:#b9412f;color:#fff;transform:scale(1.07)}}
+@media (prefers-reduced-motion:reduce){.st-card,.st-minus{transition:none}.st-minus.show.bump,.st-timer.done{animation:none}}
 </style>
 
 <style>
 :root{--paper:#e9eeeb;--panel:#f8faf8;--ink:#17231e;--muted:#5d6b65;--line:#cfd8d3;
   --board:#1d3a31;--brass:#f2b632;--brass-d:#c98f12;--red:#b9412f}
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 html,body{margin:0}
 body{background:var(--paper);color:var(--ink);font-family:'Atkinson Hyperlegible','Segoe UI',system-ui,sans-serif;font-size:15px;line-height:1.4}
 button,input,textarea{font:inherit;color:inherit}
@@ -107,6 +126,17 @@ button{cursor:pointer}
 .toast button{background:transparent;border:1.5px solid rgba(255,255,255,.4);border-radius:7px;color:#fff;padding:3px 10px;font-weight:700}
 
 @media (min-width:901px){.modal-back{justify-items:end;padding-right:max(24px,8vw)}}
+.timer-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.timer-head label{font-weight:700}
+.timer-readout{font-family:'Bricolage Grotesque',system-ui,sans-serif;font-weight:800;font-size:28px;font-variant-numeric:tabular-nums;line-height:1}
+.timer-readout.paused{color:var(--muted)}
+.timer-readout.done{color:var(--red)}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btnrow .btn{flex:1}
+.timer-other input{flex:1.4;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff}
+.linkish{border:0;background:none;padding:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;font-size:14px;justify-self:start}
+.linkish:hover{color:var(--ink)}
+.timer-err{color:var(--red);font-size:14px;margin:-4px 0 0}
 @media (max-width:900px){.layout{grid-template-columns:1fr}.left{position:static}}
 </style>
 </head>
@@ -143,6 +173,29 @@ button{cursor:pointer}
       </div>
       <div class="totals" id="totals"></div>
     </div>
+    <div class="settings">
+      <div class="timer-head">
+        <label>Timer</label>
+        <span class="timer-readout" id="timerReadout" aria-live="polite"></span>
+      </div>
+      <div class="btnrow" id="timerStart">
+        <button class="btn" data-min="10">10 min</button>
+        <button class="btn" data-min="20">20 min</button>
+        <button class="btn" id="timerOtherBtn">Other…</button>
+      </div>
+      <form class="btnrow timer-other" id="timerOther" hidden>
+        <input id="timerOtherInput" placeholder="Minutes, e.g. 15 or 7:30" aria-label="Timer length in minutes" autocomplete="off">
+        <button class="btn brass" type="submit">Start</button>
+        <button class="btn" type="button" id="timerOtherCancel">Cancel</button>
+      </form>
+      <p class="timer-err" id="timerErr" hidden>Type minutes like 15, or minutes and seconds like 7:30.</p>
+      <div class="btnrow" id="timerRun" hidden>
+        <button class="btn" id="timerPause">Pause</button>
+        <button class="btn" id="timerAdd">+1 min</button>
+        <button class="btn" id="timerClear">Clear timer</button>
+      </div>
+      <button class="linkish" id="timerTest" type="button">Test the time's up sound</button>
+    </div>
   </section>
 
   <section class="right">
@@ -171,11 +224,18 @@ button{cursor:pointer}
 function createStage(root){
   var doc = root.ownerDocument, win = doc.defaultView, TAU = Math.PI * 2;
   root.innerHTML = '<div class="stage"><canvas></canvas><div class="st-title"></div>' +
-    '<div class="st-reveal"><div class="st-card"><div class="st-label">The wheel picked</div><div class="st-name"></div></div></div></div>';
+    '<div class="st-timer"><div class="st-timer-label">Time left</div><div class="st-timer-time"></div></div>' +
+    '<div class="st-reveal"><div class="st-card"><div class="st-label">The wheel picked</div><div class="st-name"></div></div></div>' +
+    '<div class="st-minus"><div class="st-minus-main"><span></span><b></b></div><div class="st-minus-sub"></div></div></div>';
   var stageEl = root.firstChild, canvas = stageEl.querySelector('canvas'), ctx = canvas.getContext('2d');
   var titleEl = stageEl.querySelector('.st-title'), revealEl = stageEl.querySelector('.st-reveal');
   var cardEl = stageEl.querySelector('.st-card'), nameEl = stageEl.querySelector('.st-name');
-  var entries = [], rot = 0, anim = null, kick = 0, lastIdx = -1, dirty = true, W = 0, H = 0, dpr = 1;
+  var timerEl = stageEl.querySelector('.st-timer'), timerLabel = stageEl.querySelector('.st-timer-label'), timerTime = stageEl.querySelector('.st-timer-time');
+  var minusEl = stageEl.querySelector('.st-minus'), minusMain = stageEl.querySelector('.st-minus-main');
+  var minusName = minusMain.querySelector('span'), minusNum = minusMain.querySelector('b'), minusSub = stageEl.querySelector('.st-minus-sub');
+  var minusTimer = null, minusPid = null, minusTotal = 0;
+  // slices: { pid, name, color, text, w (shown weight), from, to }
+  var slices = [], tween = null, rot = 0, anim = null, kick = 0, lastIdx = -1, dirty = true, W = 0, H = 0, dpr = 1;
   var FONT = "'Bricolage Grotesque','Segoe UI',system-ui,sans-serif";
 
   function mod(a, m){ return ((a % m) + m) % m; }
@@ -192,51 +252,60 @@ function createStage(root){
     var R = Math.min(avail / 2 - H * 0.03, W * 0.42);
     return { cx: W / 2, cy: top + avail / 2 + H * 0.02, R: Math.max(10, R) };
   }
+  function total(){ var t = 0; for (var i = 0; i < slices.length; i++) t += slices[i].w; return t; }
+  function sliceAt(frac){
+    var t = total(), acc = 0;
+    if (t <= 0) return -1;
+    for (var i = 0; i < slices.length; i++){
+      if (slices[i].w <= 0) continue;
+      acc += slices[i].w / t;
+      if (frac < acc) return i;
+    }
+    return slices.length - 1;
+  }
 
   function draw(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    var g = geom(), cx = g.cx, cy = g.cy, R = g.R, n = entries.length;
-    // shadow ring
+    var g = geom(), cx = g.cx, cy = g.cy, R = g.R, T = total();
     ctx.save(); ctx.beginPath(); ctx.arc(cx, cy + R * 0.025, R * 1.035, 0, TAU);
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fill(); ctx.restore();
-    if (!n){
+    if (T <= 0.0001){
       ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.fillStyle = 'rgba(244,241,230,.06)'; ctx.fill();
       ctx.setLineDash([R * 0.04, R * 0.03]); ctx.lineWidth = R * 0.012; ctx.strokeStyle = 'rgba(244,241,230,.4)'; ctx.stroke(); ctx.setLineDash([]);
       ctx.fillStyle = 'rgba(244,241,230,.75)'; ctx.font = '600 ' + Math.round(R * 0.09) + 'px ' + FONT;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('Add names to fill the wheel', cx, cy);
       drawPointer(cx, cy, R); return;
     }
-    var seg = TAU / n;
-    for (var i = 0; i < n; i++){
-      var a0 = -Math.PI / 2 + rot + i * seg;
-      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, a0, a0 + seg); ctx.closePath();
-      ctx.fillStyle = entries[i].color; ctx.fill();
+    var segs = [], a = -Math.PI / 2 + rot, shown = 0;
+    for (var i = 0; i < slices.length; i++){
+      var sw = slices[i].w / T * TAU;
+      if (sw > 0.0005) { segs.push({ s: slices[i], a0: a, a1: a + sw }); shown++; }
+      a += sw;
     }
-    if (n > 1){
-      ctx.lineWidth = Math.max(1, R * (n > 80 ? 0.002 : 0.005)); ctx.strokeStyle = 'rgba(20,42,35,.55)';
-      for (var j = 0; j < n; j++){
-        var a = -Math.PI / 2 + rot + j * seg;
-        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R); ctx.stroke();
-      }
+    segs.forEach(function(sg){
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, sg.a0, sg.a1); ctx.closePath();
+      ctx.fillStyle = sg.s.color; ctx.fill();
+    });
+    if (shown > 1){
+      ctx.lineWidth = Math.max(1, R * 0.006); ctx.strokeStyle = 'rgba(20,42,35,.6)';
+      segs.forEach(function(sg){
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(sg.a0) * R, cy + Math.sin(sg.a0) * R); ctx.stroke();
+      });
     }
-    // labels
     var hub = R * 0.14, outer = R * 0.93, maxW = outer - hub - R * 0.05;
-    var chord = 2 * (R * 0.7) * Math.sin(Math.min(seg, Math.PI) / 2);
-    var base = Math.min(R * 0.085, chord * 0.62);
     ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-    for (var k = 0; k < n; k++){
-      var e = entries[k], size = base;
+    segs.forEach(function(sg){
+      var seg = sg.a1 - sg.a0, chord = 2 * (R * 0.7) * Math.sin(Math.min(seg, Math.PI) / 2);
+      var size = Math.min(R * 0.13, chord * 0.62);
       ctx.font = '700 ' + size + 'px ' + FONT;
-      var w = ctx.measureText(e.name).width;
+      var w = ctx.measureText(sg.s.name).width;
       if (w > maxW) { size = size * maxW / w; ctx.font = '700 ' + size + 'px ' + FONT; }
-      if (size < 3 * dpr) continue;
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(-Math.PI / 2 + rot + (k + 0.5) * seg);
-      ctx.fillStyle = e.text; ctx.fillText(e.name, outer, 0); ctx.restore();
-    }
-    // rim
+      if (size < 3 * dpr) return;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate((sg.a0 + sg.a1) / 2);
+      ctx.fillStyle = sg.s.text; ctx.fillText(sg.s.name, outer, 0); ctx.restore();
+    });
     ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.lineWidth = R * 0.035; ctx.strokeStyle = '#142a23'; ctx.stroke();
     ctx.beginPath(); ctx.arc(cx, cy, R * 1.017, 0, TAU); ctx.lineWidth = R * 0.008; ctx.strokeStyle = 'rgba(244,241,230,.35)'; ctx.stroke();
-    // hub
     ctx.beginPath(); ctx.arc(cx, cy, hub, 0, TAU); ctx.fillStyle = '#f4f1e6'; ctx.fill();
     ctx.lineWidth = R * 0.02; ctx.strokeStyle = '#142a23'; ctx.stroke();
     ctx.beginPath(); ctx.arc(cx, cy, hub * 0.38, 0, TAU); ctx.fillStyle = '#f2b632'; ctx.fill();
@@ -254,16 +323,22 @@ function createStage(root){
   }
 
   function ease(t){ return 1 - Math.pow(1 - t, 4); }
+  function smooth(t){ return t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
   function loop(){
+    var now = Date.now();
+    if (tween){
+      var tt = Math.min(1, (now - tween.start) / tween.dur), k = smooth(tt);
+      slices.forEach(function(s){ s.w = s.from + (s.to - s.from) * k; });
+      if (tt >= 1){ slices = slices.filter(function(s){ return s.to > 0; }); tween = null; }
+      dirty = true;
+    }
     if (anim){
-      var t = (Date.now() - anim.start) / anim.dur;
+      var t = (now - anim.start) / anim.dur;
       if (t >= 1){ rot = mod(anim.to, TAU); anim = null; }
       else if (t > 0){ rot = anim.from + (anim.to - anim.from) * ease(t); }
       dirty = true;
-      if (entries.length){
-        var idx = Math.floor(mod(-rot, TAU) / (TAU / entries.length));
-        if (idx !== lastIdx){ lastIdx = idx; kick = 1; }
-      }
+      var idx = sliceAt(mod(-rot, TAU) / TAU);
+      if (idx !== lastIdx){ lastIdx = idx; kick = 1; }
     }
     if (kick > 0.01){ kick *= 0.82; dirty = true; } else if (kick) { kick = 0; dirty = true; }
     if (dirty && W){ dirty = false; draw(); }
@@ -271,19 +346,66 @@ function createStage(root){
   }
   win.requestAnimationFrame(loop);
 
+  function fitText(el, base, maxFrac){
+    el.style.fontSize = base + 'cqh';
+    var max = stageEl.clientWidth * maxFrac, w = el.scrollWidth;
+    if (w > max) el.style.fontSize = (base * max / w).toFixed(2) + 'cqh';
+  }
+
   return {
-    setEntries: function(list){ entries = list.map(function(e){ return { name: e.name, color: e.color, text: e.text }; }); dirty = true; },
+    // list: [{ pid, name, color, text, weight }] in wheel order; animate = tween slice sizes
+    setEntries: function(list, animate){
+      if (!animate || anim || !slices.length){
+        slices = list.map(function(e){ return { pid: e.pid, name: e.name, color: e.color, text: e.text, w: e.weight, from: e.weight, to: e.weight }; });
+        tween = null; dirty = true; return;
+      }
+      var old = {}; slices.forEach(function(s){ old[s.pid] = s; });
+      var next = [], seen = {};
+      list.forEach(function(e){
+        var o = old[e.pid]; seen[e.pid] = 1;
+        next.push({ pid: e.pid, name: e.name, color: e.color, text: e.text, w: o ? o.w : 0, from: o ? o.w : 0, to: e.weight });
+      });
+      // pupils that left the wheel shrink away in place
+      slices.forEach(function(s, i){
+        if (seen[s.pid]) return;
+        var at = 0;
+        for (var k = i - 1; k >= 0; k--){ var p = next.findIndex(function(n){ return n.pid === slices[k].pid; }); if (p !== -1){ at = p + 1; break; } }
+        next.splice(at, 0, { pid: s.pid, name: s.name, color: s.color, text: s.text, w: s.w, from: s.w, to: 0 });
+      });
+      slices = next; tween = { start: Date.now(), dur: 450 }; dirty = true;
+    },
     setTitle: function(s){ titleEl.textContent = s || ''; },
     setRotation: function(r){ if (!anim){ rot = r; dirty = true; } },
     spin: function(from, to, start, dur){ anim = { from: from, to: to, start: start, dur: dur }; },
     showReveal: function(name, color){
       nameEl.textContent = name; cardEl.style.setProperty('--c', color);
-      nameEl.style.fontSize = '17cqh';
-      var max = stageEl.clientWidth * 0.76, w = nameEl.scrollWidth;
-      if (w > max) nameEl.style.fontSize = (17 * max / w).toFixed(2) + 'cqh';
+      fitText(nameEl, 17, 0.76);
       revealEl.classList.add('show');
     },
-    hideReveal: function(){ revealEl.classList.remove('show'); }
+    hideReveal: function(){ revealEl.classList.remove('show'); },
+    showMinus: function(pid, name, n, left){
+      if (minusPid === pid && minusEl.classList.contains('show')) minusTotal += n; else minusTotal = n;
+      minusPid = pid;
+      minusName.textContent = name; minusNum.textContent = '−' + minusTotal;
+      minusSub.textContent = left > 0 ? (left + (left === 1 ? ' entry' : ' entries') + ' left on the wheel') : 'Off the wheel';
+      minusMain.style.fontSize = '15cqh';
+      var max = stageEl.clientWidth * 0.8, w = minusMain.scrollWidth;
+      if (w > max) minusMain.style.fontSize = (15 * max / w).toFixed(2) + 'cqh';
+      var wasShown = minusEl.classList.contains('show');
+      minusEl.classList.add('show');
+      if (wasShown){ minusEl.classList.remove('bump'); void minusEl.offsetWidth; minusEl.classList.add('bump'); }
+      clearTimeout(minusTimer);
+      minusTimer = win.setTimeout(function(){ minusEl.classList.remove('show', 'bump'); minusPid = null; }, 2800);
+    },
+    // t: null to hide, else { text, state: 'run' | 'paused' | 'done' }
+    setTimer: function(t){
+      if (!t){ timerEl.className = 'st-timer'; return; }
+      var cls = 'st-timer on' + (t.state === 'paused' ? ' paused' : '') + (t.state === 'done' ? ' done' : '');
+      if (timerEl.className !== cls) timerEl.className = cls;
+      var label = t.state === 'done' ? 'Time’s up' : t.state === 'paused' ? 'Paused' : 'Time left';
+      if (timerLabel.textContent !== label) timerLabel.textContent = label;
+      if (timerTime.textContent !== t.text) timerTime.textContent = t.text;
+    }
   };
 }
 </script>
@@ -316,27 +438,25 @@ function colourFor(i){
   return { bg: `hsl(${h.toFixed(1)} ${s*100}% ${l*100}%)`, fg: lum > 0.32 ? '#142a23' : '#ffffff' };
 }
 
-// Round-robin so each pupil's entries are spread around the wheel
+// One slice per pupil, sized by how many entries they have
 function buildEntries(){
-  const ps = state.pupils.map((p, i) => ({ ...p, i })).filter(p => p.name.trim() && p.count > 0);
-  const max = Math.max(0, ...ps.map(p => p.count)), out = [];
-  for (let k = 0; k < max; k++) for (const p of ps) if (p.count > k) {
-    const c = colourFor(p.i); out.push({ pid: p.id, name: p.name.trim(), color: c.bg, text: c.fg });
-  }
-  return out;
+  return state.pupils.map((p, i) => ({ p, i })).filter(({ p }) => p.name.trim() && p.count > 0).map(({ p, i }) => {
+    const c = colourFor(i); return { pid: p.id, name: p.name.trim(), color: c.bg, text: c.fg, weight: p.count };
+  });
 }
+const entryTotal = () => entries.reduce((t, e) => t + e.weight, 0);
 
 // ---------- stages ----------
 const previewStage = createStage($('preview'));
 function presenterOk(){ return presenterWin && !presenterWin.closed && presenterWin.stage; }
 function forStages(fn){ fn(previewStage); if (presenterOk()) { try { fn(presenterWin.stage); } catch(e){} } }
 
-function refreshWheel(){
+function refreshWheel(animate){
   if (spinning) return;
   entries = buildEntries();
-  forStages(s => { s.setEntries(entries); s.setTitle(state.title); });
-  const onWheel = state.pupils.filter(p => p.name.trim() && p.count > 0).length;
-  $('totals').textContent = `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'} on the wheel from ${onWheel} ${onWheel === 1 ? 'pupil' : 'pupils'}`;
+  forStages(s => { s.setEntries(entries, animate); s.setTitle(state.title); });
+  const onWheel = entries.length, tot = entryTotal();
+  $('totals').textContent = `${tot} ${tot === 1 ? 'entry' : 'entries'} on the wheel from ${onWheel} ${onWheel === 1 ? 'pupil' : 'pupils'}`;
   $('pupilCount').textContent = state.pupils.length ? state.pupils.length : '';
   $('spinBtn').disabled = !entries.length || spinning;
 }
@@ -364,10 +484,11 @@ $('grid').addEventListener('click', e => {
   const p = pupilFromEl(btn); if (!p) return;
   const act = btn.dataset.act;
   if (act === 'minus' || act === 'plus'){
+    const before = p.count;
     p.count = clampCount(p.count + (act === 'plus' ? 1 : -1));
     const card = btn.closest('.card');
     card.querySelector('.cnt').value = p.count; card.classList.toggle('off', p.count === 0);
-    save(); refreshWheel();
+    save(); refreshWheel(true); announceMinus(p, before);
   } else if (act === 'del'){
     const idx = state.pupils.indexOf(p);
     state.pupils.splice(idx, 1); save(); renderGrid(); refreshWheel();
@@ -381,11 +502,18 @@ $('grid').addEventListener('input', e => {
 $('grid').addEventListener('change', e => {
   const p = pupilFromEl(e.target); if (!p) return;
   if (e.target.classList.contains('cnt')){
+    const before = p.count;
     p.count = clampCount(e.target.value); e.target.value = p.count;
-    e.target.closest('.card').classList.toggle('off', p.count === 0); save(); refreshWheel();
+    e.target.closest('.card').classList.toggle('off', p.count === 0); save(); refreshWheel(true); announceMinus(p, before);
   }
   if (e.target.classList.contains('name')){ p.name = e.target.value.trim(); e.target.value = p.name; save(); refreshWheel(); }
 });
+// While presenting, taking entries off a pupil flashes up on the projector
+function announceMinus(p, before){
+  const n = before - p.count;
+  if (n <= 0 || !presenterOk() || !p.name.trim()) return;
+  forStages(s => s.showMinus(p.id, p.name.trim(), n, p.count));
+}
 $('grid').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.matches('input')) e.target.blur();
 });
@@ -463,8 +591,11 @@ $('defInput').addEventListener('keydown', e => { if (e.key === 'Enter') e.target
 function rand(){ const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; }
 function spin(){
   if (spinning || modalCancel || !entries.length) return;
-  const n = entries.length, seg = TAU / n, idx = Math.floor(rand() * n);
-  const target = -(idx + 0.15 + rand() * 0.7) * seg;
+  const T = entryTotal();
+  let r = rand() * T, idx = 0, cum = 0;
+  while (idx < entries.length - 1 && r >= entries[idx].weight){ r -= entries[idx].weight; cum += entries[idx].weight; idx++; }
+  const w = entries[idx].weight, margin = 0.15;
+  const target = -((cum + w * (margin + rand() * (1 - 2 * margin))) / T) * TAU;
   const from = rot, to = from + (5 + Math.floor(rand() * 3)) * TAU + mod(target - from, TAU);
   const start = Date.now() + 40, dur = 7000;
   spinning = true; currentSpin = [from, to, start, dur];
@@ -519,7 +650,7 @@ if (window.opener) window.opener.presenterReady();
 window.presenterReady = function(){
   if (!presenterOk()) return;
   const s = presenterWin.stage;
-  s.setEntries(entries); s.setTitle(state.title); s.setRotation(rot);
+  s.setEntries(entries); s.setTitle(state.title); s.setRotation(rot); s.setTimer(timerView());
   if (currentSpin) s.spin(...currentSpin);
   if (revealShown) s.showReveal(revealShown.name, revealShown.color);
   updatePresentUi();
@@ -554,6 +685,97 @@ $('presentBtn').onclick = present; $('stopBtn').onclick = stopPresenting;
 setInterval(() => { if (presenterWin && presenterWin.closed){ presenterWin = null; updatePresentUi(); } }, 1000);
 window.addEventListener('beforeunload', () => { if (presenterWin && !presenterWin.closed) presenterWin.close(); });
 
+// ---------- timer ----------
+const TKEY = 'wheelOfNames.timer';
+let timer = (() => { try { return JSON.parse(localStorage.getItem(TKEY)); } catch(e){ return null; } })();
+const saveTimer = () => { try { timer ? localStorage.setItem(TKEY, JSON.stringify(timer)) : localStorage.removeItem(TKEY); } catch(e){} };
+const timerLeft = () => !timer ? 0 : timer.paused ? timer.remaining : Math.max(0, timer.end - Date.now());
+function fmtTime(ms){ const s = Math.ceil(ms / 1000), m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); }
+function timerView(){
+  if (!timer) return null;
+  const left = timerLeft();
+  return { text: fmtTime(left), state: left <= 0 ? 'done' : timer.paused ? 'paused' : 'run' };
+}
+function startTimer(ms){ unlockAudio(); timer = { end: Date.now() + ms, remaining: ms, paused: false, chimed: false }; saveTimer(); tickTimer(); }
+function parseDuration(str){
+  str = String(str).trim().toLowerCase().replace(/\s*(mins?|minutes?|m)$/, '');
+  let m;
+  if ((m = str.match(/^(\d+):([0-5]?\d)$/))) return (Number(m[1]) * 60 + Number(m[2])) * 1000;
+  if ((m = str.match(/^\d+(\.\d+)?$/))) return Math.round(Number(str) * 60) * 1000;
+  return null;
+}
+function tickTimer(){
+  const v = timerView();
+  if (v && v.state === 'done' && !timer.chimed){ timer.chimed = true; saveTimer(); chime(); }
+  forStages(s => s.setTimer(v));
+  const ro = $('timerReadout');
+  ro.textContent = v ? (v.state === 'done' ? 'Time\u2019s up' : v.text) : '';
+  ro.className = 'timer-readout' + (v ? ' ' + v.state : '');
+  $('timerStart').hidden = !!timer || !$('timerOther').hidden;
+  $('timerRun').hidden = !timer;
+  $('timerPause').textContent = timer && timer.paused ? 'Resume' : 'Pause';
+  $('timerPause').disabled = !!(v && v.state === 'done');
+}
+setInterval(tickTimer, 250);
+
+$('timerStart').addEventListener('click', e => { const b = e.target.closest('[data-min]'); if (b) startTimer(Number(b.dataset.min) * 60000); });
+$('timerOtherBtn').onclick = () => { $('timerOther').hidden = false; $('timerStart').hidden = true; $('timerOtherInput').value = ''; $('timerOtherInput').focus(); };
+$('timerOtherCancel').onclick = () => { $('timerOther').hidden = true; $('timerErr').hidden = true; tickTimer(); };
+$('timerOther').addEventListener('submit', e => {
+  e.preventDefault();
+  const ms = parseDuration($('timerOtherInput').value);
+  if (!ms || ms > 180 * 60000){ $('timerErr').hidden = false; $('timerOtherInput').focus(); return; }
+  $('timerErr').hidden = true; $('timerOther').hidden = true; startTimer(ms);
+});
+$('timerPause').onclick = () => {
+  if (!timer) return;
+  if (timer.paused){ timer.end = Date.now() + timer.remaining; timer.paused = false; }
+  else { timer.remaining = timerLeft(); timer.paused = true; }
+  saveTimer(); tickTimer();
+};
+$('timerAdd').onclick = () => {
+  if (!timer) return;
+  if (timerLeft() <= 0) return startTimer(60000);
+  if (timer.paused) timer.remaining += 60000; else timer.end += 60000;
+  saveTimer(); tickTimer();
+};
+$('timerClear').onclick = () => { timer = null; saveTimer(); tickTimer(); };
+$('timerTest').onclick = () => { unlockAudio(); chime(); };
+
+// A soft, warm chime: rounded tones through a gentle filter and a little room reverb
+let audio = null;
+function unlockAudio(){
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+  } catch(e){}
+}
+document.addEventListener('pointerdown', unlockAudio, { once: true });
+function chime(){
+  unlockAudio(); if (!audio) return;
+  const ac = audio, t0 = ac.currentTime + 0.06;
+  const out = ac.createGain(); out.gain.value = 0.6;
+  const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2800; lp.Q.value = 0.5;
+  const verb = ac.createConvolver(), len = Math.floor(ac.sampleRate * 2.4), ir = ac.createBuffer(2, len, ac.sampleRate);
+  for (let ch = 0; ch < 2; ch++){ const d = ir.getChannelData(ch); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2); }
+  verb.buffer = ir;
+  const wet = ac.createGain(); wet.gain.value = 0.22;
+  lp.connect(out); lp.connect(verb); verb.connect(wet); wet.connect(out); out.connect(ac.destination);
+  const note = (freq, at, vol) => {
+    [[1, 1, 3.2], [2, 0.16, 1.4], [3, 0.05, 0.8]].forEach(([mult, g, decay]) => {
+      const o = ac.createOscillator(), gn = ac.createGain();
+      o.type = 'sine'; o.frequency.value = freq * mult;
+      gn.gain.setValueAtTime(0.0001, at);
+      gn.gain.linearRampToValueAtTime(vol * g, at + 0.012);
+      gn.gain.exponentialRampToValueAtTime(0.0001, at + decay);
+      o.connect(gn); gn.connect(lp); o.start(at); o.stop(at + decay + 0.05);
+    });
+  };
+  const arp = [392.00, 493.88, 587.33, 783.99];
+  [0, 1.9].forEach((off, r) => arp.forEach((f, i) => note(f, t0 + off + i * 0.2, r ? 0.22 : 0.26)));
+  note(392.00, t0 + 1.9 + 0.8, 0.14); note(587.33, t0 + 1.9 + 0.8, 0.12);
+}
+
 // ---------- modal & toast ----------
 function modal({ title, body, buttons }){
   const m = $('modal');
@@ -579,7 +801,7 @@ function toast(msg, undo){
 $('toastUndo').onclick = () => { if (undoFn) undoFn(); undoFn = null; $('toast').classList.remove('show'); };
 
 // ---------- start ----------
-renderGrid(); refreshWheel(); updatePresentUi();
+renderGrid(); refreshWheel(); updatePresentUi(); if (timer && timerLeft() <= 0) timer.chimed = true; tickTimer();
 </script>
 </body>
 </html>
