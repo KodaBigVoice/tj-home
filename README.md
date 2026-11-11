@@ -14,6 +14,7 @@ Small pages without their own site live here in their own folders:
 | `vic-lap/` | VIC Lap Viewer |
 | `engine-note-lab/` | Engine Note Lab |
 | `family-tree/` | Family Tree |
+| `lunch-queue/` | Matchday Lunch Queue |
 
 Apps with their own site (PMU, Morning Slide, Crooket, MusicLAMDA, Simple Track Builder, Vobiscum Configurator) are only linked.
 

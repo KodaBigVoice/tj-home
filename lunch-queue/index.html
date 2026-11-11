@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matchday Lunch Queue</title>
+<style>
+:root{--navy:#12355b;--art:#1f5c99;--chapel:#9dc3e6;--artT:#e9f0f8;--chapelT:#eef6fc;--bg:#f3f5f8;--line:#d6dde6;--ink:#1d2733;--muted:#66768a;--boys:#2b6cb0;--girls:#c05680;--warn:#a35a00;--bad:#c62828;--ok:#2e7d32}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased}
+button{font:inherit}
+header.top{background:var(--navy);color:#fff;padding:10px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;position:sticky;top:0;z-index:30;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+.brand{font-weight:700;font-size:17px;line-height:1.2}
+.brand small{display:block;font-weight:400;font-size:12px;opacity:.7;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.daysw{display:flex;background:rgba(255,255,255,.12);border-radius:12px;padding:4px;gap:4px}
+.daysw button{border:0;background:transparent;color:#fff;padding:7px 18px;border-radius:9px;cursor:pointer;text-align:left;min-width:150px}
+.daysw button b{display:block;font-size:16px}
+.daysw button span{font-size:12px;opacity:.8}
+.daysw button.on{background:#fff;color:var(--navy)}
+.daysw button:disabled{opacity:.35;cursor:default}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto;align-items:center}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 12px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;line-height:1.2}
+.btn:hover{border-color:#a9b7c8}
+.top .btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.25);color:#fff}
+.top .btn:hover{background:rgba(255,255,255,.18)}
+.top .btn.hl{background:#fff;color:var(--navy);border-color:#fff}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.primary{background:var(--art);border-color:var(--art);color:#fff}
+.btn.small{padding:4px 9px;font-size:12.5px}
+.btn svg{width:16px;height:16px;flex:none}
+.vsep{width:1px;align-self:stretch;background:rgba(255,255,255,.22);margin:2px 4px}
+main{max-width:1320px;margin:0 auto;padding:16px 20px 60px}
+.bar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:2px 0 12px}
+.bar h1{font-size:20px;margin:0;color:var(--navy)}
+.bar .spacer{flex:1}
+.slider{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 12px}
+.slider input{width:140px;accent-color:var(--art)}
+.slider b{min-width:18px;text-align:center;font-size:15px;color:var(--navy)}
+.manual{font-size:12px;color:var(--muted)}
+.hidebar{display:none;background:#fff4e5;border:1px solid #f0c27a;color:#6b3d00;border-radius:10px;padding:10px 14px;margin-bottom:12px;align-items:center;gap:12px}
+body.hide-mode .hidebar{display:flex}
+body.hide-mode .card,body.hide-mode .pill{cursor:crosshair}
+body.hide-mode .card:hover{outline:2px solid var(--bad);outline-offset:1px}
+body.hide-mode .pill:hover{background:#fde7e7;border-color:var(--bad)}
+
+/* editor grid */
+.grid{display:grid;grid-template-columns:78px 130px 1fr 1fr;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(18,53,91,.06)}
+.grid>div{border-bottom:1px solid var(--line)}
+.grid>div.last{border-bottom:0}
+.gh{padding:10px 14px;font-weight:700;font-size:15px}
+.gh.art{background:var(--art);color:#fff}
+.gh.chapel{background:var(--chapel);color:#0d2a45}
+.gh.blank{background:#eef1f5}
+.tc,.lc{background:#f6f8fa;padding:14px 12px;font-weight:700;color:var(--navy)}
+.tc{font-size:17px;border-right:1px solid var(--line)}
+.lc{font-size:12.5px;letter-spacing:.6px;text-transform:uppercase;border-right:1px solid var(--line)}
+.lc small{display:block;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:4px;font-size:12px}
+.drop{padding:10px;min-height:120px;display:flex;flex-direction:column;gap:8px;position:relative;transition:background .12s}
+.drop.art{background:var(--artT);border-right:1px solid var(--line)}
+.drop.chapel{background:var(--chapelT)}
+.drop.over{outline:3px dashed #e39b1b;outline-offset:-5px;background:#fff8ea}
+.count{align-self:flex-end;font-size:12px;color:var(--muted);background:#fff;border:1px solid var(--line);border-radius:20px;padding:2px 9px;margin-bottom:-2px}
+.count.bad{background:var(--bad);color:#fff;border-color:var(--bad);font-weight:600}
+.empty{color:#9aa7b6;font-size:13px;text-align:center;padding:18px 6px;border:1.5px dashed #c9d4df;border-radius:10px}
+.fixed{grid-column:3 / span 2;background:repeating-linear-gradient(135deg,#f6f8fa,#f6f8fa 10px,#eef1f5 10px,#eef1f5 20px);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:13px;padding:12px}
+.card{background:#fff;border:1px solid #d3dce7;border-left:5px solid #9aa7b6;border-radius:10px;padding:8px 10px 9px;box-shadow:0 1px 2px rgba(0,0,0,.05);cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.card.g-Boys{border-left-color:var(--boys)}
+.card.g-Girls{border-left-color:var(--girls)}
+.ct{font-weight:650;font-size:14.5px;line-height:1.3;display:flex;gap:8px;align-items:baseline}
+.ct span{flex:1}
+.ct em{font-style:normal;font-weight:500;font-size:12px;color:var(--muted);white-space:nowrap}
+.pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.pill{background:#f1f5fa;border:1px solid #cbd7e4;border-radius:7px;padding:3px 8px 2px;font-size:13px;font-weight:600;cursor:grab;touch-action:none;line-height:1.15;text-align:center}
+.pill small{display:block;font-weight:400;font-size:10.5px;color:var(--muted)}
+.pill:hover{border-color:#7f9bbb;background:#e7eef7}
+.allbadge{display:inline-block;background:var(--navy);color:#fff;border-radius:5px;font-size:11px;padding:1px 6px;margin-left:4px;vertical-align:1px}
+.dragsrc{opacity:.35}
+.ghost{position:fixed;pointer-events:none;z-index:100;opacity:.92;transform:rotate(1.5deg);box-shadow:0 10px 24px rgba(0,0,0,.25)}
+
+/* lower panels */
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.panel h2{font-size:14px;margin:0 0 10px;color:var(--navy);display:flex;align-items:center;gap:8px}
+.panel h2 .spacer{flex:1}
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.notes li{padding:7px 10px;border-radius:8px;background:#f4f7fa;font-size:13px;line-height:1.4;display:flex;gap:8px}
+.notes li.warn{background:#fff4e5;color:#6b3d00}
+.notes li.bad{background:#fdecec;color:#7f1d1d}
+.notes li i{font-style:normal;flex:none}
+.hiddenbox{min-height:70px;border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:6px}
+.hiddenbox.over{outline:3px dashed #e39b1b;background:#fff8ea}
+.hchip{display:flex;align-items:center;gap:10px;background:#f6f8fa;border:1px solid var(--line);border-radius:9px;padding:6px 8px 6px 10px;cursor:grab;touch-action:none;user-select:none}
+.hchip b{font-size:13.5px}
+.hchip span{flex:1;font-size:12px;color:var(--muted)}
+.muted{color:var(--muted);font-size:13px}
+
+/* export */
+.export{margin-top:16px}
+.exphead{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.exphead h2{margin:0;flex:1}
+.prevwrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px}
+
+/* empty state */
+.welcome{max-width:640px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:36px;text-align:center}
+.welcome h1{color:var(--navy);margin:0 0 8px}
+.welcome p{color:var(--muted);line-height:1.5}
+.dropzone{border:2px dashed #b9c7d6;border-radius:14px;padding:30px;margin:20px 0;cursor:pointer;color:var(--navy)}
+.dropzone:hover,.dropzone.over{background:#f2f7fc;border-color:var(--art)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,25,45,.45);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:40px 16px;overflow:auto}
+.modal.open{display:flex}
+.sheet{background:#fff;border-radius:16px;width:100%;max-width:720px;padding:22px 24px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.sheet h2{margin:0 0 4px;color:var(--navy)}
+.sheet h3{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:20px 0 8px}
+.sheet table{width:100%;border-collapse:collapse}
+.sheet td,.sheet th{padding:5px 6px;text-align:left;font-size:13px}
+.sheet th{color:var(--muted);font-weight:600}
+.sheet input[type=text],.sheet select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;width:100%;background:#fff}
+.row2{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.row2 label{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.chk{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13.5px}
+.chk input{width:16px;height:16px;accent-color:var(--art)}
+.sheet .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#1d2733;color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;opacity:0;transition:.2s;z-index:120;pointer-events:none;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+@media (max-width:900px){.panels{grid-template-columns:1fr}.grid{grid-template-columns:62px 96px 1fr 1fr}.lc{font-size:11px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">Matchday Lunch Queue<small id="fileName"></small></div>
+  <div class="daysw" id="daySwitch"></div>
+  <div class="tools" id="tools">
+    <button class="btn" data-act="upload" title="Upload this week's SOCS fixtures CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>Upload CSV</button>
+    <button class="btn" data-act="auto" title="Re-run the automatic arrangement for this day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg>Auto-arrange</button>
+    <button class="btn" data-act="hidemode" id="hideBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 9 6 9 6a16 16 0 0 1-3 3.4M6.6 6.6C4.1 8.3 3 12 3 12s4 6 9 6c1.6 0 3-.4 4.3-1.1"/></svg>Hide team</button>
+    <div class="vsep"></div>
+    <button class="btn" data-act="undo" id="undoBtn" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>Undo</button>
+    <button class="btn" data-act="redo" id="redoBtn" title="Redo (Ctrl+Y)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg>Redo</button>
+    <div class="vsep"></div>
+    <button class="btn" data-act="save" title="Download a save file (.json)">Save</button>
+    <button class="btn" data-act="open" title="Open a save file (.json)">Open</button>
+    <button class="btn" data-act="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<div class="modal" id="settingsModal"><div class="sheet" id="settingsSheet"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="csvInput" accept=".csv,text/csv" hidden>
+<input type="file" id="jsonInput" accept=".json,application/json" hidden>
+
+<script type="text/plain" id="exampleCsv">Published,Date,Sport,Team,Opposition,Venue,Venue Details,Result,Teacher I/C,Umpire/Referee,Our Changing,Opp Changing,Transport,Lunch Time,Meet Time,Start Time,Tea Time,Return Time,More Details,Unnamed: 19
+1,Monday 09 Nov 2026,Swimming,Mixed-U9A,Opposition School 1,H,Home,Won,Teacher 1,,,,,,,16:30,,17:30,,
+1,Monday 09 Nov 2026,Swimming,Mixed-U8A,Opposition School 1,H,Home | Lambrook School,Won,Teacher 1,,,,,,,16:30,,17:30,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13A,Opposition School 2,A,Away,tbc,Teacher 2,,,,Mini Bus 14 WRU,,11:00,13:00,,18:00,IAPS Finals,
+1,Wednesday 11 Nov 2026,Football,Boys-U13A,Opposition School 3,N,Neutral | Summer Fields Pitch 2,tbc, , , , , , , ,13:15, , ,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13A,Opposition School 4,N,Neutral | Summer Fields Pitch 2,tbc, , , , , , , ,13:45, , ,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13A,Opposition School 5,N,Neutral | Summer Fields Pitch 2,tbc, , , , , , , ,14:00, , ,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13B,Opposition School 6,A,Away | Main School,tbc,Teacher 4,,,,Mini Bus 8 ZZL,,13:15,14:30,,16:30,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13C,Opposition School 7,H,Home | Powers Field,tbc,Teacher 5,,,,,,,14:30,,16:00,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13D,Opposition School 8,H,Home | Meadow,tbc,Teacher 6,,,,,,,14:30,,16:00,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13E,Opposition School 9,A,Away | Main School,tbc,Teacher 7,,,,Mini Bus 16 HOJ,,13:15,14:30,,16:30,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13F,Opposition School 10,A,Away | Main School,tbc,Teacher 8,,,,Coach,,13:15,14:30,,17:30,,
+1,Wednesday 11 Nov 2026,Football,Boys-U13G,Opposition School 11,H,Home | Slope,tbc,Teacher 9,,,,,,,14:30,,16:00,,
+1,Wednesday 11 Nov 2026,Football,Boys-U11A,Opposition School 12,H,Home | Willow,tbc,Teacher 10,,,,,,,14:30,,16:00,,
+1,Wednesday 11 Nov 2026,Football,Boys-U11B,Opposition School 12,H,Home | Pavilion,tbc,Teacher 11,,,,,,,14:30,,16:00,,
+1,Wednesday 11 Nov 2026,Football,Boys-U11 United ,Opposition School 13,H,Home | Athletics 1,tbc,Teacher 12,,,,,,,14:30,,16:00,,
+1,Wednesday 11 Nov 2026,Football,Boys-U11 City ,Opposition School 14,H,Home | Athletics 2,tbc,Teacher 13,,,,,,,14:30,,16:00,,
+1,Wednesday 11 Nov 2026,Football,Boys-U10A,Opposition School 12,A,Away,tbc,Teacher 1,,,,Coach,,13:15,14:30,,17:30,,
+1,Wednesday 11 Nov 2026,Football,Boys-U10C,Opposition School 15,A,Away | Main School,tbc,Teacher 14,,,,Coach,,13:15,14:30,,17:30,,
+1,Wednesday 11 Nov 2026,Football,Boys-U10D,Opposition School 16,H,Home | Riverside,tbc,Teacher 15,,,,,,,14:30,,16:00,,
+1,Wednesday 11 Nov 2026,Football,Boys-U10 Training ,Opposition School 17,H,Home | Chapel 1,tbc,Teacher 16,,,,,,,14:15,,15:30,Internal Match,
+1,Wednesday 11 Nov 2026,Hockey,1st Team,Opposition School 18,H,Home | Lambrook School,tbc,Teacher 17,,,,,,,13:45,,16:30,,
+1,Wednesday 11 Nov 2026,Hockey,2nd Team,Opposition School 19,N,Neutral | Staines Hockey Club,tbc,Teacher 18,,,,14 UVT,,13:20,14:30,,16:15,,
+1,Wednesday 11 Nov 2026,Hockey,3rd Team,Opposition School 20,N,Neutral | Cantley Park,tbc,Teacher 19,,,,,,13:40,14:30,,16:45,,
+1,Wednesday 11 Nov 2026,Hockey,4th Team,Opposition School 21,N,Neutral | Staines Hockey Club,tbc,Teacher 20,,,,16 NTD,,14:00,15:15,,17:00,,
+1,Wednesday 11 Nov 2026,Hockey,5th Team,Opposition School 22,N,Neutral | Cantley Park,tbc,Teacher 21,,,,,,13:40,14:30,,16:45,,
+1,Wednesday 11 Nov 2026,Hockey,6th Team,Opposition School 23,A,Away | Main School,tbc,Teacher 22,,,,,,13:40,14:30,,16:15,,
+1,Wednesday 11 Nov 2026,Hockey,7th Team,Opposition School 24,N,Neutral | Cantley Park,tbc,Teacher 23,,,,,,13:40,15:10,,16:45,,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U11A,Opposition School 25,N,Neutral | Urnfield Guildford,tbc,Teacher 24,,,,14 VUL,,11:50,13:15,,17:15,,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U11A,Opposition School 26,N,Neutral | Upton Court Rd,tbc,Teacher 25,,,,Coach,,13:20,14:30,,17:00,Goalkeeper is player number 1,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U11B,Opposition School 26,N,Neutral | Upton Court Rd,tbc,Teacher 26,,,,Coach,,13:20,15:15,,17:00,Goalkeeper is player number 1,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U11C,Opposition School 26,N,Neutral | Upton Court Rd,tbc,Teacher 27,,,,Coach,,13:20,14:30,,17:00,Goalkeeper is player number 1,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U11D,Opposition School 26,N,Neutral | Upton Court Rd,tbc,Teacher 27,,,,Coach,,13:20,15:15,,17:00,Goalkeeper is player number 1,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U10A,Opposition School 27,A,Away | Main Astro,tbc,Teacher 28,,,,16 OGE,,,14:30,,16:30,,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U10A,Opposition School 26,H,Home | Winkfield Astro,tbc,Teacher 29,,,,,,,14:15,,15:30,,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U10B,Opposition School 27,A,Away | Main Astro,tbc,Teacher 30,,,,14 UKX,,,15:10,,16:45,,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U10B,Opposition School 26,H,Home | Winkfield Astro,tbc,Teacher 31,,,,,,,14:15,,15:30,,
+1,Wednesday 11 Nov 2026,Hockey,Girls-U10C,Opposition School 26,H,Home | Hedges Astro,tbc,Teacher 32,,,,,,,14:15,,15:30,,
+1,Thursday 12 Nov 2026,Hockey,1st Team,Opposition School 28,N,Neutral | Reading Hockey Club,tbc,Teacher 17,,,,14 VUL,,08:30,10:00,,17:15,,
+1,Friday 13 Nov 2026,Football,Boys-U13A,Opposition School 29,H,Home | Meadow,tbc,Teacher 2,Mike Andrew,,,,,11:30,11:40,,13:00,During Games ; Meadow; Lambrook spectators welcome - Parking only available on Cricketers Lanes,
+1,Friday 13 Nov 2026,Football,Girls-1st Team,Opposition School 30,H,Home | Powers Field,tbc,,,,,,,,11:30,,,During Games ; Powers Field ; Lambrook spectators welcome - Parking only available on Cricketers Lanes,
+1,Friday 13 Nov 2026,Football,Boys-U9 Group 1,Opposition School 31,A,Away | Main School,tbc,Teacher 34,,,,Mini Bus NTD 16,,13:15,14:15,,16:30,,
+1,Friday 13 Nov 2026,Football,Boys-U9 Group 2 ,Opposition School 32,H,Home | Athletics 1; 2,tbc,Teacher 35,,,,,,,14:30,,16:00,,
+1,Friday 13 Nov 2026,Football,Boys-U9 Group 3,Opposition School 33,H,Home | Riverside; Chapel; Cliff,tbc,Teacher 36,,,,,,,14:30,,16:00,,
+1,Friday 13 Nov 2026,Football,Boys-U8 Group 2,Opposition School 31,A,Away | Main School,tbc,Teacher 37,,,,Mini Busc14 UVT,,13:15,14:15,,16:30,,
+1,Friday 13 Nov 2026,Football,Boys-U8 Group 2,Opposition School 32,H,Home | Athletics 3,tbc,Teacher 38,,,,,,,14:30,,16:00,,
+1,Friday 13 Nov 2026,Football,Boys-U8 Group 3,Opposition School 33,H,Home | Lambrook School,tbc,Teacher 39,,,,Mini Bus 16 ZSY; UKX,,13:15,14:15,,16:30,,
+1,Friday 13 Nov 2026,Hockey,1st Team,Opposition School 34,H,Home | Winkfield Astro,tbc,,,,,,,,18:00,,,,
+1,Friday 13 Nov 2026,Hockey,U9 Group 1,Opposition School 32,N,Neutral | Henley Hockey Club,tbc,,,,,HOJ 16; VUL 14,,,14:15,,16:15,,
+1,Friday 13 Nov 2026,Hockey,U9 Group 2,Opposition School 26,H,Home | Winkfield Astro,tbc,,,,,,,,14:30,,,,
+1,Friday 13 Nov 2026,Hockey,U8 Group 1,Opposition School 32,H,Home | Hedges Astro,tbc,,,,,,,,14:30,,,,
+1,Friday 13 Nov 2026,Hockey,U8 Group 2,Opposition School 35,H,Home | Winkfield Astro,tbc,,,,,,,,14:30,,,,
+1,Friday 13 Nov 2026,Hockey Sevens,Girls-U9A,Opposition School 26,H,Home,tbc, , , , , , , ,14:30, , ,,
+1,Friday 13 Nov 2026,Hockey Sevens,Girls-U9B,Opposition School 26,H,Home,tbc, , , , , , , ,14:30, , ,,
+1,Saturday 14 Nov 2026,Football,Boys-U13A,Opposition School 36,A,Away | Main School,tbc,Teacher 2,,,,Mini Bus 14 VUL,,13:15,14:30,,17:30,,
+1,Saturday 14 Nov 2026,Football,Boys-U13B,Opposition School 36,H,Home | Powers Field,tbc,Teacher 4,,,,,,,14:30,,16:00,,
+1,Saturday 14 Nov 2026,Football,Boys-U13C,Opposition School 36,A,Away | Main School,tbc,Teacher 7,,,,Mini Bus 16 HOJ,,13:15,14:30,,17:30,,
+1,Saturday 14 Nov 2026,Football,Boys-U13D,Opposition School 36,H,Home | Westfield,tbc,Teacher 40,,,,,,,14:30,,16:00,,
+1,Saturday 14 Nov 2026,Football,Boys-U13E,Opposition School 36,A,Away | Main School,tbc,Teacher 6,,,,Mini Bus 14 WRU,,13:15,14:30,,17:30,,
+1,Saturday 14 Nov 2026,Football,Boys-U13F,Opposition School 36,H,Home | Meadow ,tbc,Teacher 8,,,,,,,14:30,,16:00,,
+1,Saturday 14 Nov 2026,Football,Boys-U13G,Opposition School 36,A,Away | Main School,tbc,Teacher 41,,,,Coach,,13:15,14:30,,17:30,,
+1,Saturday 14 Nov 2026,Football,Boys-U11A,Opposition School 36,A,Away,tbc,Teacher 10,,,,Coach,,13:15,14:30,,17:30,,
+1,Saturday 14 Nov 2026,Football,Boys-U11B,Opposition School 36,A,Away,tbc,Teacher 11,,,,Coach,,13:15,14:30,,17:30,,
+1,Saturday 14 Nov 2026,Football,Boys-U11C,Opposition School 36,A,Away,tbc,Teacher 9,,,,Coach,,13:15,14:30,,17:30,,
+1,Saturday 14 Nov 2026,Football,Boys-U10A,Opposition School 36,H,Home | Pavilion,tbc,Teacher 42,,,,,,,14:30,,16:00,,
+1,Saturday 14 Nov 2026,Football,Boys-U10B,Opposition School 36,H,Home | Willow,tbc,Teacher 43,,,,,,,14:30,,16:00,,
+1,Saturday 14 Nov 2026,Football,Boys-U10C,Opposition School 36,H,Home | Athletics 1,tbc,Teacher 44,,,,,,,14:30,,16:00,Triangular. Internal match starting at 2.10pm,
+1,Saturday 14 Nov 2026,Football,Boys-U10D,Opposition School 37,H,Home | Athletics 1,tbc,Teacher 15,,,,,,,14:30,,16:00,Triangular Internal match starting at 2.10pm,
+1,Saturday 14 Nov 2026,Hockey,1st Team,Opposition School 38,A,Away | Athletics track / Frith astro,tbc,Teacher 17,,,,,,13:20,14:00,,16:00,This will be an 11 aside game.,
+1,Saturday 14 Nov 2026,Hockey,2nd Team,Opposition School 39,A,Away | Quilters astro,tbc,Teacher 45,,,,,,13:20,14:00,,16:00,,
+1,Saturday 14 Nov 2026,Hockey,3rd Team,Opposition School 40,A,Away | Quilters astro,tbc,Teacher 19,,,,,,13:20,14:00,,16:00,,
+1,Saturday 14 Nov 2026,Hockey,4th Team,Opposition School 41,H,Home | Winkfield Astro,tbc,Teacher 21,,,,,,,14:15,,15:30,,
+1,Saturday 14 Nov 2026,Hockey,5th Team,Opposition School 42,H,Home | Winkfield Astro,tbc,Teacher 23,,,,,,,14:15,,15:30,,
+1,Saturday 14 Nov 2026,Hockey,6th Team,Opposition School 43,H,Home | Winkfield Astro,tbc,Teacher 22,,,,,,,15:00,,16:15,,
+1,Saturday 14 Nov 2026,Hockey,7th Team,Opposition School 44,H,Home | Willow Cricket Nets,tbc,Teacher 20,,,,,,,13:40,,15:15,,
+1,Saturday 14 Nov 2026,Hockey,U11 Training,Opposition School 45,H,Home | Hard Courts,tbc,,,,,,,,13:40,,15:00,,
+1,Saturday 14 Nov 2026,Hockey,U10 Training,Opposition School 45,H,Home | Hedges Astro,tbc,,,,,,,,13:40,,15:00,,
+</script>
+<script>
+(function(){
+'use strict';
+
+/* ================= constants & settings ================= */
+const PRESETS={
+  '1':{name:'Rotation 1 – Boys football, Girls hockey',sports:[{name:'Football',gender:'Boys',combined:true},{name:'Hockey',gender:'Girls',combined:true}]},
+  '2':{name:'Rotation 2 – Boys rugby, Girls netball',sports:[{name:'Rugby',gender:'Boys',combined:false},{name:'Netball',gender:'Girls',combined:true}]},
+  '3':{name:'Rotation 3 – Boys hockey, Girls football',sports:[{name:'Hockey',gender:'Boys',combined:true},{name:'Football',gender:'Girls',combined:true}]},
+  '4':{name:'Rotation 4 – Cricket (boys and girls)',sports:[{name:'Cricket',gender:'',combined:true}]}
+};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const DEF={rotation:'1',sports:clone(PRESETS['1'].sports),
+  doors:{y5:'art',y6:'chapel',y7:'art',y8:'chapel',g78:'art',b78:'chapel'},
+  doorNames:{art:'Art Door',chapel:'Chapel Door'},
+  times:{away:'12:50',lower:'1:10',home:'1:20'},
+  maxPerDoor:9,useAll:true,showTimes:false};
+const YL={'5':'Year 5','6':'Year 6','7':'Year 7','8':'Year 8','78':'Year 7&8','LS':'Lower school'};
+const YO={'5':5,'6':6,'7':7,'78':7.5,'8':8,'LS':0};
+const LS_KEY='lunchQueue.v1';
+const MON=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const WD=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+let S={settings:clone(DEF),csvName:'',days:{},cur:'wed'};
+let hist=[],fut=[];
+const ui={hideMode:false};
+
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+function toMin24(s){if(!s)return null;const m=String(s).trim().match(/^(\d{1,2})[:.](\d{2})/);return m?(+m[1])*60+(+m[2]):null;}
+function toMin(s){if(!s)return null;const m=String(s).trim().match(/^(\d{1,2})[:.](\d{2})/);if(!m)return null;let h=+m[1];if(h<8)h+=12;return h*60+(+m[2]);}
+function fmt(m){if(m==null||m>=9999)return '';return Math.floor(m/60)+':'+String(m%60).padStart(2,'0');}
+function ordinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function parseDate(s){s=(s||'').trim();let m=s.match(/(\d{1,2})\s+([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{4})/);
+  if(m){const mi=MON.indexOf(m[2].toLowerCase());if(mi>=0)return new Date(+m[3],mi,+m[1]);}
+  m=s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;return new Date(y,+m[2]-1,+m[1]);}
+  m=s.match(/(\d{4})-(\d{2})-(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3]);return null;}
+function toast(msg,ms){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),ms||2600);}
+function doorName(d){return S.settings.doorNames[d]||d;}
+function cellName(c){const [slot,door]=c.split('-');return doorName(door)+' at '+(slot==='away'?S.settings.times.away:S.settings.times.home);}
+
+function parseCSV(text){const rows=[];let row=[],f='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+    else if(c==='"')q=true;
+    else if(c===','){row.push(f);f='';}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(f);rows.push(row);row=[];f='';}
+    else f+=c;}
+  if(f!==''||row.length){row.push(f);rows.push(row);}
+  return rows.filter(r=>r.some(x=>x.trim()!==''));}
+
+/* ================= team parsing ================= */
+function matchSport(sport){const s=(sport||'').trim().toLowerCase();const L=S.settings.sports.filter(x=>x.name&&x.name.trim());
+  return L.find(x=>x.name.trim().toLowerCase()===s)||L.find(x=>s.includes(x.name.trim().toLowerCase()))||null;}
+function annotate(e){
+  let s=e.raw.trim().replace(/\s+/g,' ');let gender=null;
+  let m=s.match(/^(boys|girls|mixed)\b[\s\-–]*/i);
+  if(m){gender=m[1][0].toUpperCase()+m[1].slice(1).toLowerCase();s=s.slice(m[0].length);}
+  let age=null,ageExplicit=false;
+  m=s.match(/(^|[\s\-])U\s?(\d{1,2})(?=[A-Za-z\s]|$)/i);
+  if(m){age=+m[2];ageExplicit=true;s=(s.slice(0,m.index)+' '+s.slice(m.index+m[0].length));}
+  s=s.replace(/\bteam\b/ig,'').replace(/\s+/g,' ').trim();
+  const sp=matchSport(e.sport);
+  e.sportKey=sp?sp.name.trim():(e.sport||'').trim();
+  e.genderInferred=!gender;
+  if(!gender)gender=sp&&sp.gender?sp.gender:null;
+  if(age==null)age=13;
+  const combined=sp?!!sp.combined:true;
+  let yk;if(age<=9)yk='LS';else if(age===10)yk='5';else if(age===11)yk='6';else if(age===12)yk=combined?'78':'7';else yk=combined?'78':'8';
+  Object.assign(e,{gender,age,ageExplicit,suffix:s,yearKey:yk});
+  e.short=((ageExplicit?'U'+age+(s?' ':''):'')+s)||e.raw;
+}
+function slotOf(e){const h=(e.ha||'').trim().toUpperCase();if(h==='H')return 'home';if(h==='A'||h==='N')return 'away';return /^home/i.test(e.venue||'')?'home':'away';}
+function tKey(e){const v=slotOf(e)==='away'?(e.meet!=null?e.meet:e.start):(e.start!=null?e.start:e.meet);return v==null?9999:v;}
+const gk=e=>e.yearKey+'|'+(e.gender||'')+'|'+e.sportKey;
+function prefDoor(e){const d=S.settings.doors;let v=null;
+  switch(e.yearKey){case '5':v=d.y5;break;case '6':v=d.y6;break;case '7':v=d.y7;break;case '8':v=d.y8;break;
+    case '78':v=e.gender==='Girls'?d.g78:e.gender==='Boys'?d.b78:null;break;}
+  return (v==='art'||v==='chapel')?v:null;}
+function tokRank(e){const s=e.suffix||'';if(!s)return[-1,''];if(/^[A-Z]$/i.test(s))return[0,s.toUpperCase()];
+  const m=s.match(/^(\d+)(st|nd|rd|th)\b/i);if(m)return[1,+m[1]];return[2,s.toLowerCase()];}
+function tokCmp(a,b){const aa=a.ageExplicit?a.age:99,bb=b.ageExplicit?b.age:99;if(aa!==bb)return aa-bb;
+  const ra=tokRank(a),rb=tokRank(b);if(ra[0]!==rb[0])return ra[0]-rb[0];return ra[1]<rb[1]?-1:ra[1]>rb[1]?1:0;}
+function tokensFor(list){const seen=new Set(),u=[];for(const e of list)if(!seen.has(e.raw)){seen.add(e.raw);u.push(e);}
+  u.sort(tokCmp);
+  if(u.every(e=>e.ageExplicit)&&new Set(u.map(e=>e.age)).size===1){const suf=u.map(e=>e.suffix).filter(Boolean);
+    return 'U'+u[0].age+(suf.length?' '+suf.join(suf.some(x=>x.includes(' '))?', ':' '):'');}
+  const p=u.map(e=>e.short);return p.join(p.some(x=>x.includes(' '))?', ':' ');}
+function headFor(day,e){const needSport=day.entries.some(x=>x.yearKey===e.yearKey&&x.gender===e.gender&&x.sportKey!==e.sportKey);
+  return [YL[e.yearKey]||'',e.gender||'',needSport?e.sportKey:''].filter(Boolean).join(' ');}
+function describe(day,list){return headFor(day,list[0])+' ('+tokensFor(list)+')';}
+
+/* ================= build from CSV ================= */
+function buildDays(text){
+  const rows=parseCSV(text.replace(/^﻿/,''));
+  if(rows.length<2)throw new Error('That file has no fixture rows.');
+  const norm=s=>s.toLowerCase().replace(/[^a-z]/g,'');const H=rows[0].map(norm);
+  const col=(...n)=>{for(const x of n){const i=H.indexOf(x);if(i>=0)return i;}return -1;};
+  const C={date:col('date'),sport:col('sport'),team:col('team'),opp:col('opposition'),ha:col('venue'),venue:col('venuedetails'),
+    teacher:col('teacheric','teacher'),transport:col('transport'),meet:col('meettime'),start:col('starttime'),ret:col('returntime'),details:col('moredetails')};
+  if(C.date<0||C.team<0)throw new Error("Couldn't find the Date and Team columns. Is this the SOCS fixtures export?");
+  const g=(r,k)=>C[k]>=0?(r[C[k]]||'').trim():'';
+  const byDate={};
+  for(const r of rows.slice(1)){const d=parseDate(g(r,'date'));if(!d)continue;const w=d.getDay();if(w!==3&&w!==6)continue;
+    const k=iso(d);(byDate[k]=byDate[k]||{d,recs:[]}).recs.push(r);}
+  const today=new Date();today.setHours(0,0,0,0);
+  const pick=w=>{const c=Object.values(byDate).filter(x=>x.d.getDay()===w);if(!c.length)return null;
+    c.sort((a,b)=>Math.abs(a.d-today)-Math.abs(b.d-today)||b.d-a.d);return c[0];};
+  const days={};
+  for(const [key,w] of [['wed',3],['sat',6]]){const p=pick(w);if(!p)continue;
+    days[key]=makeDay(key,p.d,p.recs.map(r=>({sport:g(r,'sport'),team:g(r,'team'),opp:g(r,'opp'),ha:g(r,'ha'),venue:g(r,'venue'),
+      teacher:g(r,'teacher'),transport:g(r,'transport'),meet:g(r,'meet'),start:g(r,'start'),ret:g(r,'ret'),details:g(r,'details')})));
+    autoArrange(days[key]);}
+  if(!Object.keys(days).length)throw new Error('No Wednesday or Saturday fixtures found in that file.');
+  return days;
+}
+function makeDay(key,d,recs){
+  const awayT=toMin(S.settings.times.away);const entries=[],notes=[];
+  for(const r of recs){const raw=r.team.replace(/\s+/g,' ').trim();if(!raw)continue;
+    const prev=entries.find(e=>e.raw===raw&&e.sport===r.sport);
+    if(prev&&!r.teacher&&!r.meet){if(r.opp)prev.extraOpps.push(r.opp);continue;}
+    const e={id:uid(),sport:r.sport,raw,opp:r.opp,ha:r.ha,venue:r.venue,teacher:r.teacher,transport:r.transport,details:r.details,
+      meet:toMin24(r.meet),start:toMin24(r.start),ret:toMin24(r.ret),extraOpps:[],hidden:false,hiddenReason:'',auto:false,cell:null};
+    annotate(e);entries.push(e);}
+  for(const e of entries){
+    if(e.yearKey==='LS'){e.hidden=true;e.auto=true;e.hiddenReason='Lower school (U9 and below)';}
+    else if(e.meet!=null&&awayT!=null&&e.meet<awayT){e.hidden=true;e.auto=true;e.hiddenReason='Meets at '+fmt(e.meet)+', before lunch';
+      notes.push({t:'warn',x:e.raw+' meets at '+fmt(e.meet)+', before lunch, so it has been hidden. Packed lunch?'});}
+    if(e.extraOpps.length)notes.push({t:'info',x:e.raw+': '+e.extraOpps.length+' more fixture'+(e.extraOpps.length>1?'s':'')+' on the day (tournament) merged into one entry.'});}
+  const ls=entries.filter(e=>e.yearKey==='LS').length;
+  if(ls)notes.push({t:'info',x:ls+' lower school team'+(ls>1?'s':'')+' (U9 and below) hidden automatically.'});
+  return {key,dateISO:iso(d),title:WD[d.getDay()]+' '+ordinal(d.getDate())+' '+MN[d.getMonth()],
+    short:d.getDate()+' '+MN[d.getMonth()].slice(0,3),entries,parseNotes:notes,arrangeNotes:[],manual:false};
+}
+
+/* ================= auto-arrange ================= */
+function groupBy(list,f){const m=new Map();for(const e of list){const k=f(e);if(!m.has(k))m.set(k,[]);m.get(k).push(e);}return [...m.values()];}
+function autoArrange(day){
+  const lim=S.settings.maxPerDoor;const notes=[];const vis=day.entries.filter(e=>!e.hidden);
+  for(const slot of ['away','home']){
+    const es=vis.filter(e=>slotOf(e)===slot);const cnt={art:0,chapel:0};const nopref=[];
+    for(const u of groupBy(es,gk)){const d=prefDoor(u[0]);if(d){u.forEach(e=>e.cell=slot+'-'+d);cnt[d]+=u.length;}else nopref.push(u);}
+    nopref.sort((a,b)=>b.length-a.length);
+    for(const u of nopref){const d=cnt.art<=cnt.chapel?'art':'chapel';u.forEach(e=>e.cell=slot+'-'+d);cnt[d]+=u.length;}
+    for(let it=0;it<60;it++){
+      const heavy=cnt.art>=cnt.chapel?'art':'chapel',light=heavy==='art'?'chapel':'art';const H=cnt[heavy],L=cnt[light];
+      if(H<=lim)break;
+      const units=groupBy(es.filter(e=>e.cell===slot+'-'+heavy),gk);const cands=[];
+      for(const u of units){const s=u.length,nm=Math.max(H-s,L+s);if(nm<H)cands.push({u,nm,whole:1,t:Math.min(...u.map(tKey))});}
+      if(!cands.length&&H-L>=2){for(const u of units){const e=[...u].sort((a,b)=>tKey(b)-tKey(a))[0];cands.push({u:[e],nm:Math.max(H-1,L+1),whole:0,t:tKey(e)});}}
+      if(!cands.length)break;
+      cands.sort((a,b)=>a.nm-b.nm||b.whole-a.whole||b.t-a.t);const best=cands[0];
+      best.u.forEach(e=>e.cell=slot+'-'+light);cnt[heavy]-=best.u.length;cnt[light]+=best.u.length;
+      notes.push({t:'info',x:describe(day,best.u)+(best.whole?'':' split off and')+' moved to '+doorName(light)+' ('+(slot==='away'?'away':'home')+') to balance: '+doorName(heavy)+' had '+H+' teams.'});
+    }
+  }
+  day.arrangeNotes=notes;day.manual=false;
+}
+function placeEntry(day,e){const slot=slotOf(e);
+  const sib=day.entries.find(x=>x!==e&&!x.hidden&&gk(x)===gk(e)&&x.cell&&x.cell.startsWith(slot));
+  if(sib){e.cell=sib.cell;return;}
+  let d=prefDoor(e);if(!d){const c=k=>day.entries.filter(x=>!x.hidden&&x.cell===slot+'-'+k).length;d=c('art')<=c('chapel')?'art':'chapel';}
+  e.cell=slot+'-'+d;}
+
+/* ================= state ops ================= */
+function day(){return S.days[S.cur];}
+function snap(){return JSON.stringify({days:S.days,settings:S.settings,csvName:S.csvName});}
+function restoreSnap(str){const o=JSON.parse(str);S.days=o.days;S.settings=o.settings;S.csvName=o.csvName;if(!S.days[S.cur])S.cur=Object.keys(S.days)[0]||'wed';}
+function commit(fn){hist.push(snap());if(hist.length>150)hist.shift();fut=[];fn();persist();render();}
+function undo(){if(!hist.length)return;fut.push(snap());restoreSnap(hist.pop());persist();render();toast('Undone');}
+function redo(){if(!fut.length)return;hist.push(snap());restoreSnap(fut.pop());persist();render();toast('Redone');}
+function persist(){try{localStorage.setItem(LS_KEY,JSON.stringify({days:S.days,settings:S.settings,csvName:S.csvName}));}catch(e){}}
+function reannotateAll(){for(const d of Object.values(S.days))for(const e of d.entries)annotate(e);}
+function defaultDay(){const w=new Date().getDay();const p=(w>=4&&w<=6)?'sat':'wed';return S.days[p]?p:(S.days.wed?'wed':'sat');}
+function byId(ids){const set=new Set(ids);return day().entries.filter(e=>set.has(e.id));}
+function moveIds(ids,target){const d=day();
+  if(target==='hidden'){const es=byId(ids).filter(e=>!e.hidden);if(!es.length)return;
+    commit(()=>{es.forEach(e=>{e.hidden=true;e.auto=false;e.hiddenReason='Hidden manually';});d.manual=true;});
+    toast('Hidden '+(es.length>1?es.length+' teams':es[0].raw));return;}
+  const es=byId(ids).filter(e=>e.hidden||e.cell!==target);if(!es.length)return;
+  commit(()=>{es.forEach(e=>{e.hidden=false;e.hiddenReason='';e.cell=target;});d.manual=true;});}
+function showIds(ids){const es=byId(ids).filter(e=>e.hidden);if(!es.length)return;
+  commit(()=>{es.forEach(e=>{e.hidden=false;e.hiddenReason='';placeEntry(day(),e);});day().manual=true;});}
+
+/* ================= load / save ================= */
+function loadCSVText(text,name){
+  let days;try{days=buildDays(text);}catch(err){toast(err.message,4500);return;}
+  commit(()=>{S.days=days;S.csvName=name||'';S.cur=defaultDay();});
+  const n=Object.values(days).reduce((a,d)=>a+d.entries.length,0);
+  toast('Loaded '+n+' fixtures for '+Object.values(days).map(d=>d.title).join(' and '));
+}
+function readFile(file){const r=new FileReader();
+  r.onload=()=>{const t=String(r.result);
+    if(/\.json$/i.test(file.name)||/^\s*\{/.test(t))loadJSONText(t);else loadCSVText(t,file.name);};
+  r.readAsText(file);}
+function loadJSONText(t){try{const o=JSON.parse(t);const st=o.state||o;if(!st.days)throw 0;
+    commit(()=>{S.days=st.days;S.settings=Object.assign(clone(DEF),st.settings||{});S.csvName=st.csvName||'';S.cur=defaultDay();});
+    toast('Save file opened');}catch(e){toast("That doesn't look like a Lunch Queue save file.",4000);}}
+let dlNS=null;
+function initDownloads(tries){try{if(window.claude&&typeof window.claude.use==='function'){window.claude.use('downloads').then(ns=>{dlNS=ns;}).catch(()=>{});return;}}catch(e){}
+  if((tries||0)<10)setTimeout(()=>initDownloads((tries||0)+1),500);}
+async function saveFile(filename,data){
+  if(dlNS){try{await dlNS.save({filename,data});toast('Saved '+filename);return;}
+    catch(err){if(err&&err.code==='declined')return;}}
+  try{const blob=data instanceof Blob?data:new Blob([data]);const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;
+    document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);}
+  catch(e){toast("Downloads aren't available here.",3500);}
+}
+function saveJSON(){if(!Object.keys(S.days).length){toast('Nothing to save yet');return;}
+  const d=day();const data=JSON.stringify({app:'lunch-queue',version:1,savedAt:new Date().toISOString(),state:{days:S.days,settings:S.settings,csvName:S.csvName}},null,1);
+  saveFile('lunch-queue-'+(d?d.dateISO:'save')+'.json',data);}
+
+/* ================= export model ================= */
+function groupsIn(d,cell){const es=d.entries.filter(e=>!e.hidden&&e.cell===cell);
+  const gs=groupBy(es,gk).map(list=>{list.sort((a,b)=>tokCmp(a,b)||tKey(a)-tKey(b));return {list,t:Math.min(...list.map(tKey)),key:gk(list[0])};});
+  gs.sort((a,b)=>a.t-b.t||(YO[a.list[0].yearKey]-YO[b.list[0].yearKey]));return gs;}
+function isAll(d,g,cell){if(!S.settings.useAll)return false;const same=d.entries.filter(e=>gk(e)===g.key);
+  return new Set(same.map(e=>e.raw)).size>=2&&same.every(e=>!e.hidden&&e.cell===cell);}
+function lineFor(d,g,cell){const all=isAll(d,g,cell);
+  return {head:headFor(d,g.list[0]),tok:all?'All':tokensFor(g.list),all,time:fmt(g.t)};}
+function lineText(l,withTime){return l.head+' – '+l.tok+(withTime&&l.time?' ('+l.time+')':'');}
+function exportModel(d){const st=S.settings;const L=c=>groupsIn(d,c).map(g=>lineText(lineFor(d,g,c),st.showTimes));
+  const rows=[{time:st.times.away,label:'AWAY MATCHES:',art:L('away-art'),chapel:L('away-chapel')}];
+  if(d.key==='sat')rows.push({time:st.times.lower,label:'Lower school',fixed:true,art:[],chapel:[]});
+  rows.push({time:st.times.home,label:'HOME MATCHES',art:L('home-art'),chapel:L('home-chapel')});
+  return {title:'Lunch queue order '+d.title,rows};}
+const XC={title:'#dbe8f5',grey:'#ececec',art:'#1f5c99',chapel:'#9dc3e6',blank:'#f7f7f7',line:'#8fa6bd'};
+function exportHTML(m){const st=S.settings;const td='border:1px solid '+XC.line+';padding:6px 9px;vertical-align:top;font-family:Calibri,Arial,sans-serif;font-size:11pt;';
+  const lines=a=>a.map(esc).join('<br>');
+  let h='<table style="border-collapse:collapse;width:780px;">';
+  h+='<tr><td colspan="4" style="'+td+'background:'+XC.title+';text-align:center;font-weight:bold;color:#12355b;">'+esc(m.title)+'</td></tr>';
+  h+='<tr><td style="'+td+'background:'+XC.grey+';width:70px;"></td><td style="'+td+'background:'+XC.grey+';width:150px;"></td>'+
+     '<td style="'+td+'background:'+XC.art+';color:#ffffff;font-weight:bold;width:280px;">'+esc(st.doorNames.art)+'</td>'+
+     '<td style="'+td+'background:'+XC.chapel+';color:#0d2a45;font-weight:bold;width:280px;">'+esc(st.doorNames.chapel)+'</td></tr>';
+  for(const r of m.rows){h+='<tr><td style="'+td+'background:'+XC.grey+';font-weight:bold;">'+esc(r.time)+'</td><td style="'+td+'background:'+XC.grey+';font-weight:bold;">'+esc(r.label)+'</td>';
+    if(r.fixed)h+='<td style="'+td+'background:'+XC.blank+';"></td><td style="'+td+'background:'+XC.blank+';"></td>';
+    else h+='<td style="'+td+'background:'+XC.art+';color:#ffffff;">'+lines(r.art)+'</td><td style="'+td+'background:'+XC.chapel+';color:#0d2a45;">'+lines(r.chapel)+'</td>';
+    h+='</tr>';}
+  return h+'</table>';}
+function exportPlain(m){let s=m.title+'\n';for(const r of m.rows){s+='\n'+r.time+'  '+r.label+'\n';if(r.fixed)continue;
+  s+='  '+S.settings.doorNames.art+':\n'+r.art.map(x=>'    '+x).join('\n')+'\n  '+S.settings.doorNames.chapel+':\n'+r.chapel.map(x=>'    '+x).join('\n')+'\n';}return s;}
+function drawCanvas(m){
+  const sc=2,W=[78,160,330,330],TW=W.reduce((a,b)=>a+b,0),P=10,LH=21,GAP=5;
+  const F='15px Calibri, "Segoe UI", Arial, sans-serif',FB='bold 15px Calibri, "Segoe UI", Arial, sans-serif';
+  const c=document.createElement('canvas'),x=c.getContext('2d');
+  const wrap=(t,w,f)=>{x.font=f;const words=t.split(' ');const out=[];let cur='';
+    for(const wd of words){const tr=cur?cur+' '+wd:wd;if(x.measureText(tr).width>w&&cur){out.push(cur);cur=wd;}else cur=tr;}if(cur)out.push(cur);return out;};
+  const cellLines=a=>{const o=[];a.forEach((t,i)=>{wrap(t,330-2*P,F).forEach((l,j)=>o.push({l,gap:i>0&&j===0}));});return o;};
+  const rows=m.rows.map(r=>{const a=cellLines(r.art),ch=cellLines(r.chapel),lab=wrap(r.label,160-2*P,FB);
+    const hh=Math.max(a.length*LH+a.filter(q=>q.gap).length*GAP,ch.length*LH+ch.filter(q=>q.gap).length*GAP,lab.length*LH,LH*2)+2*P;return {r,a,ch,lab,h:hh};});
+  const TH=36,HH=34,total=TH+HH+rows.reduce((s,r)=>s+r.h,0);
+  c.width=TW*sc;c.height=(total+1)*sc;x.scale(sc,sc);x.textBaseline='top';x.lineWidth=1;
+  const box=(X,Y,w,h,fill)=>{x.fillStyle=fill;x.fillRect(X,Y,w,h);x.strokeStyle=XC.line;x.strokeRect(X+.5,Y+.5,w,h);};
+  box(0,0,TW-1,TH,XC.title);x.font=FB;x.fillStyle='#12355b';x.textAlign='center';x.fillText(m.title,TW/2,(TH-17)/2);x.textAlign='left';
+  let X=0,Y=TH;const xs=[0,W[0],W[0]+W[1],W[0]+W[1]+W[2]];
+  box(xs[0],Y,W[0],HH,XC.grey);box(xs[1],Y,W[1],HH,XC.grey);box(xs[2],Y,W[2],HH,XC.art);box(xs[3],Y,W[3]-1,HH,XC.chapel);
+  x.font=FB;x.fillStyle='#fff';x.fillText(S.settings.doorNames.art,xs[2]+P,Y+9);x.fillStyle='#0d2a45';x.fillText(S.settings.doorNames.chapel,xs[3]+P,Y+9);
+  Y+=HH;
+  for(const R of rows){box(xs[0],Y,W[0],R.h,XC.grey);box(xs[1],Y,W[1],R.h,XC.grey);
+    box(xs[2],Y,W[2],R.h,R.r.fixed?XC.blank:XC.art);box(xs[3],Y,W[3]-1,R.h,R.r.fixed?XC.blank:XC.chapel);
+    x.font=FB;x.fillStyle='#1d2733';x.fillText(R.r.time,xs[0]+P,Y+P);R.lab.forEach((l,i)=>x.fillText(l,xs[1]+P,Y+P+i*LH));
+    x.font=F;
+    const draw=(arr,X0,col)=>{x.fillStyle=col;let yy=Y+P;arr.forEach(q=>{if(q.gap)yy+=GAP;x.fillText(q.l,X0+P,yy);yy+=LH;});};
+    draw(R.a,xs[2],'#ffffff');draw(R.ch,xs[3],'#0d2a45');Y+=R.h;}
+  return c;}
+
+/* ================= rendering ================= */
+function render(){
+  document.body.classList.toggle('hide-mode',ui.hideMode);
+  $('#hideBtn').classList.toggle('hl',ui.hideMode);
+  $('#undoBtn').disabled=!hist.length;$('#redoBtn').disabled=!fut.length;
+  $('#fileName').textContent=S.csvName||'';
+  renderDaySwitch();
+  const has=Object.keys(S.days).length>0;
+  ['auto','hidemode','save'].forEach(a=>{const b=document.querySelector('[data-act="'+a+'"]');if(b)b.disabled=!has;});
+  if(!has){renderWelcome();return;}
+  renderEditor();
+}
+function renderDaySwitch(){const el=$('#daySwitch');
+  el.innerHTML=[['wed','Wednesday'],['sat','Saturday']].map(([k,n])=>{const d=S.days[k];
+    return '<button data-act="day" data-day="'+k+'" class="'+(S.cur===k&&d?'on':'')+'"'+(d?'':' disabled')+'><b>'+n+'</b><span>'+(d?esc(d.short):'no fixtures loaded')+'</span></button>';}).join('');}
+function renderWelcome(){
+  $('#main').innerHTML='<div class="welcome"><h1>Matchday lunch queue</h1><p>Upload the weekly fixtures CSV from SOCS. The Wednesday and Saturday teams are pulled out and arranged by door and lunch time automatically. Then drag teams around to fine-tune it.</p>'+
+  '<div class="dropzone" data-act="upload" id="dz"><b>Click to choose the CSV</b><br><span class="muted">or drop it anywhere on this page</span></div>'+
+  '<button class="btn" data-act="example">Try it with the example week (9 Nov)</button></div>';}
+function pillHTML(e){const tip=[e.raw+' v '+(e.opp||'?')+(e.extraOpps.length?' (+'+e.extraOpps.join(', ')+')':''),e.venue,
+    (e.meet!=null?'Meet '+fmt(e.meet):'')+(e.start!=null?(e.meet!=null?' · ':'')+'Start '+fmt(e.start):''),e.teacher,e.transport,e.details].filter(Boolean).join('\n');
+  const t=slotOf(e)==='away'?(e.meet!=null?'meet '+fmt(e.meet):(e.start!=null?'start '+fmt(e.start):'')):(e.start!=null?'start '+fmt(e.start):'');
+  return '<div class="pill" data-id="'+e.id+'" title="'+esc(tip)+'">'+esc(e.short)+(t?'<small>'+t+'</small>':'')+'</div>';}
+function cellHTML(d,cell){const gs=groupsIn(d,cell);const n=d.entries.filter(e=>!e.hidden&&e.cell===cell).length;const lim=S.settings.maxPerDoor;
+  let h='<div class="count'+(n>lim?' bad':'')+'">'+n+' team'+(n===1?'':'s')+'</div>';
+  if(!gs.length)h+='<div class="empty">Drop teams here</div>';
+  for(const g of gs){const l=lineFor(d,g,cell);const slot=cell.split('-')[0];
+    const tl=slot==='away'?(g.t<9999?'from '+fmt(g.t):''):'';
+    h+='<div class="card g-'+esc(g.list[0].gender||'x')+'" data-ids="'+g.list.map(e=>e.id).join(',')+'"><div class="ct"><span>'+esc(l.head)+' – '+(l.all?'<span class="allbadge">All</span>':esc(l.tok))+'</span>'+(tl?'<em>'+tl+'</em>':'')+'</div>'+
+      '<div class="pills">'+g.list.map(pillHTML).join('')+'</div></div>';}
+  return h;}
+function liveNotes(d){const out=[];const st=S.settings;const lim=st.maxPerDoor;
+  for(const c of ['away-art','away-chapel','home-art','home-chapel']){const n=d.entries.filter(e=>!e.hidden&&e.cell===c).length;
+    if(n>lim)out.push({t:'bad',x:cellName(c)+' has '+n+' teams, over the limit of '+lim+'.'});}
+  const homeT=toMin(st.times.home);
+  const late=d.entries.filter(e=>!e.hidden&&e.cell&&e.cell.startsWith('away')&&e.meet!=null&&homeT!=null&&e.meet>=homeT+40);
+  if(late.length)out.push({t:'info',x:'Leaving later: '+late.map(e=>e.raw+' (meet '+fmt(e.meet)+')').join(', ')+'. They could eat at '+st.times.home+' if the away queue is long.'});
+  const ng=d.entries.filter(e=>!e.hidden&&!e.gender);
+  if(ng.length)out.push({t:'warn',x:"Couldn't tell boys or girls for: "+ng.map(e=>e.raw+' ('+e.sport+')').join(', ')+'. Set the sport in Settings.'});
+  const unk=[...new Set(d.entries.filter(e=>!matchSport(e.sport)&&e.yearKey!=='LS').map(e=>e.sport))];
+  if(unk.length)out.push({t:'info',x:'Sport not in your current rotation: '+unk.join(', ')+'. Teams still included.'});
+  return out;}
+function renderEditor(){const d=day();const st=S.settings;
+  const hidden=d.entries.filter(e=>e.hidden);
+  const notes=[...liveNotes(d),...d.parseNotes,...d.arrangeNotes.map(n=>({t:n.t,x:'Auto-arrange: '+n.x}))];
+  const icon={info:'ℹ️',warn:'⚠️',bad:'⛔'};
+  const m=exportModel(d);
+  let h='<div class="hidebar"><b>Hide a team:</b> click a team to hide it, or click a card\'s title to hide the whole group.<span style="flex:1"></span><button class="btn small" data-act="hidemode">Cancel</button></div>';
+  h+='<div class="bar"><h1>'+esc(d.title)+'</h1><span class="manual">'+(d.manual?'Edited by hand':'Auto-arranged')+'</span><span class="spacer"></span>'+
+     '<label class="slider" title="Max teams at one door before the auto-arrange starts moving groups">Max per door<input type="range" min="3" max="20" id="limit" value="'+st.maxPerDoor+'"><b id="limitVal">'+st.maxPerDoor+'</b></label></div>';
+  h+='<div class="grid">'+
+    '<div class="gh blank"></div><div class="gh blank"></div><div class="gh art">'+esc(st.doorNames.art)+'</div><div class="gh chapel">'+esc(st.doorNames.chapel)+'</div>'+
+    '<div class="tc">'+esc(st.times.away)+'</div><div class="lc">Away matches<small>Away and neutral, earliest leavers first</small></div>'+
+    '<div class="drop art" data-drop="away-art">'+cellHTML(d,'away-art')+'</div><div class="drop chapel" data-drop="away-chapel">'+cellHTML(d,'away-chapel')+'</div>';
+  if(d.key==='sat')h+='<div class="tc">'+esc(st.times.lower)+'</div><div class="lc">Lower school</div><div class="fixed">Lower school lunch (fixed)</div>';
+  h+='<div class="tc last">'+esc(st.times.home)+'</div><div class="lc last">Home matches</div>'+
+    '<div class="drop art last" data-drop="home-art">'+cellHTML(d,'home-art')+'</div><div class="drop chapel last" data-drop="home-chapel">'+cellHTML(d,'home-chapel')+'</div></div>';
+  h+='<div class="panels"><div class="panel"><h2>Notes</h2>'+(notes.length?'<ul class="notes">'+notes.map(n=>'<li class="'+n.t+'"><i>'+icon[n.t]+'</i><span>'+esc(n.x)+'</span></li>').join('')+'</ul>':'<p class="muted">Nothing to flag.</p>')+'</div>'+
+    '<div class="panel"><h2>Hidden teams <span class="muted">('+hidden.length+')</span><span class="spacer"></span>'+(hidden.length?'<button class="btn small" data-act="showall">Show all</button>':'')+'</h2>'+
+    '<div class="hiddenbox" data-drop="hidden">'+(hidden.length?hidden.map(e=>'<div class="hchip" data-ids="'+e.id+'" title="Drag onto a door to show it there"><b>'+esc(e.raw)+'</b><span>'+esc(e.sport)+' · '+esc(e.hiddenReason)+'</span><button class="btn small" data-act="show" data-id="'+e.id+'">Show</button></div>').join(''):'<p class="muted" style="margin:6px">No hidden teams. Drag a team here, or use Hide team, to leave it off the sheet.</p>')+'</div></div></div>';
+  h+='<div class="panel export"><div class="exphead"><h2>Preview &amp; export</h2>'+
+    '<button class="btn primary" data-act="copyimg">Copy as image</button><button class="btn" data-act="copyhtml">Copy as table</button><button class="btn" data-act="png">Download PNG</button>'+
+    '<label class="chk" style="margin:0 0 0 6px"><input type="checkbox" id="showTimes"'+(st.showTimes?' checked':'')+'>Show leave times</label></div>'+
+    '<div class="prevwrap" id="preview">'+exportHTML(m)+'</div></div>';
+  $('#main').innerHTML=h;
+  const lim=$('#limit');
+  lim.addEventListener('input',()=>{$('#limitVal').textContent=lim.value;});
+  lim.addEventListener('change',()=>{const v=+lim.value;changeSettings(s=>{s.maxPerDoor=v;},true);});
+  $('#showTimes').addEventListener('change',ev=>{const v=ev.target.checked;changeSettings(s=>{s.showTimes=v;},false);});
+}
+function changeSettings(fn,affectsArrange){const cur=day();
+  commit(()=>{fn(S.settings);reannotateAll();if(affectsArrange)for(const d of Object.values(S.days))if(!d.manual)autoArrange(d);});
+  if(affectsArrange&&cur&&cur.manual)toast('This day has been edited by hand, so press Auto-arrange to apply the new settings.',4000);}
+
+/* ================= settings modal ================= */
+function openSettings(){renderSettings();$('#settingsModal').classList.add('open');}
+function closeSettings(){$('#settingsModal').classList.remove('open');}
+function renderSettings(){const st=S.settings;
+  const doorSel=(k,lab)=>'<label>'+lab+'<select data-door="'+k+'"><option value="art"'+(st.doors[k]==='art'?' selected':'')+'>'+esc(st.doorNames.art)+'</option><option value="chapel"'+(st.doors[k]==='chapel'?' selected':'')+'>'+esc(st.doorNames.chapel)+'</option><option value=""'+(!st.doors[k]?' selected':'')+'>No preference</option></select></label>';
+  let h='<h2>Settings</h2><p class="muted" style="margin:0">Saved in this browser and kept when you upload a new week.</p>';
+  h+='<h3>Sports this term</h3><select id="rotSel">'+Object.entries(PRESETS).map(([k,p])=>'<option value="'+k+'"'+(st.rotation===k?' selected':'')+'>'+esc(p.name)+'</option>').join('')+'<option value="custom"'+(st.rotation==='custom'?' selected':'')+'>Custom</option></select>';
+  h+='<table style="margin-top:8px"><tr><th>Sport (as in SOCS)</th><th>Teams with no Boys/Girls in the name are</th><th>Y7 &amp; Y8 combined</th><th></th></tr>'+
+    st.sports.map((s,i)=>'<tr><td><input type="text" data-sp="'+i+'" data-f="name" value="'+esc(s.name)+'"></td><td><select data-sp="'+i+'" data-f="gender"><option value="Boys"'+(s.gender==='Boys'?' selected':'')+'>Boys</option><option value="Girls"'+(s.gender==='Girls'?' selected':'')+'>Girls</option><option value=""'+(!s.gender?' selected':'')+'>Unknown / mixed</option></select></td><td><input type="checkbox" data-sp="'+i+'" data-f="combined"'+(s.combined?' checked':'')+'></td><td><button class="btn small" data-act="delsport" data-i="'+i+'">Remove</button></td></tr>').join('')+
+    '</table><button class="btn small" data-act="addsport" style="margin-top:6px">+ Add sport</button>';
+  h+='<h3>Preferred doors</h3><div class="row2">'+doorSel('y5','Year 5 (U10)')+doorSel('y6','Year 6 (U11)')+doorSel('y7','Year 7 (U12, when separate)')+doorSel('y8','Year 8 (U13, when separate)')+doorSel('g78','Year 7&8 Girls (combined)')+doorSel('b78','Year 7&8 Boys (combined)')+'</div>';
+  h+='<h3>Door names and lunch times</h3><div class="row2"><label>Door 1<input type="text" data-dn="art" value="'+esc(st.doorNames.art)+'"></label><label>Door 2<input type="text" data-dn="chapel" value="'+esc(st.doorNames.chapel)+'"></label><span></span>'+
+    '<label>Away matches<input type="text" data-tm="away" value="'+esc(st.times.away)+'"></label><label>Lower school (Saturday)<input type="text" data-tm="lower" value="'+esc(st.times.lower)+'"></label><label>Home matches<input type="text" data-tm="home" value="'+esc(st.times.home)+'"></label></div>';
+  h+='<h3>Display</h3><label class="chk"><input type="checkbox" id="useAll"'+(st.useAll?' checked':'')+'>Say "All" when a whole year group eats together</label>';
+  h+='<div class="foot"><button class="btn" data-act="resetsettings">Reset to defaults</button><button class="btn primary" data-act="closesettings">Done</button></div>';
+  $('#settingsSheet').innerHTML=h;}
+function settingsChanged(ev){const t=ev.target;const st=S.settings;
+  if(t.id==='rotSel'){const v=t.value;if(v==='custom')return changeSettings(s=>{s.rotation='custom';},false),renderSettings();
+    changeSettings(s=>{s.rotation=v;s.sports=clone(PRESETS[v].sports);},true);renderSettings();return;}
+  if(t.dataset.sp!=null){const i=+t.dataset.sp,f=t.dataset.f;const v=t.type==='checkbox'?t.checked:t.value;
+    changeSettings(s=>{s.sports[i][f]=v;s.rotation='custom';},true);renderSettings();return;}
+  if(t.dataset.door){const k=t.dataset.door,v=t.value;changeSettings(s=>{s.doors[k]=v;},true);return;}
+  if(t.dataset.dn){const k=t.dataset.dn,v=t.value.trim()||DEF.doorNames[k];changeSettings(s=>{s.doorNames[k]=v;},false);renderSettings();return;}
+  if(t.dataset.tm){const k=t.dataset.tm,v=t.value.trim();if(toMin(v)==null){toast('Use a time like 12:50');t.value=st.times[k];return;}changeSettings(s=>{s.times[k]=v;},false);return;}
+  if(t.id==='useAll'){const v=t.checked;changeSettings(s=>{s.useAll=v;},false);}
+}
+$('#settingsSheet').addEventListener('change',settingsChanged);
+$('#settingsModal').addEventListener('pointerdown',e=>{if(e.target.id==='settingsModal')closeSettings();});
+
+/* ================= clicks ================= */
+document.addEventListener('click',async ev=>{const b=ev.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;
+  switch(a){
+    case 'upload':$('#csvInput').click();break;
+    case 'open':$('#jsonInput').click();break;
+    case 'example':loadCSVText($('#exampleCsv').textContent.trim(),'Example week (anonymised)');break;
+    case 'day':S.cur=b.dataset.day;ui.hideMode=false;render();break;
+    case 'auto':commit(()=>autoArrange(day()));toast('Auto-arranged '+day().title);break;
+    case 'hidemode':ui.hideMode=!ui.hideMode;render();break;
+    case 'undo':undo();break;case 'redo':redo();break;
+    case 'save':saveJSON();break;
+    case 'settings':openSettings();break;
+    case 'closesettings':closeSettings();break;
+    case 'resetsettings':changeSettings(s=>{Object.assign(s,clone(DEF));},true);renderSettings();break;
+    case 'addsport':changeSettings(s=>{s.sports.push({name:'',gender:'',combined:true});s.rotation='custom';},false);renderSettings();break;
+    case 'delsport':{const i=+b.dataset.i;changeSettings(s=>{s.sports.splice(i,1);s.rotation='custom';},true);renderSettings();break;}
+    case 'show':showIds([b.dataset.id]);break;
+    case 'showall':showIds(day().entries.filter(e=>e.hidden).map(e=>e.id));toast('All teams shown');break;
+    case 'copyimg':copyImage();break;
+    case 'copyhtml':copyTable();break;
+    case 'png':{const c=drawCanvas(exportModel(day()));c.toBlob(bl=>saveFile('lunch-queue-'+day().dateISO+'.png',bl),'image/png');break;}
+  }});
+async function copyImage(){const c=drawCanvas(exportModel(day()));
+  try{if(!window.ClipboardItem)throw 0;
+    await navigator.clipboard.write([new ClipboardItem({'image/png':new Promise(r=>c.toBlob(r,'image/png'))})]);toast('Copied as an image. Paste it into your email.');}
+  catch(e){toast("Copying images isn't allowed here. Use Download PNG instead.",4000);}}
+async function copyTable(){const m=exportModel(day());const html=exportHTML(m),txt=exportPlain(m);
+  try{if(!window.ClipboardItem)throw 0;await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([txt],{type:'text/plain'})})]);toast('Copied as a table. Paste it into Outlook or Teams.');return;}catch(e){}
+  try{const box=document.createElement('div');box.contentEditable='true';box.style.cssText='position:fixed;left:-9999px;top:0';box.innerHTML=html;document.body.appendChild(box);
+    const r=document.createRange();r.selectNodeContents(box);const s=getSelection();s.removeAllRanges();s.addRange(r);const ok=document.execCommand('copy');s.removeAllRanges();box.remove();
+    toast(ok?'Copied as a table. Paste it into Outlook or Teams.':"Couldn't copy here.");}catch(e){toast("Couldn't copy here.");}}
+
+$('#csvInput').addEventListener('change',e=>{const f=e.target.files[0];if(f)readFile(f);e.target.value='';});
+$('#jsonInput').addEventListener('change',e=>{const f=e.target.files[0];if(f)readFile(f);e.target.value='';});
+window.addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files')){e.preventDefault();const dz=$('#dz');if(dz)dz.classList.add('over');}});
+window.addEventListener('dragleave',()=>{const dz=$('#dz');if(dz)dz.classList.remove('over');});
+window.addEventListener('drop',e=>{if(!e.dataTransfer||!e.dataTransfer.files.length)return;e.preventDefault();readFile(e.dataTransfer.files[0]);});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){if(ui.hideMode){ui.hideMode=false;render();}closeSettings();return;}
+  if(e.target.closest&&e.target.closest('input,select,textarea'))return;
+  const mod=e.ctrlKey||e.metaKey;if(!mod)return;const k=e.key.toLowerCase();
+  if(k==='z'&&!e.shiftKey){e.preventDefault();undo();}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();redo();}});
+
+/* ================= pointer drag & drop (mouse + touch) ================= */
+let drag=null;
+document.addEventListener('pointerdown',e=>{
+  if(e.button>0||e.target.closest('button,input,select'))return;
+  const pill=e.target.closest('.pill'),card=e.target.closest('.card'),hc=e.target.closest('.hchip');
+  if(!pill&&!card&&!hc)return;
+  let ids,src;if(pill){ids=[pill.dataset.id];src=pill;}else if(card){ids=card.dataset.ids.split(',');src=card;}else{ids=hc.dataset.ids.split(',');src=hc;}
+  if(ui.hideMode){if(hc)return;e.preventDefault();ui.hideMode=false;moveIds(ids,'hidden');return;}
+  drag={ids,src,x0:e.clientX,y0:e.clientY,active:false,ghost:null,over:null,dx:0,dy:0};
+});
+function dropTargetAt(x,y){const el=document.elementFromPoint(x,y);return el?el.closest('[data-drop]'):null;}
+document.addEventListener('pointermove',e=>{if(!drag)return;
+  if(!drag.active){if(Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)<6)return;
+    drag.active=true;const r=drag.src.getBoundingClientRect();drag.dx=drag.x0-r.left;drag.dy=drag.y0-r.top;
+    const g=drag.src.cloneNode(true);g.classList.add('ghost');g.style.width=r.width+'px';document.body.appendChild(g);drag.ghost=g;drag.src.classList.add('dragsrc');}
+  e.preventDefault();
+  drag.ghost.style.left=(e.clientX-drag.dx)+'px';drag.ghost.style.top=(e.clientY-drag.dy)+'px';
+  const t=dropTargetAt(e.clientX,e.clientY);if(t!==drag.over){if(drag.over)drag.over.classList.remove('over');drag.over=t;if(t)t.classList.add('over');}
+},{passive:false});
+function endDrag(e,cancel){if(!drag)return;const d=drag;drag=null;
+  if(!d.active)return;d.ghost.remove();d.src.classList.remove('dragsrc');if(d.over)d.over.classList.remove('over');
+  if(cancel||!d.over)return;moveIds(d.ids,d.over.dataset.drop);}
+document.addEventListener('pointerup',e=>endDrag(e,false));
+document.addEventListener('pointercancel',e=>endDrag(e,true));
+
+/* ================= boot ================= */
+try{const raw=localStorage.getItem(LS_KEY);if(raw){const o=JSON.parse(raw);if(o&&o.days){S.days=o.days;S.settings=Object.assign(clone(DEF),o.settings||{});S.csvName=o.csvName||'';}}}catch(e){}
+S.cur=defaultDay();
+initDownloads(0);
+render();
+window.__LQ={S,buildDays,autoArrange,exportModel,exportPlain,day};
+})();
+</script>
+</body>
+</html>
