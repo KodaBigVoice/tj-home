@@ -632,7 +632,7 @@ function merge(base,over){ if(Array.isArray(base)||typeof base!=='object'||base=
   const o={...base}; if(over&&typeof over==='object') for(const k of Object.keys(over)) o[k]= k in base ? merge(base[k],over[k]) : over[k]; return o; }
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
-const CLOUD = {url:'', key:''};
+const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
 const CLOUD_ON = /^https:/.test(CLOUD.url) && CLOUD.key.length>20;
 const SHARED = ['sections','forms','staff','subjects','aliases','colors','preset'];
 const PWKEY='tt-maker-pw';
@@ -641,7 +641,9 @@ try{ PW=localStorage.getItem(PWKEY); }catch(e){}
 let saveT, pushT; const save=()=>{ clearTimeout(saveT); saveT=setTimeout(()=>{ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} },150);
   if(CLOUD_ON && ADMIN && PW){ clearTimeout(pushT); setSync('Saving…'); pushT=setTimeout(push,1200); } };
 async function rpc(fn,body){
-  const r=await fetch(`${CLOUD.url.replace(/\/$/,'')}/rest/v1/rpc/${fn}`,{method:'POST',headers:{apikey:CLOUD.key,Authorization:'Bearer '+CLOUD.key,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const base=CLOUD.url.replace(/\/+$/,'').replace(/\/rest\/v1$/,'');
+  const headers={apikey:CLOUD.key,'Content-Type':'application/json'}; if(/^eyJ/.test(CLOUD.key)) headers.Authorization='Bearer '+CLOUD.key;
+  const r=await fetch(`${base}/rest/v1/rpc/${fn}`,{method:'POST',headers,body:JSON.stringify(body)});
   const j=await r.json().catch(()=>null);
   if(!r.ok){ const e=new Error(j&&j.message||r.statusText); e.wrong=(j&&(j.code==='28P01'||/wrong password/i.test(j.message||''))); throw e; }
   return j; }
