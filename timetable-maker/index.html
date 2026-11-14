@@ -1133,6 +1133,18 @@ function setColour(key,c){ if(!/^#[0-9a-f]{6}$/i.test(c)) return; S.colors[key]=
 
 /* ========================== settings tab ========================== */
 let SECTAB='MS';
+const secForYear = y => y<=4 ? 'LS' : y<=6 ? 'MS' : 'US';
+function upsertForm(tutor,year,letters){
+  tutor=tutor.trim(); letters=letters.trim().toUpperCase(); const y=parseInt(year,10);
+  if(!tutor || !(y>=3&&y<=8) || !/^[A-Z]{1,4}$/.test(letters)) return false;
+  const form=y+letters, section=secForYear(y);
+  const ft=S.forms.find(f=>f.tutor.toLowerCase()===tutor.toLowerCase()), ff=S.forms.find(f=>f.form.toLowerCase()===form.toLowerCase());
+  if(ft){ Object.assign(ft,{form,section}); if(ff&&ff!==ft) S.forms.splice(S.forms.indexOf(ff),1); }
+  else if(ff) Object.assign(ff,{tutor,section});
+  else S.forms.push({form,tutor,section});
+  return true;
+}
+function redetect(){ for(const q of P){ const d=detect(q.grid); if(d.form){ q.form=d.form; q.section=d.section; } } }
 function staffNames(){ const s=new Set(Object.keys(S.staff)); for(const p of P) for(const d in p.grid) for(const id in p.grid[d]) for(const e of p.grid[d][id]) if(e.teacher) s.add(e.teacher); return [...s].sort((a,b)=>a.replace(/^\S+\s/,'').localeCompare(b.replace(/^\S+\s/,''))); }
 const TIMES=[]; for(let m=T('7:00');m<=T('19:00');m+=5) TIMES.push(fmt(m));
 const norm = v => v ? fmt(T(v)) : '';
@@ -1159,6 +1171,14 @@ function renderSettings(){
     <p class="mini" style="margin:10px 0 0">Games lessons: when iSAMS shows Games alongside another subject, Games wins inside these periods and the other subject wins outside them. Matches days count automatically.</p>
   </fieldset></div><fieldset class="ro" ${dis}>
   <div class="card" id="sec-forms"><h3>Forms and tutors</h3><p>The tutor name must match the Registration line in the export (e.g. Mr Joshi). The form and section are then picked automatically.</p>
+    <p class="lbl">Quick add</p>
+    <div class="inl qa"><input class="in sm" id="qatutor" list="stafflist2" placeholder="Start typing a teacher…" autocomplete="off" style="width:220px" aria-label="Tutor">
+      <input class="in sm" id="qayear" inputmode="numeric" maxlength="1" placeholder="Year" style="width:64px" aria-label="Year group">
+      <input class="in sm" id="qaletters" maxlength="3" placeholder="TJ" style="width:64px;text-transform:uppercase" aria-label="Form letters">
+      <button class="btn sm" id="qaadd">Add</button><span class="mini" id="qaprev"></span></div>
+    <details style="margin:10px 0 14px"><summary class="mini" style="cursor:pointer">Paste a list instead</summary>
+      <textarea class="in" id="formpaste" placeholder="Mr Smith&#9;5&#9;AS&#10;Mrs Jones, 7, CJ" style="margin-top:8px"></textarea>
+      <button class="btn sm" id="formimport" style="margin-top:6px">Add pasted list</button></details>
     <table class="tbl stack"><thead><tr><th>Form</th><th>Tutor (as in iSAMS)</th><th>Section</th><th></th></tr></thead><tbody>
     ${S.forms.map((f,i)=>`<tr><td data-l="Form"><input class="in sm" data-form="${i}|form" value="${esc(f.form)}"></td><td data-l="Tutor"><input class="in sm" data-form="${i}|tutor" list="stafflist2" value="${esc(f.tutor)}"></td>
       <td data-l="Section"><select class="in sm" data-form="${i}|section">${Object.keys(SECNAME).map(k=>`<option${f.section===k?' selected':''}>${k}</option>`).join('')}</select></td><td><button class="btn sm" data-delform="${i}">Remove</button></td></tr>`).join('')}
@@ -1180,6 +1200,13 @@ function renderSettings(){
     <div class="inl"><button class="btn sm" id="exp">Save settings file</button><label class="btn sm">Load settings file<input type="file" id="imp" accept=".json" hidden></label><button class="btn sm" id="reset">Reset everything</button></div></div></fieldset>`;
 }
 
+function quickAdd(){
+  const tu=$('#qatutor'), yr=$('#qayear'), le=$('#qaletters');
+  if(!upsertForm(tu.value,yr.value,le.value)){ toast('Type a teacher, a year (3–8) and the form letters'); return; }
+  const added=parseInt(yr.value,10)+le.value.trim().toUpperCase();
+  S.forms.sort((a,b)=>a.form.localeCompare(b.form,undefined,{numeric:true})); save(); redetect(); renderSettings();
+  toast(`${added} added`); setTimeout(()=>$('#qatutor')?.focus(),20);
+}
 /* ========================== events ========================== */
 const rerender = () => { renderList(); renderPreview(); };
 document.addEventListener('click',async e=>{
@@ -1219,6 +1246,11 @@ document.addEventListener('click',async e=>{
   if(t.id==='lockbtn'){ try{localStorage.removeItem(PWKEY);}catch(e){} PW=null; ADMIN=false; setSync(''); closeEditor(); lockScreen(); return; }
   if(t.id==='setpw'){ const v=$('#newpw').value; if(v.length<6){ toast('Use at least 6 characters'); return; }
     try{ await rpc('tt_set_staff_password',{pw:PW,new_pw:v}); $('#newpw').value=''; toast('Staff password changed'); }catch(e){ toast('Couldn’t change it: '+e.message); } return; }
+  if(t.id==='qaadd'){ quickAdd(); return; }
+  if(t.id==='formimport'){ let n=0, bad=0; for(const line of $('#formpaste').value.split(/\n/)){ if(!line.trim()) continue;
+      const parts=line.split(/\t|,/).map(x=>x.trim()).filter(Boolean); if(parts.length>=3 && upsertForm(parts[0],parts[1],parts[2])) n++; else bad++; }
+    S.forms.sort((a,b)=>a.form.localeCompare(b.form,undefined,{numeric:true})); save(); redetect(); renderSettings();
+    toast(n?`Added ${n} form${n>1?'s':''}${bad?` (${bad} line${bad>1?'s':''} not recognised)`:''}`:'Nothing recognised – use “Name, Year, Letters” per line'); return; }
   if(t.id==='addform'){ S.forms.push({form:'',tutor:'',section:'MS'}); save(); renderSettings(); return; }
   if(ds.delform!==undefined){ S.forms.splice(+ds.delform,1); save(); renderSettings(); return; }
   if(t.id==='staffimport'){ let n=0; for(const line of $('#staffpaste').value.split(/\n/)){ const m=/^\s*(.+?)\s*[,\t]\s*([A-Za-z]{1,6})\s*$/.exec(line); if(m){ S.staff[m[1]]=m[2].toUpperCase(); n++; } }
@@ -1227,6 +1259,7 @@ document.addEventListener('click',async e=>{
   if(t.id==='reset'){ if(t.dataset.sure){ S=defaults(); save(); renderAll(); renderSettings(); toast('Settings reset'); } else { t.dataset.sure=1; t.textContent='Click again to reset everything'; } return; }
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeEditor(); $('#picker').hidden=true; }
+  if(e.key==='Enter' && ['qatutor','qayear','qaletters'].includes(e.target.id)){ e.preventDefault(); if(e.target.id==='qaletters') quickAdd(); else (e.target.id==='qatutor'?$('#qayear'):$('#qaletters')).focus(); }
   if((e.key==='Enter'||e.key===' ') && e.target.classList?.contains('pi')){ e.preventDefault(); e.target.click(); } });
 document.addEventListener('change',e=>{
   const t=e.target, ds=t.dataset, p=curP();
@@ -1253,12 +1286,14 @@ document.addEventListener('change',e=>{
   if(ds.gon){ sec.games[ds.gon].on=t.checked; save(); renderSettings(); rerender(); return; }
   if(ds.gfrom){ sec.games[ds.gfrom].from=t.value; save(); rerender(); return; }
   if(ds.gto){ sec.games[ds.gto].to=t.value; save(); rerender(); return; }
-  if(ds.form){ const [i,k]=ds.form.split('|'); S.forms[+i][k]=t.value.trim(); save();
-    for(const q of P){ const d=detect(q.grid); if(d.form){ q.form=d.form; q.section=d.section; } } return; }
+  if(ds.form){ const [i,k]=ds.form.split('|'); S.forms[+i][k]=t.value.trim(); save(); redetect(); return; }
   if(ds.staff){ const v=t.value.trim().toUpperCase(); if(v) S.staff[ds.staff]=v; else delete S.staff[ds.staff]; t.value=v; t.closest('tr').classList.toggle('miss',!v); save(); return; }
   if(ds.alias){ const v=t.value.trim()||ds.alias; S.aliases[ds.alias]=v; ensureSubject(v); save(); return; }
 });
 document.addEventListener('input',e=>{ const t=e.target;
+  if(['qatutor','qayear','qaletters'].includes(t.id)){ const y=parseInt($('#qayear').value,10), l=$('#qaletters').value.trim().toUpperCase();
+    $('#qaprev').textContent = y>=3&&y<=8&&l ? `→ ${y}${l} · ${secForYear(y)}` : '';
+    if(t.id==='qayear' && /^[3-8]$/.test(t.value)) $('#qaletters').focus(); }
   if(t.dataset.p0){ S.sections[SECTAB].p0[t.dataset.p0].label=t.value; if(t.value.trim()) ensureSubject(t.value.trim()); save(); clearTimeout(t._h); t._h=setTimeout(renderPreview,250); }
   if(t.id==='pkc'){ setColour(PICK,t.value); $('#pkh').value=t.value.toUpperCase(); }
   if(t.id==='pkh' && /^#[0-9a-f]{6}$/i.test(t.value)){ setColour(PICK,t.value); $('#pkc').value=t.value.toLowerCase(); }
