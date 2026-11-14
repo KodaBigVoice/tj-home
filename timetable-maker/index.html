@@ -1163,7 +1163,7 @@ function renderSettings(){
     </tbody></table><datalist id="stafflist2">${names.map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
     <button class="btn sm" id="addform" style="margin-top:10px">Add form</button></div>
   <div class="card" id="sec-staff"><h3>Staff initials</h3><p>Paste a list (one per line: name, then initials, separated by a comma or tab), or type them into the table. Teachers found in your uploads are listed automatically.</p>
-    <textarea class="in" id="staffpaste" placeholder="Mr Downer, CRD&#10;Mrs Shuttleworth&#9;JJS"></textarea>
+    <textarea class="in" id="staffpaste" placeholder="Mr Smith, ABS&#10;Mrs Jones&#9;CDJ"></textarea>
     <div class="inl" style="margin:8px 0 12px"><button class="btn sm" id="staffimport">Add pasted list</button><span class="mini">${names.filter(n=>!S.staff[n]).length} without initials</span></div>
     <div class="scroll"><table class="tbl"><thead><tr><th>Name</th><th style="width:120px">Initials</th></tr></thead><tbody>
     ${names.map(n=>`<tr class="${S.staff[n]?'':'miss'}"><td>${esc(n)}</td><td><input class="in sm" data-staff="${esc(n)}" value="${esc(S.staff[n]||'')}" maxlength="6"></td></tr>`).join('')||'<tr><td colspan="2" class="mini">Upload a timetable or paste a list.</td></tr>'}
