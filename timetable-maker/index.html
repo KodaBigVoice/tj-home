@@ -701,25 +701,33 @@ async function unzip(buf){
     const out=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
     return new TextDecoder().decode(out); };
 }
+const tags = (n,name) => n ? [...n.getElementsByTagNameNS('*',name)] : [];
+const attr = (el,local) => { for(const a of el.attributes) if(a.localName===local) return a.value; return null; };
+const colNum = l => [...l].reduce((s,ch)=>s*26+ch.charCodeAt(0)-64,0)-1;
 async function readXlsx(buf){
   const read=await unzip(buf), X=s=>new DOMParser().parseFromString(s,'application/xml');
   const ss=[]; const sst=await read('xl/sharedStrings.xml');
-  if(sst) for(const si of X(sst).getElementsByTagName('si')) ss.push([...si.getElementsByTagName('t')].map(t=>t.textContent).join(''));
-  let path='xl/worksheets/sheet1.xml';
+  if(sst) for(const si of tags(X(sst),'si')) ss.push(tags(si,'t').filter(t=>t.parentNode.localName!=='rPh').map(t=>t.textContent).join(''));
+  let paths=[];
   try{ const wb=X(await read('xl/workbook.xml')), rels=X(await read('xl/_rels/workbook.xml.rels'));
-    const sh=wb.getElementsByTagName('sheet')[0], rid=sh.getAttribute('r:id');
-    const rel=[...rels.getElementsByTagName('Relationship')].find(r=>r.getAttribute('Id')===rid);
-    if(rel){ const t=rel.getAttribute('Target'); path=t.startsWith('/')?t.slice(1):'xl/'+t.replace(/^\.\//,''); } }catch(e){}
-  const xml=await read(path); if(!xml) throw new Error('No worksheet found');
-  const rows={};
-  for(const c of X(xml).getElementsByTagName('c')){
-    const m=/^([A-Z]+)(\d+)$/.exec(c.getAttribute('r')||''); if(!m) continue;
-    const col=[...m[1]].reduce((s,ch)=>s*26+ch.charCodeAt(0)-64,0)-1, row=+m[2]-1, t=c.getAttribute('t');
-    const v=c.getElementsByTagName('v')[0];
-    const val = t==='s' ? (v?ss[+v.textContent]??'':'') : t==='inlineStr' ? [...c.getElementsByTagName('t')].map(x=>x.textContent).join('') : (v?v.textContent:'');
-    (rows[row]??={})[col]=val;
-  }
-  return rows;
+    for(const sh of tags(wb,'sheet')){ const rid=attr(sh,'id'); const rel=tags(rels,'Relationship').find(r=>r.getAttribute('Id')===rid);
+      if(rel){ const t=rel.getAttribute('Target'); paths.push(t.startsWith('/')?t.slice(1):'xl/'+t.replace(/^\.\//,'')); } } }catch(e){}
+  if(!paths.length) paths=['xl/worksheets/sheet1.xml'];
+  const sheets=[];
+  for(const path of paths){
+    const xml=await read(path); if(!xml) continue;
+    const rows={}; let ri=-1;
+    for(const rowEl of tags(X(xml),'row')){
+      const rr=rowEl.getAttribute('r'); ri = rr ? +rr-1 : ri+1; let ci=-1;
+      for(const c of tags(rowEl,'c')){
+        const m=/^([A-Z]+)(\d+)$/.exec(c.getAttribute('r')||''); ci = m ? colNum(m[1]) : ci+1;
+        const t=c.getAttribute('t'), v=tags(c,'v')[0];
+        const val = t==='s' ? (v?ss[+v.textContent]??'':'') : t==='inlineStr' ? tags(c,'t').map(x=>x.textContent).join('') : (v?v.textContent:'');
+        if(val!=='') (rows[ri]??={})[ci]=val;
+      } }
+    sheets.push(rows); }
+  if(!sheets.length) throw new Error('No worksheet found in the file');
+  return sheets;
 }
 function parseCell(raw){
   return raw.replace(/\r/g,'').split(/\n*-{4,}\n*/).map(part=>{
@@ -728,16 +736,24 @@ function parseCell(raw){
     return {raw:(lines[0]||'').trim(),teacher:(lines[1]||'').trim(),room:(lines[2]||'').trim()};
   }).filter(e=>e.raw);
 }
-function parseTimetable(rows,file){
-  const R=Object.keys(rows).map(Number).sort((a,b)=>a-b); let title='',hdr=-1;
-  for(const r of R){ const a=String(rows[r][0]||'').trim();
-    if(!title && /timetable/i.test(a)) title=a;
-    if(hdr<0 && Object.values(rows[r]).some(v=>/^monday$/i.test(String(v).trim()))) hdr=r; }
-  if(hdr<0) throw new Error('Couldn’t find the Monday–Saturday header row');
-  const dayCol={}; for(const [c,v] of Object.entries(rows[hdr])){ const d=DAYS.find(d=>DAYNAME[d].toLowerCase()===String(v).trim().toLowerCase()); if(d) dayCol[d]=+c; }
+const dayOf = v => { const s=String(v).replace(/\s+/g,' ').trim().toLowerCase().replace(/\.$/,'');
+  return DAYS.find(d=>{ const full=DAYNAME[d].toLowerCase(), ab=d.toLowerCase(); return s===full||s===ab||s===full.slice(0,4)||s===full.slice(0,5)||(s.startsWith(full)&&s.length<=full.length+12); }); };
+function parseTimetable(sheets,file){
+  const peek=[];
+  for(const rows of sheets){
+    const R=Object.keys(rows).map(Number).sort((a,b)=>a-b);
+    const hdr=R.find(r=>Object.values(rows[r]).filter(v=>dayOf(v)).length>=3);
+    if(hdr===undefined){ peek.push(...R.slice(0,4).flatMap(r=>Object.values(rows[r]).slice(0,4)).map(v=>String(v).split('\n')[0].slice(0,24))); continue; }
+    return parseSheet(rows,R,hdr,file); }
+  throw new Error('Couldn’t find the Monday–Saturday header row'+(peek.length?` (the file starts: “${peek.slice(0,6).join('”, “')}”)`:' (the sheet looks empty)'));
+}
+function parseSheet(rows,R,hdr,file){
+  let title=''; for(const r of R){ if(r>hdr) break; for(const v of Object.values(rows[r])) if(!title && /timetable/i.test(v)) title=String(v).trim(); }
+  const dayCol={}; for(const [c,v] of Object.entries(rows[hdr])){ const d=dayOf(v); if(d && !(d in dayCol)) dayCol[d]=+c; }
+  const labCol=Math.min(...Object.values(dayCol))-1 >= 0 ? Object.keys(rows[hdr]).map(Number).filter(c=>c<Math.min(...Object.values(dayCol))).sort((a,b)=>a-b)[0] ?? 0 : 0;
   const grid={}; for(const d in dayCol) grid[d]={};
-  for(const r of R){ if(r<=hdr) continue; const lab=String(rows[r][0]||'').trim(); let id=null;
-    if(/^reg/i.test(lab)) id='REG'; else if(/^prep$/i.test(lab)) id='PREP'; else { const m=/^period\s*(\d+)$/i.exec(lab); if(m&&BELL['P'+m[1]]) id='P'+m[1]; }
+  for(const r of R){ if(r<=hdr) continue; const lab=String(rows[r][labCol]??rows[r][0]??'').trim(); let id=null;
+    if(/^reg/i.test(lab)) id='REG'; else if(/^(evening\s+)?prep$/i.test(lab)) id='PREP'; else { const m=/^(?:period|p)\s*(\d+)$/i.exec(lab); if(m&&BELL['P'+m[1]]) id='P'+m[1]; }
     if(!id) continue;
     for(const d in dayCol){ const raw=rows[r][dayCol[d]]; if(raw && String(raw).trim()) grid[d][id]=parseCell(String(raw)); } }
   let name=title.replace(/^.*?timetable\s*:\s*/i,'').trim().replace(/^(mr|mrs|miss|ms|mx|master|dr)\.?\s+/i,'');
