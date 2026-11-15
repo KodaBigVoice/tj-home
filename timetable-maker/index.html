@@ -88,7 +88,7 @@ button{cursor:pointer}
 .hint{font-size:13px;color:var(--mute);margin:0}
 .close{border:0;background:var(--soft);border-radius:8px;width:32px;height:32px;font-size:18px;line-height:1}
 /* colours + settings */
-#tab-col,#tab-set{padding:20px max(2vw,14px) 60px;justify-items:center}
+#tab-col,#tab-set,#tab-chk{padding:20px max(2vw,14px) 60px;justify-items:center}
 .wrap{width:100%;max-width:1120px;display:flex;flex-direction:column;gap:18px}
 .wrap h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
@@ -146,11 +146,34 @@ fieldset.ro:disabled .card{opacity:.85}
 .cks{display:flex;flex-wrap:wrap;gap:6px 16px}
 .cks label{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;cursor:pointer;min-height:32px}
 .cks input{width:18px;height:18px;accent-color:var(--acc);margin:0;cursor:pointer}
+
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--warn);color:#2b1d00;font-size:11px;font-weight:800;margin-left:4px}
+.fh{display:flex;align-items:center;gap:8px;padding:8px 6px 4px;cursor:pointer;border-radius:6px}
+.fh b{font-size:13px}.fh .car{display:inline-block;transition:.15s;color:var(--mute);font-weight:800}.fh.open .car{transform:rotate(90deg)}
+.fh:hover{background:var(--soft)}
+.tag.v{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
+.vnav{gap:10px}.vnav .btn{min-height:30px;padding:3px 10px;font-size:15px}
+.scope{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px}
+.rad{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}.rad input{accent-color:var(--acc);width:16px;height:16px;margin:0}
+.who{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow:auto;padding:6px 2px}
+.who label{display:flex;gap:7px;align-items:center;font-size:13.5px;cursor:pointer}.who input{accent-color:var(--acc);margin:0}
+.exdlg{position:fixed;inset:0;z-index:45;background:#0006;display:grid;place-items:center;padding:16px}
+.exdlg[hidden]{display:none}
+.exbox{background:var(--panel);border-radius:16px;padding:18px;width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;display:flex;flex-direction:column;gap:14px;box-shadow:0 20px 60px #0004}
+.exbox h3{margin:0;font-size:18px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+.extree{border:1px solid var(--line);border-radius:10px;padding:8px 10px;max-height:240px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.extree .ck{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}.extree .ck .mini{margin-left:auto}
+.extree input{accent-color:var(--acc);width:16px;height:16px;margin:0}
+.extree .fm{margin-left:22px}.extree details{margin-left:24px}
+.chk{padding:14px 16px}.chk .chkh{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.chk.sev0{border-left:4px solid var(--warn)}.chk.sev1{border-left:4px solid #e0782f}.chk.sev2,.chk.sev3{border-left:4px solid var(--acc)}.chk.sev4,.chk.sev5{border-left:4px solid var(--line)}
+.whobox{margin-top:8px}
 </style></head><body>
 <header class="top">
  <div class="brand"><i><b></b><b></b><b></b></i>Timetable Maker</div>
  <nav class="tabs" id="tabs" style="margin-left:auto">
   <button data-tab="tt" class="on">Timetables</button>
+  <button data-tab="chk">Checks <span class="badge" id="chkbadge" hidden></span></button>
   <button data-tab="col">Colours</button>
   <button data-tab="set">Settings</button>
  </nav>
@@ -177,8 +200,8 @@ fieldset.ro:disabled .card{opacity:.85}
     <div><p class="lbl">Show</p><div class="cks"><label><input type="checkbox" data-tog="reg">Registration</label><label><input type="checkbox" data-tog="p0">P0</label><label><input type="checkbox" data-tog="prep">Prep</label></div></div>
    </div>
    <div class="acts">
-    <button class="btn pri" id="dl1">Download this PDF</button>
-    <button class="btn" id="dlall">Download all as one PDF</button>
+    <button class="btn pri" id="dlall">Download timetables…</button>
+    <button class="btn" id="dl1">Just this pupil</button>
    </div>
   </aside>
   <div class="stage">
@@ -187,11 +210,13 @@ fieldset.ro:disabled .card{opacity:.85}
    <div class="paper land" id="paper"></div>
   </div>
  </section>
+ <section id="tab-chk" class="tab"><div class="wrap" id="chkwrap"></div></section>
  <section id="tab-col" class="tab"><div class="wrap" id="colwrap"></div></section>
  <section id="tab-set" class="tab"><div class="wrap" id="setwrap"></div></section>
 </main>
 <div class="drawer" id="editor" hidden></div>
 <div class="pick" id="picker" hidden></div>
+<div class="exdlg" id="exportdlg" hidden></div>
 <div id="toast"></div>
 
 <script>/** @license
@@ -629,7 +654,7 @@ function defaults(){
     return {days,lunch,prep,matches:m,games:g,p0:p0(p0o)}; };
   return {
     v:2,
-    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true},
+    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one'},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:30','17:00'),{Fri:'P17'},
               {Mon:['Assembly'],Thu:['House Meeting']}),
@@ -639,6 +664,7 @@ function defaults(){
               {Mon:['Assembly'],Tue:['Assembly'],Thu:['House Meeting'],Fri:['Prep'],Sat:['Chapel','P1']})
     },
     forms:[{form:'5TJ',tutor:'Mr Joshi',section:'MS'}],
+    planner:{w:0,h:0},
     staff:{},
     subjects,
     aliases:{Mathematics:'Maths','Religious Studies':'RS','Theo/Phil/Rel':'TPR','Info Tech':'IT','Design Tech':'DT','General Studies':'Saturday Series',Registration:'Reg'},
@@ -660,7 +686,7 @@ const MIGRATED=migrate();
 { const v=S.view; if('ptimes' in v){ v.periods=v.ptimes?'both':'labels'; delete v.ptimes; } if('ltimes' in v){ v.lt=v.ltimes?'all':'none'; delete v.ltimes; } }
 const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
 const CLOUD_ON = /^https:/.test(CLOUD.url) && CLOUD.key.length>20;
-const SHARED = ['v','sections','forms','staff','subjects','aliases','colors','preset'];
+const SHARED = ['v','sections','forms','staff','subjects','aliases','colors','preset','planner'];
 const PWKEY='tt-maker-pw';
 let ADMIN=!CLOUD_ON, PW=null, SYNC='';
 try{ PW=localStorage.getItem(PWKEY); }catch(e){}
@@ -1043,15 +1069,24 @@ function toSVG(pg){
     } }
   return s+'</svg>';
 }
+function pageSize(){ const v=S.view, port=v.orient==='port';
+  let w=210,h=297;
+  if(v.size==='planner' && S.planner && S.planner.w>0 && S.planner.h>0){ w=+S.planner.w; h=+S.planner.h; }
+  else if(v.size==='custom' && v.custom && v.custom.w>0 && v.custom.h>0){ w=+v.custom.w; h=+v.custom.h; }
+  const a=Math.min(w,h), b=Math.max(w,h); return port?[a,b]:[b,a]; }
+function scaled(pg,W,H){ const sc=Math.min(W/pg.w,H/pg.h); if(Math.abs(sc-1)<1e-6) return pg.items;
+  const ox=(W-pg.w*sc)/2, oy=(H-pg.h*sc)/2, X=v=>ox+v*sc, Y=v=>oy+v*sc;
+  return pg.items.map(it=> it.t==='r' ? {...it,x:X(it.x),y:Y(it.y),w:it.w*sc,h:it.h*sc,r:it.r*sc,sw:(it.sw||0)*sc,dash:it.dash&&it.dash.map(d=>d*sc)}
+    : it.t==='x' ? {...it,x:X(it.x),y:Y(it.y),pt:it.pt*sc} : {...it,x1:X(it.x1),y1:Y(it.y1),x2:X(it.x2),y2:Y(it.y2),sw:it.sw*sc,dash:it.dash&&it.dash.map(d=>d*sc)}); }
 function pdfFor(list){
-  const {jsPDF}=window.jspdf; let doc=null;
+  const {jsPDF}=window.jspdf; let doc=null; const [W,H]=pageSize();
   for(const p of list){
-    const pg=layoutPage(p,S.view,false), o=pg.port?'p':'l';
-    if(!doc){ doc=new jsPDF({orientation:o,unit:'mm',format:'a4',compress:true});
+    const pg=layoutPage(p,S.view,false), o=W>H?'l':'p';
+    if(!doc){ doc=new jsPDF({orientation:o,unit:'mm',format:[W,H],compress:true});
       for(const w of [500,700,800]){ doc.addFileToVFS(`Inter-${w}.ttf`,FONTS[w]); doc.addFont(`Inter-${w}.ttf`,`Inter${w}`,'normal'); }
       doc.setProperties({title:list.length===1?`Timetable – ${p.name}`:'Timetables',creator:'Timetable Maker'}); }
-    else doc.addPage('a4',o);
-    for(const it of pg.items){ if(it.preview) continue;
+    else doc.addPage([W,H],o);
+    for(const it of scaled(pg,W,H)){ if(it.preview) continue;
       if(it.t==='r'){
         if(it.f){ doc.setFillColor(it.f); }
         if(it.s){ doc.setDrawColor(it.s); doc.setLineWidth(it.sw); }
@@ -1070,6 +1105,18 @@ function pdfFor(list){
       } } }
   return doc.output('blob');
 }
+const CRC=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } return t; })();
+const crc32 = u8 => { let c=~0; for(let i=0;i<u8.length;i++) c=CRC[(c^u8[i])&255]^(c>>>8); return (~c)>>>0; };
+function makeZip(files){ const enc=new TextEncoder(), parts=[], central=[]; let off=0; const used=new Set();
+  for(const f of files){ let name=f.name, k=2; while(used.has(name)) name=f.name.replace(/(\.\w+)$/,` (${k++})$1`); used.add(name);
+    const nm=enc.encode(name), crc=crc32(f.data), sz=f.data.length;
+    const lh=new DataView(new ArrayBuffer(30)); lh.setUint32(0,0x04034b50,true); lh.setUint16(4,20,true); lh.setUint16(6,0x0800,true); lh.setUint16(12,0x21,true); lh.setUint32(14,crc,true); lh.setUint32(18,sz,true); lh.setUint32(22,sz,true); lh.setUint16(26,nm.length,true);
+    parts.push(new Uint8Array(lh.buffer),nm,f.data);
+    const ch=new DataView(new ArrayBuffer(46)); ch.setUint32(0,0x02014b50,true); ch.setUint16(4,20,true); ch.setUint16(6,20,true); ch.setUint16(8,0x0800,true); ch.setUint16(14,0x21,true); ch.setUint32(16,crc,true); ch.setUint32(20,sz,true); ch.setUint32(24,sz,true); ch.setUint16(28,nm.length,true); ch.setUint32(42,off,true);
+    central.push(new Uint8Array(ch.buffer),nm); off+=30+nm.length+sz; }
+  const csz=central.reduce((a,b)=>a+b.length,0), end=new DataView(new ArrayBuffer(22));
+  end.setUint32(0,0x06054b50,true); end.setUint16(8,files.length,true); end.setUint16(10,files.length,true); end.setUint32(12,csz,true); end.setUint32(16,off,true);
+  return new Blob([...parts,...central,new Uint8Array(end.buffer)],{type:'application/zip'}); }
 const DL = (window.claude && typeof window.claude.use==='function') ? window.claude.use('downloads').catch(()=>null) : Promise.resolve(null);
 async function saveFile(blob,name){
   const d=await Promise.race([DL,new Promise(r=>setTimeout(()=>r(null),1500))]);
@@ -1078,7 +1125,7 @@ async function saveFile(blob,name){
   const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),5000); toast('Downloaded '+name);
 }
-const safe = s => String(s).replace(/[\\/:*?"<>|]+/g,'').trim();
+const safe = s => String(s).replace(/[\\/:*?"<>|]+/g,'').replace(/\.+(\.\w+)$/,'$1').trim();
 
 /* ========================== app state ========================== */
 let P=[], cur=null, examples=false, uid=0;
@@ -1130,12 +1177,42 @@ function makePupil({name,grid},meta){ const d=detect(grid), id=++uid; GRIDS.set(
 const curP = () => P.find(p=>p.id===cur);
 
 /* ========================== rendering: timetable tab ========================== */
+const COLL=new Set();
 function renderList(){
+  computeGroups();
   $('#plabel').innerHTML = (P.length ? (examples?'Examples (drop your own files to replace)':`Pupils (${P.length})`) : 'Pupils') + (P.length&&!examples?' <button class="lnk" id="clearall">Clear all</button>':'');
-  $('#plist').innerHTML = P.length ? P.map(p=>{ const n=flagsOf(p).length;
-    return `<div class="pi${p.id===cur?' on':''}" data-id="${p.id}" role="button" tabindex="0"><span class="nm">${esc(p.name)}</span>${p.form?`<span class="tag">${esc(p.form)}</span>`:`<span class="tag">${p.section}</span>`}${n?`<span class="tag w" title="Clashes to check">${n}</span>`:''}<button class="x" data-del="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></div>`; }).join('')
+  const curF=curP()?formKey(curP()):'';
+  $('#plist').innerHTML = P.length ? GROUPS.forms.map(f=>{ const open=!COLL.has(f.key)||f.key===curF, nv=f.versions.length;
+    return `<div class="fh${open?' open':''}" data-fold="${esc(f.key)}" role="button" tabindex="0"><span class="car">›</span><b>${esc(f.key)}</b><span class="mini">${f.pupils.length} pupil${f.pupils.length>1?'s':''}${nv>1?` · ${nv} ${termFor(f.section).toLowerCase()}s`:''}</span></div>`
+      + (open ? f.pupils.map(p=>{ const n=flagsOf(p).length, vv=GROUPS.ver.get(p.id);
+        return `<div class="pi${p.id===cur?' on':''}" data-id="${p.id}" role="button" tabindex="0"><span class="nm">${esc(p.name)}</span>${nv>1?`<span class="tag v" title="${termFor(f.section)} ${vv.v.letter}">${vv.v.letter}</span>`:''}${n?`<span class="tag w" title="Clashes to check">${n}</span>`:''}<button class="x" data-del="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></div>`; }).join('') : ''); }).join('')
     : '<p class="hint">No timetables yet.</p>';
+  renderBadge();
 }
+let GROUPS={forms:[],ver:new Map()};
+const formKey = p => p.form || `No form (${p.section})`;
+const yearOf = p => parseInt(p.form,10) || p.year || 0;
+const termFor = section => section==='US' ? 'Stream' : 'Version';
+function lessonsOf(p){ const sec=S.sections[p.section]; return sec.days.filter(d=>p.grid[d]).flatMap(d=>buildDay(p,d).filter(b=>b.kind!=='gap'&&b.kind!=='lunch').map(b=>({d,a:b.a,b:b.b,subj:b.subj,t:(b.teachers||[]).join(' / '),r:(b.rooms||[]).join(' / ')}))); }
+function computeGroups(){
+  const forms=new Map(), ver=new Map();
+  for(const p of P){ const k=formKey(p); if(!forms.has(k)) forms.set(k,{key:k,form:p.form,section:p.section,year:yearOf(p),pupils:[]}); forms.get(k).pupils.push(p); }
+  for(const f of forms.values()){
+    const bySig=new Map();
+    for(const p of f.pupils){ const L=lessonsOf(p), sig=JSON.stringify(L); if(!bySig.has(sig)) bySig.set(sig,{L,ids:[]}); bySig.get(sig).ids.push(p.id); }
+    f.versions=[...bySig.values()].sort((a,b)=>b.ids.length-a.ids.length);
+    const base=f.versions[0];
+    const key=x=>`${x.subj}|${x.t}`, baseSet=new Set(base.L.map(key));
+    f.versions.forEach((v,i)=>{ v.letter=String.fromCharCode(65+i);
+      const diff=[...new Set(v.L.filter(x=>!baseSet.has(key(x))).map(x=>x.t?`${x.subj} (${x.t})`:x.subj))];
+      v.label = i===0 ? (f.versions.length>1?'most common':'') : (diff.slice(0,3).join(', ')+(diff.length>3?` +${diff.length-3} more`:'') || 'small differences');
+      v.diffSlots = i===0 ? [] : v.L.filter(x=>!base.L.some(y=>y.d===x.d&&y.a===x.a&&y.b===x.b&&y.subj===x.subj&&y.t===x.t&&y.r===x.r));
+      for(const id of v.ids) ver.set(id,{f,v,i}); }); }
+  GROUPS={forms:[...forms.values()].sort((a,b)=>(!a.form)-(!b.form)||a.key.localeCompare(b.key,undefined,{numeric:true})),ver};
+}
+const origSig = (q,d,id) => JSON.stringify((q.grid[d]?.[id]||[]).map(x=>[canon(x.raw),x.teacher,x.room]));
+function matchesFor(p,day,slots){ const sig=slots.map(id=>origSig(p,day,id));
+  return P.filter(q=>q.section===p.section && q.grid[day] && slots.every((id,i)=>origSig(q,day,id)===sig[i])); }
 function flagsOf(p){ const sec=S.sections[p.section]; return sec.days.filter(d=>p.grid[d]).flatMap(d=>buildDay(p,d).filter(b=>b.flag)); }
 const MODES={top:{periods:'both',lt:'none'},blocks:{periods:'labels',lt:'all'}};
 const modeOf = v => Object.keys(MODES).find(k=>MODES[k].periods===v.periods&&MODES[k].lt===v.lt)||'';
@@ -1145,7 +1222,7 @@ function renderOpts(){
   $('#modecustom').hidden=!!m; if(!m) $('#moreopts').open=true;
   $('#btimesrow').hidden=S.view.periods!=='both';
   document.querySelectorAll('[data-tog]').forEach(i=>i.checked=!!S.view[i.dataset.tog]);
-  $('#dlall').textContent = P.length>1 ? `Download all ${P.length} as one PDF` : 'Download all as one PDF';
+  $('#dlall').textContent = 'Download timetables…';
   $('#dl1').disabled=!curP(); $('#dlall').disabled=!P.length;
 }
 function renderPreview(){
@@ -1160,6 +1237,9 @@ function renderPreview(){
     <datalist id="formlist">${S.forms.map(f=>`<option value="${esc(f.form)}">`).join('')}</datalist>
     ${Object.keys(p.patches).length?'<button class="btn sm" id="undoall" style="margin-left:auto">Undo all my edits</button>':''}`;
   const notes=[];
+  const vv=GROUPS.ver.get(p.id);
+  if(vv && vv.f.versions.length>1){ const term=termFor(vv.f.section), n=vv.f.versions.length;
+    notes.push(`<div class="note vnav"><button class="btn sm" data-ver="-1" aria-label="Previous ${term.toLowerCase()}">‹</button><span><b>${term} ${vv.v.letter}</b> of ${n} in ${esc(vv.f.key)} · ${vv.v.ids.length} pupil${vv.v.ids.length>1?'s':''}${vv.v.label?` · <span class="mini">${esc(vv.v.label)}</span>`:''}</span><button class="btn sm" data-ver="1" aria-label="Next ${term.toLowerCase()}">›</button></div>`); }
   const fl=pg.flags;
   if(fl.length) notes.push(`<div class="note w"><b>${fl.length} clash${fl.length>1?'es':''} to check</b> – iSAMS lists two different lessons at once. ${fl.map(b=>`<button data-open="${b.day}|${b.slots[0]}">${b.day} ${fmt(b.a)} ${esc(b.subj)}</button>`).join(' ')}</div>`);
   if(!p.form && p.tutor) notes.push(`<div class="note">Tutor <b>${esc(p.tutor)}</b> isn’t linked to a form yet. Type the form above and it’ll be remembered for this tutor.</div>`);
@@ -1168,7 +1248,7 @@ function renderPreview(){
   notes.push(`<div class="note"><span class="mini">Click any block to edit it, or a grey gap to add a lesson.</span></div>`);
   $('#notes').innerHTML=notes.join('');
 }
-function renderAll(){ updUndo(); renderList(); renderOpts(); renderPreview(); if($('#tab-col').classList.contains('on')) renderColours(); if($('#tab-set').classList.contains('on')) renderSettings(); }
+function renderAll(){ updUndo(); renderList(); renderOpts(); renderPreview(); if($('#tab-col').classList.contains('on')) renderColours(); if($('#tab-set').classList.contains('on')) renderSettings(); if($('#tab-chk').classList.contains('on')) renderChecks(); if(!$('#exportdlg').hidden) renderExport(); }
 
 /* ========================== editor ========================== */
 let ED=null;
@@ -1190,19 +1270,137 @@ function openEditor(b){
   const isGap=b.kind==='gap';
   ed.innerHTML=`<h3><span>${isGap?'Add a lesson':esc(b.subj)}<small>${when}</small></span><button class="close" data-x aria-label="Close">×</button></h3>
     ${opts.length>1?`<div><p class="lbl">iSAMS lists more than one lesson here</p><div class="chips">${opts.map(o=>`<button class="chip${b.names.length===1&&b.names[0]===o?' on':''}" data-choice="${esc(o)}"><i style="background:${colour(subj(o).key)}"></i>${esc(o)}</button>`).join('')}<button class="chip${b.names.length>1?' on':''}" data-choice="both">Show both</button></div>
-      <label class="tg" style="margin-top:8px;font-size:13px">Same choice for every pupil with this clash<input type="checkbox" id="edall" checked></label></div>`:''}
+</div>`:''}
     <label class="f">Subject<input class="in" id="edsub" list="sublist" value="${isGap||(b.names||[]).length>1?'':esc(b.kind==='reg'?'Reg':b.subj)}" placeholder="${(b.names||[]).length>1?'Pick above, or type a subject':'e.g. Maths'}"></label>
     <datalist id="sublist">${subjects.map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
     <div class="row"><label class="f">Teacher<input class="in" id="edtch" list="stafflist" value="${esc((b.teachers||[]).join(' / '))}"></label>
     <label class="f">Room<input class="in" id="edroom" value="${esc((b.rooms||[]).join(' / '))}"></label></div>
     <datalist id="stafflist">${staffNames().map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
     ${slotsAll.length>1?`<div class="row"><label class="f">From<select class="in" id="edfrom">${slotOpt(slotsAll[0])}</select></label><label class="f">To<select class="in" id="edto">${slotOpt(slotsAll[slotsAll.length-1])}</select></label></div>`:''}
+    ${scopeHTML(p,b.day,slotsAll)}
     <div class="row"><button class="btn pri" id="edsave">Save</button>${isGap?'':'<button class="btn" id="edclear">Make blank</button>'}</div>
     ${patched?'<button class="btn" id="edundo">Undo my changes here</button>':''}`;
   ed.hidden=false;
 }
+function scopeHTML(p,day,slots){
+  const m=matchesFor(p,day,slots); ED.matches=m.map(q=>q.id); if(m.length<2) return '';
+  return `<div class="scope"><p class="lbl">Apply to</p>
+    <label class="rad"><input type="radio" name="scope" value="all" checked> All ${m.length} pupils with this exact lesson</label>
+    <label class="rad"><input type="radio" name="scope" value="one"> Just ${esc(p.name)}</label>
+    <details><summary class="mini">See who (${m.length})</summary><div class="who">${m.map(q=>`<label><input type="checkbox" data-who="${q.id}" checked> ${esc(q.name)} <span class="mini">${esc(q.form||q.section)}</span></label>`).join('')}</div></details>
+    <p class="hint">Matched on the same day, periods, subject, teacher and room as iSAMS originally had.</p></div>`; }
+function edTargets(range){ const p=curP(); const one=document.querySelector('input[name=scope][value=one]')?.checked;
+  if(one || !ED.matches || ED.matches.length<2) return [p];
+  const ticked=new Set([...document.querySelectorAll('[data-who]')].filter(c=>c.checked).map(c=>+c.dataset.who));
+  const ok=new Set(matchesFor(p,ED.day,range).map(q=>q.id));
+  const list=P.filter(q=>ticked.has(q.id)&&ok.has(q.id)); if(!list.includes(p)) list.push(p); return list; }
 function edRange(){ const s=ED.slots; if(s.length<2) return s; const a=s.indexOf($('#edfrom').value), b=s.indexOf($('#edto').value); return s.slice(Math.min(a,b),Math.max(a,b)+1); }
 function closeEditor(){ $('#editor').hidden=true; ED=null; }
+
+/* ========================== export ========================== */
+let EXSEL=new Set();
+function openExport(){ if(!EXSEL.size || [...EXSEL].some(id=>!P.find(q=>q.id===id))) EXSEL=new Set(P.map(q=>q.id)); renderExport(); $('#exportdlg').hidden=false; }
+function renderExport(){
+  computeGroups(); const v=S.view, years=new Map();
+  for(const f of GROUPS.forms){ const y=f.year||0; if(!years.has(y)) years.set(y,[]); years.get(y).push(f); }
+  const ck=(ids)=>{ const n=ids.filter(id=>EXSEL.has(id)).length; return n===ids.length?'checked':n?'data-mixed':''; };
+  const tree=[...years.entries()].sort((a,b)=>a[0]-b[0]).map(([y,fs])=>{ const yids=fs.flatMap(f=>f.pupils.map(q=>q.id));
+    return `<div class="yr"><label class="ck"><input type="checkbox" data-exsel="${yids.join(',')}" ${ck(yids)}><b>${y?`Year ${y}`:'No year'}</b><span class="mini">${yids.length}</span></label>
+      ${fs.map(f=>{ const ids=f.pupils.map(q=>q.id); return `<div class="fm"><label class="ck"><input type="checkbox" data-exsel="${ids.join(',')}" ${ck(ids)}>${esc(f.key)}<span class="mini">${ids.length}</span></label>
+        <details><summary class="mini">pupils</summary><div class="who">${f.pupils.map(q=>`<label><input type="checkbox" data-exsel="${q.id}" ${EXSEL.has(q.id)?'checked':''}> ${esc(q.name)}</label>`).join('')}</div></details></div>`; }).join('')}</div>`; }).join('');
+  const hasPlanner=S.planner && S.planner.w>0 && S.planner.h>0;
+  if(v.size==='planner' && !hasPlanner) v.size='a4';
+  const sel=P.filter(q=>EXSEL.has(q.id)), clashes=sel.reduce((a,q)=>a+flagsOf(q).length,0);
+  const nForms=new Set(sel.map(formKey)).size;
+  $('#exportdlg').innerHTML=`<div class="exbox" role="dialog" aria-label="Download timetables"><h3><span>Download timetables</span><button class="close" data-exx aria-label="Close">×</button></h3>
+    <div><p class="lbl">Who <button class="lnk" data-exall>${EXSEL.size===P.length?'Select none':'Select all'}</button></p><div class="extree">${tree}</div></div>
+    <div><p class="lbl">Size</p><div class="seg"><button data-exsize="a4" class="${v.size==='a4'||!v.size?'on':''}">A4</button>${hasPlanner?`<button data-exsize="planner" class="${v.size==='planner'?'on':''}">Planner</button>`:''}<button data-exsize="custom" class="${v.size==='custom'?'on':''}">Custom</button></div>
+      ${v.size==='custom'?`<div class="inl" style="margin-top:8px"><input class="in sm" type="number" min="50" max="600" id="cuw" value="${v.custom?.w||148}" style="width:84px" aria-label="Width in mm"> × <input class="in sm" type="number" min="50" max="600" id="cuh" value="${v.custom?.h||210}" style="width:84px" aria-label="Height in mm"><span class="mini">mm · turned to match ${v.orient==='port'?'portrait':'landscape'}</span></div>`:''}
+      ${hasPlanner&&v.size==='planner'?`<p class="mini" style="margin:6px 0 0">${S.planner.w} × ${S.planner.h} mm</p>`:''}</div>
+    <div><p class="lbl">Files</p><div class="seg"><button data-expack="one" class="${(v.pack||'one')==='one'?'on':''}">One combined PDF</button><button data-expack="form" class="${v.pack==='form'?'on':''}">One PDF per form</button><button data-expack="pupil" class="${v.pack==='pupil'?'on':''}">One per pupil</button></div>
+      <p class="mini" style="margin:6px 0 0">${(v.pack||'one')==='one'?'Pages in form order, then surname.':'Several PDFs come together in one .zip file.'}</p></div>
+    ${clashes?`<div class="note w">${clashes} clash${clashes>1?'es':''} still to check in this selection. <button data-tab-go="chk">Open Checks</button></div>`:''}
+    <button class="btn pri" id="exgo" ${sel.length?'':'disabled'}>Download ${sel.length} timetable${sel.length===1?'':'s'}${(v.pack||'one')==='form'&&sel.length?` (${nForms} PDF${nForms>1?'s':''})`:''}</button></div>`;
+  document.querySelectorAll('#exportdlg [data-mixed]').forEach(c=>c.indeterminate=true);
+}
+async function runExport(btn){
+  const sel=P.filter(q=>EXSEL.has(q.id)); if(!sel.length) return;
+  const order=[...sel].sort((a,b)=>(!a.form)-(!b.form)||formKey(a).localeCompare(formKey(b),undefined,{numeric:true})||(a.sort||a.name).localeCompare(b.sort||b.name));
+  btn.disabled=true; const old=btn.textContent; btn.textContent='Making PDFs…'; await new Promise(r=>setTimeout(r,30));
+  try{ const pack=S.view.pack||'one', forms=[...new Set(order.map(formKey))];
+    if(pack==='one'){ await saveFile(pdfFor(order),safe(`${forms.length===1?forms[0]+' ':''}Timetables.pdf`)); }
+    else { const files=[];
+      if(pack==='form') for(const f of forms) files.push({name:safe(`${f} timetables.pdf`),data:new Uint8Array(await pdfFor(order.filter(q=>formKey(q)===f)).arrayBuffer())});
+      else for(const q of order) files.push({name:safe(`${q.form?q.form+' - ':''}${q.name}.pdf`),data:new Uint8Array(await pdfFor([q]).arrayBuffer())});
+      await saveFile(makeZip(files),safe(`${forms.length===1?forms[0]+' ':''}Timetables.zip`)); }
+    $('#exportdlg').hidden=true;
+  } finally{ btn.disabled=false; btn.textContent=old; }
+}
+
+/* ========================== checks ========================== */
+const IGKEY='tt-maker-ignored';
+let IGN=new Set(); try{ IGN=new Set(JSON.parse(localStorage.getItem(IGKEY)||'[]')); }catch(e){}
+const saveIgn=()=>{ try{ localStorage.setItem(IGKEY,JSON.stringify([...IGN])); }catch(e){} };
+let SHOWIGN=false;
+function computeIssues(){
+  const out=new Map(), add=(key,o,pid)=>{ if(!out.has(key)) out.set(key,{key,pupils:[],...o}); const it=out.get(key); if(pid!=null && !it.pupils.includes(pid)) it.pupils.push(pid); };
+  const known=new Set(Object.keys(defaults().subjects));
+  for(const p of P){ const sec=S.sections[p.section];
+    for(const d of sec.days.filter(d=>p.grid[d])){ const bl=buildDay(p,d);
+      bl.forEach((b,i)=>{
+        if(b.flag) add(`clash|${p.section}|${d}|${b.slots.join(',')}|${[...b.options].sort().join('/')}`,{sev:0,type:'clash',title:`${DAYNAME[d]} ${fmt(b.a)}–${fmt(b.b)}: ${b.options.join(' and ')} both listed`,day:d,slots:b.slots,options:b.options},p.id);
+        const nx=bl[i+1]; if(nx && b.kind==='lesson' && nx.kind==='lesson' && b.b===nx.a && b.subj===nx.subj && (b.teachers||[]).join()===(nx.teachers||[]).join() && (b.rooms||[]).join()!==(nx.rooms||[]).join())
+          add(`room|${p.section}|${d}|${b.a}|${b.subj}`,{sev:5,type:'room',title:`${DAYNAME[d]} ${fmt(b.a)}: ${b.subj} changes room (${(b.rooms||[]).join('/')} → ${(nx.rooms||[]).join('/')})`},p.id); }); }
+    if(!p.form && p.tutor) add(`tutor|${p.tutor}`,{sev:2,type:'tutor',title:`${p.tutor} isn’t linked to a form`,tutor:p.tutor},p.id);
+  }
+  for(const f of GROUPS.forms){ if(f.section==='US' || f.pupils.length<3 || f.versions.length<2 || f.versions[0].ids.length<2) continue;
+    for(const v of f.versions.slice(1)) if(v.ids.length===1){ const q=P.find(x=>x.id===v.ids[0]);
+      add(`odd|${f.key}|${q.sort||q.name}`,{sev:1,type:'odd',title:`${q.name} (${f.key}) doesn’t match the rest of the form`,detail:v.diffSlots.slice(0,4).map(x=>`${x.d} ${fmt(x.a)} ${x.subj}${x.t?` (${x.t})`:''}${x.r?` ${x.r}`:''}`).join(' · ')},q.id); } }
+  for(const [n,sb] of Object.entries(S.subjects)) if(!known.has(n) && sb.key===n){ const users=P.filter(q=>Object.values(q.grid).some(day=>Object.values(day).some(es=>es.some(e=>canon(e.raw)===n)))).map(q=>q.id);
+    if(users.length) for(const id of users) add(`subj|${n}`,{sev:3,type:'subj',title:`“${n}” is a new subject name – check its colour and short name`,name:n},id); }
+  const miss=staffNames().filter(t=>!S.staff[t] && P.some(q=>Object.values(q.grid).some(day=>Object.values(day).some(es=>es.some(e=>e.teacher===t)))));
+  if(miss.length) out.set(`init|${miss.join(',')}`,{key:`init|${miss.join(',')}`,sev:4,type:'init',title:`${miss.length} teacher${miss.length>1?'s have':' has'} no initials yet`,detail:miss.slice(0,8).join(', ')+(miss.length>8?` and ${miss.length-8} more`:''),pupils:[]});
+  return [...out.values()].sort((a,b)=>a.sev-b.sev||a.title.localeCompare(b.title));
+}
+function renderBadge(){ const b=$('#chkbadge'); if(!b) return; const n=P.length&&!examples?computeIssues().filter(i=>!IGN.has(i.key)).length:0; b.textContent=n||''; b.hidden=!n; }
+function renderChecks(){
+  computeGroups(); const all=computeIssues(), open=all.filter(i=>!IGN.has(i.key)), ign=all.filter(i=>IGN.has(i.key));
+  const list=SHOWIGN?ign:open;
+  const formsOf=ids=>{ const m=new Map(); for(const id of ids){ const q=P.find(x=>x.id===id); if(q){ const k=formKey(q); m.set(k,(m.get(k)||0)+1); } } return [...m].map(([k,n])=>`<span class="tag">${esc(k)} · ${n}</span>`).join(' '); };
+  $('#chkwrap').innerHTML=`<h2>Checks</h2>
+    <p class="hint">${P.length&&!examples?(open.length?`${open.length} thing${open.length>1?'s':''} to look at across ${P.length} timetable${P.length>1?'s':''}.`:'Nothing to check – everything looks consistent.'):'Upload timetables to check them.'}${ign.length?` <button class="lnk" data-chkact="toggleign">${SHOWIGN?'Back to open checks':`Show ${ign.length} ignored`}</button>`:''}</p>
+    ${(P.length&&!examples?list:[]).map(it=>`<div class="card chk sev${it.sev}">
+      <div class="chkh"><b>${esc(it.title)}</b>${it.pupils.length?`<span class="mini">${it.pupils.length} pupil${it.pupils.length>1?'s':''}</span>`:''}</div>
+      ${it.detail?`<p class="mini" style="margin:4px 0 0">${esc(it.detail)}</p>`:''}
+      ${it.pupils.length?`<div class="chips" style="margin-top:8px">${formsOf(it.pupils)}</div>`:''}
+      ${it.type==='clash'?`<details class="whobox"><summary class="mini">Choose pupils (${it.pupils.length})</summary><div class="who">${it.pupils.map(id=>{ const q=P.find(x=>x.id===id); return `<label><input type="checkbox" data-cw="${esc(it.key)}" value="${id}" checked> ${esc(q.name)} <span class="mini">${esc(formKey(q))}</span></label>`; }).join('')}</div></details>
+        <div class="chips" style="margin-top:8px">${it.options.map(o=>`<button class="chip" data-chkact="choose" data-key="${esc(it.key)}" data-arg="${esc(o)}"><i style="background:${colour(subj(o).key)}"></i>${esc(o)}</button>`).join('')}<button class="chip" data-chkact="choose" data-key="${esc(it.key)}" data-arg="both">Show both</button><button class="chip" data-chkact="edit" data-key="${esc(it.key)}">Something else…</button></div>`:''}
+      ${it.type==='tutor'?`<div class="inl" style="margin-top:8px"><input class="in sm" data-ty="${esc(it.key)}" placeholder="Year" maxlength="1" style="width:64px" aria-label="Year"><input class="in sm" data-tl="${esc(it.key)}" placeholder="Letters" maxlength="3" style="width:80px;text-transform:uppercase" aria-label="Form letters"><button class="btn sm" data-chkact="tutor" data-key="${esc(it.key)}" data-arg="${esc(it.tutor)}">Link form</button></div>`:''}
+      <div class="inl" style="margin-top:8px">
+        ${it.type==='odd'?`<button class="btn sm" data-chkact="view" data-arg="${it.pupils[0]}">View timetable</button>`:''}
+        ${it.type==='subj'?`<button class="btn sm" data-chkact="colours">Colours &amp; short names</button>`:''}
+        ${it.type==='init'?`<button class="btn sm" data-goto="staff">Add initials</button>`:''}
+        ${it.type==='room'?`<button class="btn sm" data-chkact="view" data-arg="${it.pupils[0]}">View</button>`:''}
+        <button class="btn sm" data-chkact="${SHOWIGN?'unignore':'ignore'}" data-key="${esc(it.key)}">${SHOWIGN?'Restore':'Ignore'}</button></div>
+    </div>`).join('')}`;
+  renderBadge();
+}
+async function checkAction(act,key,arg){
+  const it=computeIssues().find(i=>i.key===key);
+  if(act==='toggleign'){ SHOWIGN=!SHOWIGN; renderChecks(); return; }
+  if(act==='ignore'){ IGN.add(key); saveIgn(); renderChecks(); renderList(); return; }
+  if(act==='unignore'){ IGN.delete(key); saveIgn(); renderChecks(); renderList(); return; }
+  if(act==='colours'){ document.querySelector('[data-tab="col"]').click(); return; }
+  if(act==='view'){ cur=+arg; document.querySelector('[data-tab="tt"]').click(); return; }
+  if(!it) return;
+  const ticked=[...document.querySelectorAll(`[data-cw="${CSS.escape(key)}"]`)].filter(c=>c.checked).map(c=>+c.value);
+  if(act==='choose'){ for(const id of ticked){ const q=P.find(x=>x.id===id); for(const sl of it.slots) q.patches[it.day+'|'+sl]={choice:arg}; }
+    toast(`Updated ${ticked.length} pupil${ticked.length>1?'s':''}`); renderChecks(); renderList(); snap(0); return; }
+  if(act==='edit'){ cur=ticked[0]||it.pupils[0]; document.querySelector('[data-tab="tt"]').click();
+    setTimeout(()=>{ const b=Object.values(RENDER.blocks).find(b=>b.day===it.day&&b.slots.includes(it.slots[0])); if(b) openEditor(b); },60); return; }
+  if(act==='tutor'){ const y=document.querySelector(`[data-ty="${CSS.escape(key)}"]`).value, l=document.querySelector(`[data-tl="${CSS.escape(key)}"]`).value;
+    if(!upsertForm(arg,y,l)){ toast('Type a year (3–8) and the form letters'); return; } save(); redetect(); renderChecks(); renderList(); snap(0); toast('Form linked'); return; }
+}
 
 /* ========================== colours tab ========================== */
 let PICK=null;
@@ -1296,6 +1494,8 @@ function renderSettings(){
     <div class="scroll"><table class="tbl stack"><thead><tr><th>In iSAMS</th><th>Shown as</th></tr></thead><tbody>
     ${[...rawSeen].filter(r=>r&&r!=='Registration').sort().map(r=>`<tr><td data-l="In iSAMS">${esc(r)}</td><td data-l="Shown as"><input class="in sm" list="sublist3" data-alias="${esc(r)}" value="${esc(S.aliases[r]||r)}"></td></tr>`).join('')}
     </tbody></table></div><datalist id="sublist3">${Object.keys(S.subjects).sort().map(s=>`<option value="${esc(s)}">`).join('')}</datalist></div>
+  <div class="card"><h3>Planner size</h3><p>The page size of the pupil planners. Once set, “Planner” appears as a size when downloading.</p>
+    <div class="inl"><input class="in sm" type="number" min="0" max="600" id="plw" value="${S.planner?.w||''}" placeholder="Width" style="width:90px" aria-label="Planner width in mm"> × <input class="in sm" type="number" min="0" max="600" id="plh" value="${S.planner?.h||''}" placeholder="Height" style="width:90px" aria-label="Planner height in mm"><span class="mini">mm</span></div></div>
   ${CLOUD_ON?`<div class="card"><h3>Staff password</h3><p>Everyone types this once per device. Changing it asks everyone for the new one.</p>
     <div class="inl"><input class="in sm" type="password" id="newpw" placeholder="New staff password" autocomplete="new-password" style="width:220px"><button class="btn sm" id="setpw">Change staff password</button></div></div>`:''}
   <div class="card"><h3>Back up settings</h3><p>${CLOUD_ON?'Settings are shared with all staff automatically. A settings file is a backup copy.':'Everything on this page and the Colours page is saved in this browser only. Save a settings file to move it to another computer or give it to a colleague.'}</p>
@@ -1312,14 +1512,15 @@ function quickAdd(){
 /* ========================== events ========================== */
 const rerender = () => { renderList(); renderPreview(); };
 document.addEventListener('click',async e=>{
-  const t=e.target.closest('button,[data-id],[data-ref]');
+  const t=e.target.closest('button,[data-id],[data-ref],[data-fold]');
   if(e.target.closest('#picker')){ const sw=e.target.closest('[data-sw]'); if(sw){ setColour(PICK,sw.dataset.sw); $('#pkh').value=sw.dataset.sw; $('#pkc').value=sw.dataset.sw.toLowerCase(); document.querySelectorAll('#picker .g button').forEach(b=>b.classList.toggle('on',b===sw)); }
     if(e.target.closest('[data-pkx]')) $('#picker').hidden=true; return; }
   if(!$('#picker').hidden && !e.target.closest('[data-pick]')) $('#picker').hidden=true;
   if(!t) return;
   const ds=t.dataset;
   if(ds.tab){ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===t)); document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+ds.tab));
-    closeEditor(); if(ds.tab==='col') renderColours(); if(ds.tab==='set') renderSettings(); if(ds.tab==='tt') renderAll(); return; }
+    closeEditor(); if(ds.tab==='col') renderColours(); if(ds.tab==='set') renderSettings(); if(ds.tab==='chk') renderChecks(); if(ds.tab==='tt') renderAll(); return; }
+  if(ds.tabGo){ $('#exportdlg').hidden=true; document.querySelector(`[data-tab="${ds.tabGo}"]`).click(); return; }
   if(t.closest('.seg[data-mode]') && ds.v){ Object.assign(S.view,MODES[ds.v]); save(); closeEditor(); renderOpts(); renderPreview(); return; }
   if(t.closest('.seg[data-opt]') && ds.v){ S.view[t.closest('.seg').dataset.opt]=ds.v; save(); closeEditor(); renderOpts(); renderPreview(); return; }
   if(ds.del){ e.stopPropagation(); P=P.filter(p=>p.id!=ds.del); if(cur==ds.del) cur=P[0]?.id??null; if(!P.length) examples=false; closeEditor(); renderAll(); return; }
@@ -1329,20 +1530,27 @@ document.addEventListener('click',async e=>{
   if(ds.goto){ closeEditor(); document.querySelector('[data-tab="set"]').click(); setTimeout(()=>{ const el=$('#sec-'+ds.goto); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },30); return; }
   if(ds.x!==undefined){ closeEditor(); return; }
   const p=curP();
-  if(ds.choice && ED && p){ const sig=[...ED.b.options].sort().join('|'); const all=$('#edall')?.checked;
-    const targets = all ? P : [p];
-    for(const q of targets){ for(const d of S.sections[q.section].days.filter(d=>q.grid[d])) for(const b of buildDay(q,d)) if(b.options && [...b.options].sort().join('|')===sig) for(const id of b.slots){ q.patches[d+'|'+id]={choice:ds.choice}; } }
-    for(const id of ED.slots) p.patches[ED.day+'|'+id]={choice:ds.choice};
-    closeEditor(); rerender(); toast(all&&P.length>1?'Applied to every pupil with this clash':'Updated'); return; }
+  if(ds.choice && ED && p){ const tg=edTargets(ED.slots);
+    for(const q of tg) for(const id of ED.slots) q.patches[ED.day+'|'+id]={choice:ds.choice};
+    closeEditor(); rerender(); toast(tg.length>1?`Updated ${tg.length} pupils`:'Updated'); return; }
   if(t.id==='edsave' && ED && p){ const sub=$('#edsub').value.trim(), tch=$('#edtch').value.trim(), room=$('#edroom').value.trim();
-    for(const id of edRange()) p.patches[ED.day+'|'+id] = sub ? {subj:sub,teacher:tch,room} : {clear:true};
+    const rg=edRange(), tg=edTargets(rg);
+    for(const q of tg) for(const id of rg) q.patches[ED.day+'|'+id] = sub ? {subj:sub,teacher:tch,room} : {clear:true};
     if(sub) ensureSubject(sub);
-    closeEditor(); rerender(); return; }
-  if(t.id==='edclear' && ED && p){ for(const id of edRange()) p.patches[ED.day+'|'+id]={clear:true}; closeEditor(); rerender(); return; }
+    closeEditor(); rerender(); if(tg.length>1) toast(`Updated ${tg.length} pupils`); return; }
+  if(t.id==='edclear' && ED && p){ const rg=edRange(), tg=edTargets(rg); for(const q of tg) for(const id of rg) q.patches[ED.day+'|'+id]={clear:true}; closeEditor(); rerender(); if(tg.length>1) toast(`Updated ${tg.length} pupils`); return; }
+  if(ds.ver && p){ const vv=GROUPS.ver.get(p.id); if(vv){ const n=vv.f.versions.length, nx=vv.f.versions[(vv.i+(+ds.ver)+n)%n]; cur=nx.ids[0]; closeEditor(); renderList(); renderPreview(); } return; }
+  if(ds.fold!==undefined){ if(COLL.has(ds.fold)) COLL.delete(ds.fold); else COLL.add(ds.fold); renderList(); return; }
   if(t.id==='edundo' && ED && p){ for(const id of ED.slots) delete p.patches[ED.day+'|'+id]; closeEditor(); rerender(); return; }
   if(t.id==='undoall' && p){ p.patches={}; closeEditor(); rerender(); toast('Edits undone'); return; }
-  if(t.id==='dl1' && p){ t.disabled=true; try{ await saveFile(pdfFor([p]),safe(`Timetable - ${p.name}${p.form?' - '+p.form:''}.pdf`)); } finally{ t.disabled=false; } return; }
-  if(t.id==='dlall' && P.length){ t.disabled=true; try{ const forms=[...new Set(P.map(p=>p.form).filter(Boolean))]; await saveFile(pdfFor(P),safe(`${forms.length===1?forms[0]+' ':''}Timetables.pdf`)); } finally{ t.disabled=false; } return; }
+  if(t.id==='dl1' && p){ t.disabled=true; try{ await saveFile(pdfFor([p]),safe(`${p.form?p.form+' - ':''}${p.name}.pdf`)); } finally{ t.disabled=false; } return; }
+  if(t.id==='dlall' && P.length){ openExport(); return; }
+  if(t.id==='exgo'){ await runExport(t); return; }
+  if(ds.exx!==undefined){ $('#exportdlg').hidden=true; return; }
+  if(ds.exsize){ S.view.size=ds.exsize; save(); renderExport(); return; }
+  if(ds.expack){ S.view.pack=ds.expack; save(); renderExport(); return; }
+  if(ds.exall!==undefined){ const all=EXSEL.size===P.length; EXSEL=new Set(all?[]:P.map(q=>q.id)); renderExport(); return; }
+  if(ds.chkact){ await checkAction(ds.chkact,ds.key,ds.arg,t); return; }
   if(ds.preset){ S.colors={...S.colors,...PAL.presets[ds.preset]}; S.preset=ds.preset; save(); renderColours(); renderPreview(); return; }
   if(ds.pick){ openPicker(ds.pick,t); return; }
   if(ds.sectab){ SECTAB=ds.sectab; renderSettings(); return; }
@@ -1370,10 +1578,13 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeEditor(); $(
     if(k==='z' && !e.shiftKey){ e.preventDefault(); undo(); return; }
     if((k==='z' && e.shiftKey) || k==='y'){ e.preventDefault(); redo(); return; } }
   if(e.key==='Enter' && ['qatutor','qayear','qaletters'].includes(e.target.id)){ e.preventDefault(); if(e.target.id==='qaletters') quickAdd(); else (e.target.id==='qatutor'?$('#qayear'):$('#qaletters')).focus(); }
-  if((e.key==='Enter'||e.key===' ') && e.target.classList?.contains('pi')){ e.preventDefault(); e.target.click(); } });
+  if((e.key==='Enter'||e.key===' ') && (e.target.classList?.contains('pi')||e.target.classList?.contains('fh'))){ e.preventDefault(); e.target.click(); } });
 document.addEventListener('change',e=>{
   const t=e.target, ds=t.dataset, p=curP();
   if(ds.tog){ S.view[ds.tog]=t.checked; save(); renderPreview(); return; }
+  if(ds.exsel){ const ids=ds.exsel.split(',').map(Number); for(const id of ids) t.checked?EXSEL.add(id):EXSEL.delete(id); renderExport(); return; }
+  if(t.id==='cuw'||t.id==='cuh'){ S.view.custom={w:+$('#cuw').value||148,h:+$('#cuh').value||210}; save(); return; }
+  if(t.id==='plw'||t.id==='plh'){ S.planner={w:+$('#plw').value||0,h:+$('#plh').value||0}; save(); return; }
   if(t.id==='file'){ addFiles([...t.files]); t.value=''; return; }
   if(t.id==='imp'){ const f=t.files[0]; if(!f) return; f.text().then(s=>{ try{ S=merge(defaults(),JSON.parse(s)); save(); renderAll(); renderSettings(); toast('Settings loaded'); }catch(err){ toast('That file isn’t a settings file'); } }); return; }
   if(t.id==='pname' && p){ p.name=t.value.trim()||p.name; rerender(); return; }
