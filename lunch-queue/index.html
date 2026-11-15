@@ -80,6 +80,7 @@ body.dragging .tile.canjoin.over{box-shadow:0 0 0 3px #2E6E6E,0 0 0 7px rgba(46,
 .chip{border:1px solid;border-radius:8px;padding:5px 10px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:44px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .chip .cn{display:flex;align-items:center;gap:4px;font:600 13.5px Inter,sans-serif;white-space:nowrap}
 .chip .ct{display:flex;align-items:center;gap:3px;font:500 11.5px Inter,sans-serif;color:#4F5664;min-height:13px}
+.sporttag{align-self:stretch;display:flex;align-items:center;padding:0 9px;border-radius:8px;background:#333A47;color:#fff;font:600 12px Inter,sans-serif;letter-spacing:.2px}
 .alltag{align-self:stretch;border-radius:8px;width:24px;min-height:42px;display:flex;align-items:center;justify-content:center}
 .alltag span{writing-mode:vertical-rl;transform:rotate(180deg);font:700 10.5px Inter,sans-serif;letter-spacing:1.2px;text-transform:uppercase}
 .g-Boys .tlab,.g-Boys .alltag{background:#DDE8F7;color:#244677}
@@ -150,7 +151,7 @@ body.hide-mode .hidebar{display:flex}
 .seg button.on{font-weight:600}
 .seg button.on.v-Boys{background:#DDE8F7;color:#244677}
 .seg button.on.v-Girls{background:#F7E1EB;color:#84305B}
-.seg button.on.v-Other{background:#E7E8EB;color:#3D4452}
+.seg button.on.v-Other,.seg button.on.v-Mixed{background:#E7E8EB;color:#3D4452}
 .seg button.on.v-dark{background:#333A47;color:#fff}
 .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .fld{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#4F5664}
@@ -352,9 +353,10 @@ const PRESETS={
   'Lent 2':[{gender:'Boys',name:'Hockey',combined:true},{gender:'Girls',name:'Football',combined:true}],
   'Summer':[{gender:'Boys',name:'Cricket',combined:true},{gender:'Girls',name:'Cricket',combined:true}]
 };
+for(const k in PRESETS)PRESETS[k].push({gender:'Mixed',name:'Cross Country',combined:true});
 const clone=o=>JSON.parse(JSON.stringify(o));
 const DEF={term:'Michaelmas 1',sports:clone(PRESETS['Michaelmas 1']),extraSports:[],
-  doors:{y5:'art',y6:'chapel',y7:'art',y8:'chapel',g78:'art',b78:'chapel'},
+  doors:{y5:'art',y6:'chapel',y7:'art',y8:'chapel',g78:'art',b78:'chapel',m78:''},
   doorNames:{art:'Art Door',chapel:'Chapel Door'},
   times:{away:'12:50',lower:'13:10',home:'13:20'},
   maxPerDoor:9,showYear:false,useAll:true,showTimes:false,lateToHome:true,lowerSchool:true};
@@ -425,9 +427,7 @@ function annotate(e){
   s=s.replace(/\bteam\b/ig,'').replace(/\s+/g,' ').trim();
   const sp=matchSports(e.sport);
   e.sportKey=sp.length?sp[0].name.trim():(e.sport||'').trim();
-  if(!gender&&!e.forceOther){const gs=[...new Set(sp.map(x=>x.gender))];if(gs.length===1&&(gs[0]==='Boys'||gs[0]==='Girls'))gender=gs[0];}
-  if(e.forceOther)gender=null;
-  if(gender==='Mixed')gender=null;
+  if(!gender){const gs=[...new Set(sp.map(x=>x.gender))];if(gs.length===1&&['Boys','Girls','Mixed'].includes(gs[0]))gender=gs[0];}
   if(age==null)age=13;
   const combined=sp.length?sp.some(x=>x.combined):true;
   let yk;if(age<=9)yk='LS';else if(age===10)yk='5';else if(age===11)yk='6';else if(age===12)yk=combined?'78':'7';else yk=combined?'78':'8';
@@ -437,6 +437,8 @@ function annotate(e){
 }
 const gKey=e=>e.gender==='Boys'||e.gender==='Girls'?e.gender:'Other';
 const gk=e=>e.yearKey+'|'+(e.gender||'')+'|'+e.sportKey;
+function defaultSport(g){const x=S.settings.sports.find(s=>s.gender===g);return x?x.name.trim():'';}
+function offSport(e){if(!e.gender||!e.sportKey)return false;const d=defaultSport(e.gender);return !!d&&e.sportKey.toLowerCase()!==d.toLowerCase();}
 function dispName(e){return [e.gender,e.short].filter(Boolean).join(' ');}
 function isTravel(e){const h=(e.ha||'').trim().toUpperCase();if(h==='A'||h==='N')return true;if(h==='H')return false;return !/^home/i.test(e.venue||'');}
 function lateMoved(e){return S.settings.lateToHome&&isTravel(e)&&e.meet!=null&&e.meet>=LATE;}
@@ -444,7 +446,7 @@ function slotOf(e){return isTravel(e)&&!lateMoved(e)?'away':'home';}
 function tKey(e){const v=isTravel(e)?(e.meet!=null?e.meet:e.start):(e.start!=null?e.start:e.meet);return v==null?9999:v;}
 function prefDoor(e){const d=S.settings.doors;let v=null;
   switch(e.yearKey){case '5':v=d.y5;break;case '6':v=d.y6;break;case '7':v=d.y7;break;case '8':v=d.y8;break;
-    case '78':v=e.gender==='Girls'?d.g78:e.gender==='Boys'?d.b78:null;break;}
+    case '78':v=e.gender==='Girls'?d.g78:e.gender==='Boys'?d.b78:e.gender==='Mixed'?d.m78:null;break;}
   return (v==='art'||v==='chapel')?v:null;}
 function tokRank(e){const s=e.suffix||'';if(!s)return[-1,''];if(/^[A-Z]$/i.test(s))return[0,s.toUpperCase()];
   const m=s.match(/^(\d+)(st|nd|rd|th)\b/i);if(m)return[1,+m[1]];return[2,s.toLowerCase()];}
@@ -516,9 +518,10 @@ function autoArrange(day){
       if(!cands.length)break;
       cands.sort((a,b)=>a.nm-b.nm||b.whole-a.whole||b.t-a.t);const best=cands[0];
       best.u.forEach(e=>cellOf[e.id]=slot+'-'+light);cnt[heavy]-=best.u.length;cnt[light]+=best.u.length;
-      const names=best.u.map(e=>dispName(e));
-      balance.push({ids:best.u.map(e=>e.id),text:'<b>'+esc(names.join(', '))+'</b> moved to '+esc(doorName(light))+' at '+esc(slot==='away'?S.settings.times.away:S.settings.times.home)+' to balance the queues ('+esc(doorName(heavy))+' had '+H+' teams).'});
     }
+    const moved=es.filter(e=>{const p=prefDoor(e);return p&&cellOf[e.id]!==slot+'-'+p;});
+    for(const g of groupBy(moved,e=>gk(e)+'|'+cellOf[e.id])){const door=cellOf[g[0].id].split('-')[1];
+      balance.push({ids:g.map(e=>e.id),text:'<b>'+esc(g.map(e=>dispName(e)).join(', '))+'</b> moved to '+esc(doorName(door))+' at '+esc(slot==='away'?S.settings.times.away:S.settings.times.home)+' to balance the queues.'});}
   }
   day.layout={};day.tiles={};
   for(const c of CELLS){
@@ -568,6 +571,7 @@ function commit(fn,manual){hist.push(snap());if(hist.length>150)hist.shift();fut
 function undo(){if(!hist.length)return;fut.push(snap());restoreSnap(hist.pop());persist();closeFloating();render();toast('Undone');}
 function redo(){if(!fut.length)return;hist.push(snap());restoreSnap(fut.pop());persist();closeFloating();render();toast('Redone');}
 function persist(){try{localStorage.setItem(LS_KEY,JSON.stringify({days:S.days,settings:S.settings,csvName:S.csvName}));}catch(e){}}
+function migrateSettings(st){st.doors=Object.assign({},DEF.doors,st.doors||{});if(!st.sports.some(x=>x.gender==='Mixed')){const i=st.extraSports.findIndex(x=>x.gender==='Mixed');const m=i>=0?st.extraSports.splice(i,1)[0]:{gender:'Mixed',name:'Cross Country',combined:true};st.sports.push(m);}}
 function reannotateAll(){for(const d of Object.values(S.days))for(const e of d.entries)annotate(e);}
 function defaultDay(){const w=new Date().getDay();const p=(w>=4&&w<=6)?'sat':'wed';return S.days[p]?p:(S.days.wed?'wed':'sat');}
 function changeSettings(fn,arr){const cur=day();
@@ -619,7 +623,7 @@ function loadCSVText(text,name){let days;try{days=buildDays(text);}catch(err){to
 function readFile(file){const r=new FileReader();
   r.onload=()=>{const t=String(r.result);if(/\.json$/i.test(file.name)||/^\s*\{/.test(t))loadJSONText(t);else loadCSVText(t,file.name);};r.readAsText(file);}
 function loadJSONText(t){try{const o=JSON.parse(t);const st=o.state||o;if(!st.days)throw 0;
-  commit(()=>{S.days=st.days;S.settings=Object.assign(clone(DEF),st.settings||{});S.csvName=st.csvName||'';S.cur=defaultDay();});toast('Save file opened');}
+  commit(()=>{S.days=st.days;S.settings=Object.assign(clone(DEF),st.settings||{});migrateSettings(S.settings);reannotateAll();S.csvName=st.csvName||'';S.cur=defaultDay();});toast('Save file opened');}
   catch(e){toast("That doesn't look like a Matchday Queues save file.",4000);}}
 let dlNS=null;
 function initDownloads(n){try{if(window.claude&&typeof window.claude.use==='function'){window.claude.use('downloads').then(ns=>{dlNS=ns;}).catch(()=>{});return;}}catch(e){}
@@ -638,9 +642,9 @@ function tileInfo(day,tid,cell){
   const all=S.settings.useAll&&new Set(es.map(x=>x.raw)).size>=2&&same.every(x=>visible(x)&&day.tiles[tid].includes(x.id));
   const seen=new Set(),uniq=[];for(const x of es)if(!seen.has(x.raw)){seen.add(x.raw);uniq.push(x);}
   const chips=all?['All']:uniq.map(x=>{if(!ageL)return x.raw;if(!x.ageExplicit)return x.suffix||x.short;if('U'+x.age===ageL)return x.suffix||x.short;return x.short;});
-  const head=[S.settings.showYear?YL[e0.yearKey]:'',e0.gender||'',ageL].filter(Boolean).join(' ');
+  const head=[S.settings.showYear?YL[e0.yearKey]:'',e0.gender||'',ageL,offSport(e0)?e0.sportKey:''].filter(Boolean).join(' ');
   if(!head)return {es,e0,ageL,all,chips:[],head:chips.join(', '),t:Math.min(...es.map(tKey))};
-  return {es,e0,ageL,all,chips,head,t:Math.min(...es.map(tKey))};
+  return {es,e0,ageL,all,chips,head,sport:offSport(e0)?e0.sportKey:'',t:Math.min(...es.map(tKey))};
 }
 function sheetModel(d){const st=S.settings;
   const cellLines=c=>(d.layout[c]||[]).map(t=>{const i=tileInfo(d,t,c);return {head:i.head,chips:i.chips,time:st.showTimes?fmt(i.t):''};});
@@ -732,7 +736,7 @@ function cellHTML(d,c,flagIds){const st=S.settings;const L=d.layout[c]||[];const
     h+='<div class="gap" data-cell="'+c+'" data-idx="'+i+'"><div class="gapin"></div></div>';
     const info=tileInfo(d,t,c);const e0=info.e0;
     h+='<div class="tile g-'+gKey(e0)+'" data-tile="'+t+'" data-gk="'+esc(gk(e0))+'"><div class="tlab" data-tile-handle="'+t+'" title="Drag to move the whole tile"><span class="rot"><b>'+esc(e0.gender||'Other')+'</b><i>'+esc(info.ageL)+'</i></span></div><div class="chips">'+
-      (info.all?'<span class="alltag" title="Whole year group. Moving a team out removes this."><span>All</span></span>':'')+info.es.map(e=>chipHTML(d,e,flagIds)).join('')+'</div></div>';
+      (info.sport?'<span class="sporttag" title="Not this term\u2019s usual sport, so it shows on the sheet">'+esc(info.sport)+'</span>':'')+(info.all?'<span class="alltag" title="Whole year group. Moving a team out removes this."><span>All</span></span>':'')+info.es.map(e=>chipHTML(d,e,flagIds)).join('')+'</div></div>';
   });
   h+='<div class="gap last" data-cell="'+c+'" data-idx="'+L.length+'"><div class="gapin"></div></div>';
   return h;}
@@ -774,13 +778,15 @@ function renderMain(){
 function openEdit(id,anchor){const d=day();
   if(id){const e=entryById(d,id);if(!e)return;const trav=isTravel(e);
     let name=e.raw.replace(/^(boys|girls|mixed)\b[\s\-–]*/i,'');
-    ui.edit={id,gender:e.forceOther||!e.gender?'Other':e.gender,ha:trav?'A':'H',name,time:fmt(trav?(e.meet!=null?e.meet:e.start):(e.start!=null?e.start:e.meet)),opp:e.opp};}
-  else ui.edit={id:null,gender:'Boys',ha:'A',name:'',time:'',opp:''};
+    ui.edit={id,gender:e.gender||null,sport:e.sportKey||defaultSport(e.gender),ha:trav?'A':'H',name,time:fmt(trav?(e.meet!=null?e.meet:e.start):(e.start!=null?e.start:e.meet)),opp:e.opp};}
+  else ui.edit={id:null,gender:'Boys',sport:defaultSport('Boys'),ha:'A',name:'',time:'',opp:''};
   ui.editAnchor=anchor;renderEdit();}
 function renderEdit(){const p=$('#pop');const E=ui.edit;if(!E){p.hidden=true;return;}
   p.innerHTML='<div class="poph"><h3>'+(E.id?'Edit team':'Add team')+'</h3>'+(E.opp?'<span>v '+esc(E.opp)+'</span>':'')+'</div>'+
-  '<div class="seg" role="group" aria-label="Boys, girls or other">'+['Boys','Girls','Other'].map(g=>'<button type="button" data-eg="'+g+'" class="v-'+g+(E.gender===g?' on':'')+'" aria-pressed="'+(E.gender===g)+'">'+g+'</button>').join('')+'</div>'+
+  '<div class="seg" role="group" aria-label="Boys, girls or mixed">'+['Boys','Girls','Mixed'].map(g=>'<button type="button" data-eg="'+g+'" class="v-'+g+(E.gender===g?' on':'')+'" aria-pressed="'+(E.gender===g)+'">'+g+'</button>').join('')+'</div>'+
   '<div class="seg" role="group" aria-label="Away or home">'+[['A','Away'],['H','Home']].map(([k,n])=>'<button type="button" data-eh="'+k+'" class="v-dark'+(E.ha===k?' on':'')+'" aria-pressed="'+(E.ha===k)+'">'+n+'</button>').join('')+'</div>'+
+  '<label class="fld">Sport<input id="eSport" list="sportList" value="'+esc(E.sport||'')+'" placeholder="'+esc(defaultSport(E.gender)||'Sport')+'" autocomplete="off"></label>'+
+  '<datalist id="sportList">'+[...new Set(allSports().map(x=>x.name.trim()))].map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist>'+
   '<div style="display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:10px"><label class="fld">Team<input id="eName" value="'+esc(E.name)+'" placeholder="e.g. U10 E" autocomplete="off"></label>'+
   '<label class="fld">'+(E.ha==='A'?'Leaves':'Meets')+'<input id="eTime" class="tm" value="'+esc(E.time)+'" placeholder="13:15" autocomplete="off"></label></div>'+
   '<div class="popf">'+(E.id?'<button type="button" class="del" data-act="edelete">'+IC.bin+'Delete</button>':'')+'<span style="flex:1"></span><button type="button" class="b2" data-act="ecancel">Cancel</button><button type="submit" class="b1">Save</button></div>';
@@ -794,18 +800,19 @@ function saveEdit(){const E=ui.edit;const d=day();
   const name=($('#eName').value||'').trim().replace(/^(boys|girls|mixed)\b[\s\-–]*/i,'');const tm=($('#eTime').value||'').trim();
   if(!name){toast('Give the team a name, e.g. U10 E');return;}
   const t=toMin24(tm);if(tm&&t==null){toast('Use a time like 13:15');return;}
-  const raw=E.gender==='Other'?name:E.gender+'-'+name;
+  const sport=($('#eSport').value||'').trim()||defaultSport(E.gender);
+  const raw=E.gender?E.gender+'-'+name:name;
   commit(()=>{
-    if(!E.id){const sp=S.settings.sports.find(x=>x.gender===E.gender);const e=newEntry({raw,ha:E.ha,manual:true,forceOther:E.gender==='Other',sport:sp?sp.name:''});if(E.ha==='A')e.meet=t;else e.start=t;annotate(e);d.entries.push(e);placeEntry(d,e);}
+    if(!E.id){const e=newEntry({raw,ha:E.ha,manual:true,sport});if(E.ha==='A')e.meet=t;else e.start=t;annotate(e);d.entries.push(e);placeEntry(d,e);}
     else{const e=entryById(d,E.id);const oldK=gk(e),oldS=slotOf(e);
-      e.raw=raw;e.forceOther=E.gender==='Other';e.ha=E.ha;if(E.ha==='A')e.meet=t;else e.start=t;e.edited=true;annotate(e);
+      e.raw=raw;e.forceOther=false;e.sport=sport;e.ha=E.ha;if(E.ha==='A')e.meet=t;else e.start=t;e.edited=true;annotate(e);
       if(visible(e)&&(gk(e)!==oldK||slotOf(e)!==oldS)){removeFromTiles(d,[e.id]);placeEntry(d,e);}
       else{const tt=tileOfEntry(d,e.id);if(tt)sortTile(d,tt);}}
   },true);
   ui.edit=null;renderEdit();}
 $('#pop').addEventListener('submit',ev=>{ev.preventDefault();saveEdit();});
 $('#pop').addEventListener('click',ev=>{const E=ui.edit;if(!E)return;const b=ev.target.closest('button');if(!b)return;
-  if(b.dataset.eg||b.dataset.eh){E.name=$('#eName').value;E.time=$('#eTime').value;if(b.dataset.eg)E.gender=b.dataset.eg;if(b.dataset.eh)E.ha=b.dataset.eh;ev.stopPropagation();renderEdit();}});
+  if(b.dataset.eg||b.dataset.eh){E.name=$('#eName').value;E.time=$('#eTime').value;const sv=$('#eSport').value.trim();E.sport=sv;if(b.dataset.eg){if(!sv||sv.toLowerCase()===defaultSport(E.gender).toLowerCase())E.sport=defaultSport(b.dataset.eg);E.gender=b.dataset.eg;}if(b.dataset.eh)E.ha=b.dataset.eh;ev.stopPropagation();renderEdit();}});
 
 /* ============ menus ============ */
 function closeFloating(){ui.menu=null;$('#menuFile').hidden=true;$('#menuExport').hidden=true;$('#fileBtn').classList.remove('open');ui.edit=null;$('#pop').hidden=true;}
@@ -834,7 +841,7 @@ function renderSettings(){const st=S.settings;
   '<section class="sec"><h2>Sports</h2><div class="termrow"><label class="term">Term<select id="termSel">'+TERMS.map(t=>'<option'+(st.term===t?' selected':'')+'>'+t+'</option>').join('')+'<option'+(st.term==='Custom'?' selected':'')+'>Custom</option></select></label>'+
     '<div class="sports">'+st.sports.map((s,i)=>sprow(s,i,true)).join('')+st.extraSports.map((s,i)=>sprow(s,i,false)).join('')+
     '<button type="button" class="addsp" data-act="addsport"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add sport</button></div></div></section>'+
-  '<div class="cols"><section class="sec"><h2>Preferred doors</h2>'+dseg('y5','Year 5')+dseg('y6','Year 6')+dseg('y7','Year 7')+dseg('y8','Year 8')+dseg('g78','Y7 &amp; Y8 Girls')+dseg('b78','Y7 &amp; Y8 Boys')+'</section>'+
+  '<div class="cols"><section class="sec"><h2>Preferred doors</h2>'+dseg('y5','Year 5')+dseg('y6','Year 6')+dseg('y7','Year 7')+dseg('y8','Year 8')+dseg('g78','Y7 &amp; Y8 Girls')+dseg('b78','Y7 &amp; Y8 Boys')+dseg('m78','Y7 &amp; Y8 Mixed')+'</section>'+
     '<section class="sec"><h2>Queue</h2><div class="qbox"><div class="top"><label for="maxPer" style="font-weight:600">Max teams per door</label><b id="maxVal">'+st.maxPerDoor+'</b></div><input id="maxPer" type="range" min="3" max="20" value="'+st.maxPerDoor+'"></div>'+
     '<div class="three"><label class="fl">Away<input data-tm="away" value="'+esc(st.times.away)+'"></label><label class="fl">Lower School<input data-tm="lower" value="'+esc(st.times.lower)+'"></label><label class="fl">Home<input data-tm="home" value="'+esc(st.times.home)+'"></label></div>'+
     '<div class="two"><label class="fl">Door 1<span class="dn"><i style="background:#2E6E6E"></i><input data-dn="art" value="'+esc(st.doorNames.art)+'"></span></label><label class="fl">Door 2<span class="dn"><i style="background:#333A47"></i><input data-dn="chapel" value="'+esc(st.doorNames.chapel)+'"></span></label></div></section></div>'+
@@ -969,6 +976,7 @@ document.addEventListener('pointercancel',e=>endDrag(e,true));
 
 /* ============ boot ============ */
 try{const raw=localStorage.getItem(LS_KEY);if(raw){const o=JSON.parse(raw);if(o&&o.days){S.days=o.days;S.settings=Object.assign(clone(DEF),o.settings||{});S.csvName=o.csvName||'';}}}catch(e){}
+migrateSettings(S.settings);reannotateAll();
 S.cur=defaultDay();
 initDownloads(0);
 render();
