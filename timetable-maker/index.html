@@ -142,6 +142,10 @@ fieldset.ro:disabled .card{opacity:.85}
 .more summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--mute)}
 .more[open] summary{color:var(--ink)}
 .more .seg{background:var(--panel)}.more .seg button.on{background:var(--soft)}
+
+.cks{display:flex;flex-wrap:wrap;gap:6px 16px}
+.cks label{display:flex;align-items:center;gap:7px;font-size:14px;font-weight:500;cursor:pointer;min-height:32px}
+.cks input{width:18px;height:18px;accent-color:var(--acc);margin:0;cursor:pointer}
 </style></head><body>
 <header class="top">
  <div class="brand"><i><b></b><b></b><b></b></i>Timetable Maker</div>
@@ -157,7 +161,7 @@ fieldset.ro:disabled .card{opacity:.85}
 <main>
  <section id="tab-tt" class="tab on">
   <aside class="side">
-   <label class="drop" id="drop"><input type="file" id="file" accept=".xlsx" multiple hidden><b>Drop iSAMS exports here</b><span>or click to choose .xlsx files (several at once is fine)</span></label>
+   <label class="drop" id="drop"><input type="file" id="file" accept=".xlsx,.zip" multiple hidden><b>Drop iSAMS exports here</b><span>a .zip from iSAMS, or any number of .xlsx files</span></label>
    <div><p class="lbl" id="plabel">Pupils</p><div class="plist" id="plist"></div></div>
    <div class="opt">
     <div><p class="lbl">Page</p><div class="seg" data-opt="orient"><button data-v="land">Landscape</button><button data-v="port">Portrait</button></div></div>
@@ -170,8 +174,7 @@ fieldset.ro:disabled .card{opacity:.85}
       <div><p class="lbl">Timings on lesson blocks</p><div class="seg" data-opt="lt"><button data-v="all">All</button><button data-v="lunch">Lunch only</button><button data-v="none">None</button></div></div>
      </div></details>
     <label class="tg">Show rooms<input type="checkbox" data-tog="rooms"></label>
-    <label class="tg">Show registration (8:20)<input type="checkbox" data-tog="reg"></label>
-    <label class="tg">Show P0 (8:30)<input type="checkbox" data-tog="p0"></label>
+    <div><p class="lbl">Show</p><div class="cks"><label><input type="checkbox" data-tog="reg">Registration</label><label><input type="checkbox" data-tog="p0">P0</label><label><input type="checkbox" data-tog="prep">Prep</label></div></div>
    </div>
    <div class="acts">
     <button class="btn pri" id="dl1">Download this PDF</button>
@@ -626,7 +629,7 @@ function defaults(){
     return {days,lunch,prep,matches:m,games:g,p0:p0(p0o)}; };
   return {
     v:2,
-    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true},
+    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:30','17:00'),{Fri:'P17'},
               {Mon:['Assembly'],Thu:['House Meeting']}),
@@ -717,12 +720,15 @@ async function unzip(buf){
     const method=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true), el=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), off=dv.getUint32(p+42,true);
     files[new TextDecoder().decode(new Uint8Array(buf,p+46,nl))]={method,csize,off}; p+=46+nl+el+cl;
   }
-  return async name => { const f=files[name]; if(!f) return null;
+  const bytes = async name => { const f=files[name]; if(!f) return null;
     const ln=dv.getUint16(f.off+26,true), le=dv.getUint16(f.off+28,true);
     const data=new Uint8Array(buf,f.off+30+ln+le,f.csize);
-    if(f.method===0) return new TextDecoder().decode(data);
-    const out=await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
-    return new TextDecoder().decode(out); };
+    if(f.method===0) return data.slice().buffer;
+    if(f.method!==8) throw new Error('Unsupported compression in zip');
+    return await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer(); };
+  const read = async name => { const b=await bytes(name); return b===null?null:new TextDecoder().decode(b); };
+  read.bytes=bytes; read.names=Object.keys(files);
+  return read;
 }
 const tags = (n,name) => n ? [...n.getElementsByTagNameNS('*',name)] : [];
 const attr = (el,local) => { for(const a of el.attributes) if(a.localName===local) return a.value; return null; };
@@ -911,7 +917,7 @@ function blockItems(b,x,y,w,h,view,items,ref,tplPt){
   const r=0;
   if(b.kind==='gap'){ items.push({t:'r',x,y,w,h,r,f:GAP,ref:b.slots.length?ref:null}); return; }
   if(b.kind==='lunch'){
-    items.push({t:'r',x,y,w,h,r,f:'#FFFFFF',s:'#D5D9E0',sw:.3,ref});
+    items.push({t:'r',x:x+.15,y:y+.15,w:w-.3,h:h-.3,r,f:'#FFFFFF',s:'#D5D9E0',sw:.3,ref});
     const rng=`${fmt(b.a)}–${fmt(b.b)}`, cx=x+w/2;
     const lab = view.lt!=='none' && tw(rng,5.6,500)<=w-1.6 ? rng : fmt(b.a);
     let Lp=7.4; while(Lp>3.9 && tw('Lunch',Lp,500)>w-1.2) Lp*=.92;
@@ -976,7 +982,8 @@ function layoutPage(p,view,interactive){
   const byDay=days.map(d=>{ let bl=buildDay(p,d);
     if(!view.reg) bl=bl.filter(b=>b.kind!=='reg');
     if(view.p0===false){ bl=bl.filter(b=>!(b.a>=P0a && b.b<=P0b)).map(b=> b.a<P0b && b.b>P0b && b.a>=P0a ? {...b,a:P0b} : b); }
-    while(bl.length&&bl[0].kind==='gap') bl.shift(); return bl; });
+    if(view.prep===false) bl=bl.filter(b=>b.kind!=='prep');
+    while(bl.length&&bl[0].kind==='gap') bl.shift(); while(bl.length&&bl[bl.length-1].kind==='gap') bl.pop(); return bl; });
   const all=byDay.flat(); const START=all.length?Math.min(...all.map(b=>b.a)):T('8:30'), END=all.length?Math.max(...all.map(b=>b.b)):T('17:00');
   const port=view.orient==='port', PW=port?210:297, PH=port?297:210, M=9, items=[];
   items.push({t:'x',x:M,y:M+3.4,s:p.name,pt:15,w:800,c:'#1D2433',al:'left'});
@@ -1088,17 +1095,38 @@ function restore(st){ const o=JSON.parse(st); S=o.S; cur=o.cur; examples=o.examp
 function undo(){ clearTimeout(snap.t); const st=stateNow(); if(H.stack[H.i]!==st){ H.stack=H.stack.slice(0,H.i+1); H.stack.push(st); H.i++; } if(H.i>0){ H.i--; restore(H.stack[H.i]); toast('Undone'); } }
 function redo(){ if(H.i<H.stack.length-1){ H.i++; restore(H.stack[H.i]); toast('Redone'); } }
 function updUndo(){ const u=document.getElementById('undo'), r=document.getElementById('redo'); if(u) u.disabled=H.i<=0; if(r) r.disabled=H.i>=H.stack.length-1; }
+const baseName = n => n.split(/[\\/]/).pop();
+function fileMeta(file){ const m=/^([A-Z][A-Z' ]*(?:-[A-Z][A-Z' ]*)*)-([A-Z][^_]*?)_\((\d{1,2})\)/.exec(baseName(file).replace(/\.xlsx$/i,''));
+  if(!m) return null; const year=+m[3]; return {first:m[2].trim(),surname:m[1].trim(),year,section:year<=4?'LS':year<=6?'MS':'US'}; }
 async function addFiles(files){
-  const ok=[], bad=[];
+  const jobs=[], bad=[];
   for(const f of files){
-    try{ const rows=await readXlsx(await f.arrayBuffer()); ok.push(makePupil(parseTimetable(rows,f.name))); }
-    catch(e){ bad.push(`${f.name}: ${e.message}`); } }
-  if(ok.length){ if(examples){ P=[]; examples=false; } P.push(...ok); P.sort((a,b)=>(!a.form)-(!b.form)||a.form.localeCompare(b.form)||a.name.localeCompare(b.name)); cur=ok[0].id; }
-  if(bad.length) toast(bad.length===1?bad[0]:`${bad.length} files couldn’t be read`);
-  else if(ok.length) toast(`Added ${ok.length} timetable${ok.length>1?'s':''}`);
+    if(/\.zip$/i.test(f.name)){
+      try{ const read=await unzip(await f.arrayBuffer());
+        const names=read.names.filter(n=>/\.xlsx$/i.test(n) && !/(^|\/)(__MACOSX|\.|~\$)/.test(n));
+        if(!names.length) bad.push(`${f.name}: no .xlsx timetables inside`);
+        for(const n of names) jobs.push({name:baseName(n),get:()=>read.bytes(n)}); }
+      catch(e){ bad.push(`${f.name}: ${e.message}`); } }
+    else if(/\.xlsx$/i.test(f.name)) jobs.push({name:f.name,get:()=>f.arrayBuffer()});
+    else bad.push(`${f.name}: not an .xlsx or .zip file`); }
+  if(jobs.length>3) toast(`Reading ${jobs.length} timetables…`);
+  const ok=[]; let dup=0;
+  for(const j of jobs){
+    try{ const p=makePupil(parseTimetable(await readXlsx(await j.get()),j.name),fileMeta(j.name));
+      const gj=JSON.stringify(p.grid); if(!examples && P.some(q=>q.name===p.name && JSON.stringify(q.grid)===gj)){ dup++; continue; }
+      ok.push(p); }
+    catch(e){ bad.push(`${j.name}: ${e.message}`); } }
+  if(ok.length){ if(examples){ P=[]; examples=false; } P.push(...ok); sortP(); cur=ok[0].id; }
+  const parts=[]; if(ok.length) parts.push(`Added ${ok.length} timetable${ok.length>1?'s':''}`); if(dup) parts.push(`${dup} already loaded`); if(bad.length) parts.push(bad.length===1?bad[0]:`${bad.length} couldn’t be read`);
+  if(parts.length) toast(parts.join(' · '));
   renderAll(); snap(0);
 }
-function makePupil({name,grid}){ const d=detect(grid), id=++uid; GRIDS.set(id,grid); return {id,name,grid,tutor:d.tutor,form:d.form,section:d.section,patches:{}}; }
+const sortP = () => P.sort((a,b)=>(!a.form)-(!b.form)||a.form.localeCompare(b.form,undefined,{numeric:true})||(a.sort||a.name).localeCompare(b.sort||b.name));
+function makePupil({name,grid},meta){ const d=detect(grid), id=++uid; GRIDS.set(id,grid);
+  const p={id,name,grid,tutor:d.tutor,form:d.form,section:d.section,patches:{}};
+  if(meta){ p.name=`${meta.first} ${meta.surname[0]}.`; p.sort=`${meta.surname} ${meta.first}`; p.year=meta.year;
+    if(!d.form || (parseInt(d.form,10)||meta.year)!==meta.year){ p.section=meta.section; if(d.form && parseInt(d.form,10)!==meta.year) p.form=''; } }
+  return p; }
 const curP = () => P.find(p=>p.id===cur);
 
 /* ========================== rendering: timetable tab ========================== */
@@ -1386,7 +1414,7 @@ document.addEventListener('input',()=>snap(700));
 const drop=$('#drop');
 ['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{ e.preventDefault(); if(ev==='drop'||!e.relatedTarget) drop.classList.remove('over'); }));
-document.addEventListener('drop',e=>{ const fs=[...(e.dataTransfer?.files||[])].filter(f=>/\.xlsx$/i.test(f.name)); if(fs.length) addFiles(fs); else if(e.dataTransfer?.files?.length) toast('Only .xlsx exports can be read'); });
+document.addEventListener('drop',e=>{ const fs=[...(e.dataTransfer?.files||[])]; if(fs.length) addFiles(fs); });
 
 function lockScreen(msg){ return new Promise(res=>{
   const ov=document.createElement('div'); ov.className='lock';
