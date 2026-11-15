@@ -168,6 +168,7 @@ fieldset.ro:disabled .card{opacity:.85}
 .chk{padding:14px 16px}.chk .chkh{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
 .chk.sev0{border-left:4px solid var(--warn)}.chk.sev1{border-left:4px solid #e0782f}.chk.sev2,.chk.sev3{border-left:4px solid var(--acc)}.chk.sev4,.chk.sev5{border-left:4px solid var(--line)}
 .whobox{margin-top:8px}
+.badge[hidden]{display:none}
 </style></head><body>
 <header class="top">
  <div class="brand"><i><b></b><b></b><b></b></i>Timetable Maker</div>
@@ -654,7 +655,7 @@ function defaults(){
     return {days,lunch,prep,matches:m,games:g,p0:p0(p0o)}; };
   return {
     v:3,
-    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one'},
+    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:''},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:30','17:00'),{Fri:'P17'},
               {Mon:['Assembly'],Thu:['House Meeting']}),
@@ -733,7 +734,7 @@ function ensureSubject(n){
   save();
 }
 const subj = n => S.subjects[n] || {short:n,key:n,bare:false};
-const colour = k => S.colors[k] || '#CFD6E0';
+const colour = k => (!canEdit() && S.view.colors && S.view.colors[k]) || S.colors[k] || '#CFD6E0';
 const initials = t => S.staff[t] || S.staff[String(t).trim()] || t;
 
 /* ========================== xlsx reading ========================== */
@@ -1409,15 +1410,16 @@ function groupsOfKeys(){ const g={}; for(const [n,s] of Object.entries(S.subject
   const order=Object.keys(PAL.presets.Refined); return Object.keys({...Object.fromEntries(order.map(k=>[k,1])),...g}).filter(k=>g[k]).map(k=>[k,g[k]]); }
 function renderColours(){
   const p=curP();
-  $('#colwrap').innerHTML=`<h2>Subject colours</h2>${roNote()}<fieldset class="ro" ${canEdit()?'':'disabled'}>
-   <div class="card"><h3>Start from a scheme</h3><p>Pick a matched set, then change any subject below. Your choices are kept in this browser.</p>
-     <div class="chips">${Object.keys(PAL.presets).map(k=>`<button class="chip${S.preset===k?' on':''}" data-preset="${k}">${k==='Refined'?'Refined (recommended)':k}</button>`).join('')}</div></div>
+  const ed=canEdit(), mine=!ed && S.view.colors && Object.keys(S.view.colors).length, curPre=ed?S.preset:(mine?S.view.preset:'school');
+  $('#colwrap').innerHTML=`<h2>Subject colours</h2>${ed?(CLOUD_ON?'<div class="note">Changes here are saved for all staff.</div>':''):`<div class="note">Colour changes here are just for you, on this device. Short names are set for the whole school by the admin.${mine?' <button data-mycolreset>Go back to the school colours</button>':''}</div>`}
+   <div class="card"><h3>Start from a scheme</h3><p>Pick a matched set, then change any subject below.</p>
+     <div class="chips">${!ed?`<button class="chip${curPre==='school'?' on':''}" data-mycolreset>School colours</button>`:''}${Object.keys(PAL.presets).map(k=>`<button class="chip${curPre===k?' on':''}" data-preset="${k}">${k==='Refined'?'Refined (recommended)':k}</button>`).join('')}</div></div>
    ${p?`<div class="card prevbox" style="max-width:100%"><h3>Preview</h3><p>${esc(p.name)}</p><div class="paper ${S.view.orient==='port'?'port':'land'}" style="max-width:${S.view.orient==='port'?'420px':'760px'}">${toSVG(layoutPage(p,S.view,false))}</div></div>`:''}
    <div class="card"><h3>Subjects</h3><p>Subjects that share a swatch always share a colour. Short names are used when a block is too small for the full name.</p>
    <div class="cgrid">${groupsOfKeys().map(([k,names])=>{ const c=colour(k);
      return `<div class="cc"><button class="sw" data-pick="${esc(k)}" style="background:${c};color:${inkOn(c)}" aria-label="Change colour for ${esc(names.join(', '))}">Aa</button><div class="sub">
-       ${names.map(n=>{ const s=S.subjects[n]; return `<div class="srow"><b>${esc(n)}</b><input type="text" class="in sm" data-short="${esc(n)}" value="${esc(s.short)}" aria-label="Short name for ${esc(n)}" title="Short name"></div><label class="srow ck"><input type="checkbox" data-bare="${esc(n)}"${s.bare?' checked':''}>Hide teacher and room</label>`; }).join('')}
-     </div></div>`; }).join('')}</div></div></fieldset>`;
+       ${names.map(n=>{ const s=S.subjects[n]; return `<div class="srow"><b>${esc(n)}</b><input type="text" class="in sm" data-short="${esc(n)}" value="${esc(s.short)}" aria-label="Short name for ${esc(n)}" title="Short name" ${ed?'':'disabled'}></div><label class="srow ck"><input type="checkbox" data-bare="${esc(n)}"${s.bare?' checked':''} ${ed?'':'disabled'}>Hide teacher and room</label>`; }).join('')}
+     </div></div>`; }).join('')}</div></div>`;
 }
 const roNote = () => canEdit() ? (CLOUD_ON?'<div class="note">Changes here are saved for all staff.</div>':'') : '<div class="note">These are set for the whole school, so only the admin can change them.</div>';
 function openPicker(key,anchor){
@@ -1428,7 +1430,9 @@ function openPicker(key,anchor){
   pk.style.left=Math.max(12,Math.min(innerWidth-pk.offsetWidth-12,r.left))+'px';
   const below=r.bottom+8+pk.offsetHeight<innerHeight; pk.style.top=(below?r.bottom+8:Math.max(12,r.top-pk.offsetHeight-8))+'px';
 }
-function setColour(key,c){ if(!/^#[0-9a-f]{6}$/i.test(c)) return; S.colors[key]=c.toUpperCase(); S.preset=''; save();
+function setColour(key,c){ if(!/^#[0-9a-f]{6}$/i.test(c)) return;
+  if(canEdit()){ S.colors[key]=c.toUpperCase(); S.preset=''; } else { S.view.colors={...(S.view.colors||{}),[key]:c.toUpperCase()}; S.view.preset=''; }
+  save();
   document.querySelectorAll(`[data-pick="${CSS.escape(key)}"]`).forEach(b=>{b.style.background=c;b.style.color=inkOn(c);});
   clearTimeout(setColour.t); setColour.t=setTimeout(()=>{ renderPreview(); const pv=document.querySelector('#colwrap .paper'); const p=curP(); if(pv&&p) pv.innerHTML=toSVG(layoutPage(p,S.view,false)); },120); }
 
@@ -1552,7 +1556,8 @@ document.addEventListener('click',async e=>{
   if(ds.expack){ S.view.pack=ds.expack; save(); renderExport(); return; }
   if(ds.exall!==undefined){ const all=EXSEL.size===P.length; EXSEL=new Set(all?[]:P.map(q=>q.id)); renderExport(); return; }
   if(ds.chkact){ await checkAction(ds.chkact,ds.key,ds.arg,t); return; }
-  if(ds.preset){ S.colors={...S.colors,...PAL.presets[ds.preset]}; S.preset=ds.preset; save(); renderColours(); renderPreview(); return; }
+  if(ds.preset){ if(canEdit()){ S.colors={...S.colors,...PAL.presets[ds.preset]}; S.preset=ds.preset; } else { S.view.colors={...PAL.presets[ds.preset]}; S.view.preset=ds.preset; } save(); renderColours(); renderPreview(); return; }
+  if(ds.mycolreset!==undefined){ S.view.colors={}; S.view.preset=''; save(); renderColours(); renderPreview(); toast('Back to the school colours'); return; }
   if(ds.pick){ openPicker(ds.pick,t); return; }
   if(ds.sectab){ SECTAB=ds.sectab; renderSettings(); return; }
   if(t.id==='undo'){ undo(); return; }
