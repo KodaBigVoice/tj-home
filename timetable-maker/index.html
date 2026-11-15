@@ -137,6 +137,11 @@ fieldset.ro:disabled .card{opacity:.85}
 
 .ur{display:flex;gap:4px}
 .lnk{border:0;background:none;color:var(--acc);font-weight:700;font-size:12px;padding:0 0 0 6px;cursor:pointer}
+
+.more{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--soft)}
+.more summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--mute)}
+.more[open] summary{color:var(--ink)}
+.more .seg{background:var(--panel)}.more .seg button.on{background:var(--soft)}
 </style></head><body>
 <header class="top">
  <div class="brand"><i><b></b><b></b><b></b></i>Timetable Maker</div>
@@ -157,10 +162,16 @@ fieldset.ro:disabled .card{opacity:.85}
    <div class="opt">
     <div><p class="lbl">Page</p><div class="seg" data-opt="orient"><button data-v="land">Landscape</button><button data-v="port">Portrait</button></div></div>
     <div><p class="lbl">Teachers</p><div class="seg" data-opt="names"><button data-v="full">Full names</button><button data-v="init">Initials</button><button data-v="none">None</button></div></div>
-    <label class="tg">Period times<input type="checkbox" data-tog="ptimes"></label>
-    <label class="tg">Times on lessons<input type="checkbox" data-tog="ltimes"></label>
+    <div><p class="lbl">Show times <span class="mini" id="modecustom" hidden>· custom</span></p><div class="seg" data-mode><button data-v="top">Along the top</button><button data-v="blocks">On each lesson</button></div></div>
+    <details id="moreopts" class="more"><summary>More options</summary>
+     <div class="opt" style="margin-top:10px">
+      <div><p class="lbl">Periods along the top</p><div class="seg" data-opt="periods"><button data-v="both">Both</button><button data-v="labels">Periods only</button><button data-v="none">None</button></div></div>
+      <label class="tg" id="btimesrow">Times for breaks and lunch<input type="checkbox" data-tog="btimes"></label>
+      <div><p class="lbl">Timings on lesson blocks</p><div class="seg" data-opt="lt"><button data-v="all">All</button><button data-v="lunch">Lunch only</button><button data-v="none">None</button></div></div>
+     </div></details>
     <label class="tg">Show rooms<input type="checkbox" data-tog="rooms"></label>
     <label class="tg">Show registration (8:20)<input type="checkbox" data-tog="reg"></label>
+    <label class="tg">Show P0 (8:30)<input type="checkbox" data-tog="p0"></label>
    </div>
    <div class="acts">
     <button class="btn pri" id="dl1">Download this PDF</button>
@@ -615,7 +626,7 @@ function defaults(){
     return {days,lunch,prep,matches:m,games:g,p0:p0(p0o)}; };
   return {
     v:2,
-    view:{ptimes:true,ltimes:false,orient:'land',names:'full',rooms:true,reg:true},
+    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:30','17:00'),{Fri:'P17'},
               {Mon:['Assembly'],Thu:['House Meeting']}),
@@ -640,9 +651,10 @@ try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(
 function migrate(){ if((S.v||1)>=2) return false;
   const t=S.sections?.US?.p0?.Tue; if(t && (!t.label || t.label==='Prep')) t.label='Assembly';
   for(const n of ['Assembly','Chapel','House Meeting']) if(S.subjects[n]) S.subjects[n].event=true;
-  if(S.view.style==='times') S.view.ltimes=true; delete S.view.style;
+  if(S.view.style==='times') S.view.lt='all'; delete S.view.style;
   S.v=2; return true; }
 const MIGRATED=migrate();
+{ const v=S.view; if('ptimes' in v){ v.periods=v.ptimes?'both':'labels'; delete v.ptimes; } if('ltimes' in v){ v.lt=v.ltimes?'all':'none'; delete v.ltimes; } }
 const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
 const CLOUD_ON = /^https:/.test(CLOUD.url) && CLOUD.key.length>20;
 const SHARED = ['v','sections','forms','staff','subjects','aliases','colors','preset'];
@@ -874,12 +886,12 @@ function fitBlock(b,w,h,view){
   const {full,short,tch,tchI,room}=contentFor(b,view);
   const padX=1.1,padY=.55,timeH=2.45, avW=w-2*padX;
   let time='';
-  if(view.ltimes && b.kind!=='reg' && h>=9){ const r=`${fmt(b.a)}–${fmt(b.b)}`; time = tw(r,5.6,500)<=avW ? r : tw(fmt(b.a),5.6,500)<=avW ? fmt(b.a) : ''; }
+  if(view.lt==='all' && b.kind!=='reg' && h>=9){ const r=`${fmt(b.a)}–${fmt(b.b)}`; time = tw(r,5.6,500)<=avW ? r : tw(fmt(b.a),5.6,500)<=avW ? fmt(b.a) : ''; }
   const dets = (t,joined) => { if(!t) return room?[[room]]:[[]]; if(!room) return [[t]]; return joined?[[`${t} · ${room}`],[t,room]]:[[t,room]]; };
   const raw=[];
   for(const nm of [full,short]){
     for(const d of dets(tch,view.names==='init')) raw.push([nm,d,1]);
-    if(tchI) for(const d of dets(tchI,true)) raw.push([nm,d,1]);
+    if(tchI) for(const d of dets(tchI,view.names==='init')) raw.push([nm,d,1]);
     raw.push([nm,room?[room]:[],1]);
   }
   raw.push([full,[],1],[short,[],1],[short,room?[room]:[],0],[short,[],0]);
@@ -901,7 +913,7 @@ function blockItems(b,x,y,w,h,view,items,ref,tplPt){
   if(b.kind==='lunch'){
     items.push({t:'r',x,y,w,h,r,f:'#FFFFFF',s:'#D5D9E0',sw:.3,ref});
     const rng=`${fmt(b.a)}–${fmt(b.b)}`, cx=x+w/2;
-    const lab = view.ltimes && tw(rng,5.6,500)<=w-1.6 ? rng : fmt(b.a);
+    const lab = view.lt!=='none' && tw(rng,5.6,500)<=w-1.6 ? rng : fmt(b.a);
     let Lp=7.4; while(Lp>3.9 && tw('Lunch',Lp,500)>w-1.2) Lp*=.92;
     if(tw('Lunch',Lp,500)>w-1.2) return;
     const two = h>=Lp*MM*1.1+5.6*MM*1.2+1.6 && tw(lab,5.6,500)<=w-1.6;
@@ -945,11 +957,12 @@ function gridAxis(byDay,START,END,p0,len,prepW){
     else if(bell&&cover(bell.a,bell.b,['lesson','tpl','match'])){ type='period'; id=bell.id; }
     else if(cover(a,b,['lunch'])) type='lunch';
     else type='gap';
+    const empty=!byDay.some(bl=>bl.some(x=>x.a<b&&x.b>a)); if(empty){ type='empty'; id=''; }
     const g=groups[groups.length-1];
     if(g && g.type===type && g.id===id) { g.b=b; g.cuts.push(b); }
-    else groups.push({type,id,a,b,cuts:[a,b]}); }
+    else groups.push({type,id,a,b,cuts:[a,b],empty}); }
   for(const g of groups){ const mins=g.b-g.a;
-    g.w = g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='lunch'?.65 : g.type==='gap'?(mins<=10?1:.65) : 1;
+    g.w = g.empty ? 0 : g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='lunch'||g.type==='gap' ? .65 : 1;
     g.label = g.type==='period'?BELL[g.id].label : g.type==='reg'?'Reg' : g.type==='prep'?'Prep' : ''; }
   const tot=groups.reduce((s,g)=>s+g.w,0); const map=new Map(); let pos=p0;
   for(const g of groups){ const W=g.w/tot*len, span=g.b-g.a; for(const c of g.cuts) map.set(c,pos+(c-g.a)/span*W); pos+=W; }
@@ -959,34 +972,40 @@ let RENDER={blocks:{}};
 function layoutPage(p,view,interactive){
   const sec=S.sections[p.section];
   const days=sec.days.filter(d=>p.grid[d]);
-  const byDay=days.map(d=>{ let bl=buildDay(p,d); if(!view.reg) bl=bl.filter(b=>b.kind!=='reg'); while(bl.length&&bl[0].kind==='gap') bl.shift(); return bl; });
+  const P0a=BELL.P0.a, P0b=BELL.P0.b;
+  const byDay=days.map(d=>{ let bl=buildDay(p,d);
+    if(!view.reg) bl=bl.filter(b=>b.kind!=='reg');
+    if(view.p0===false){ bl=bl.filter(b=>!(b.a>=P0a && b.b<=P0b)).map(b=> b.a<P0b && b.b>P0b && b.a>=P0a ? {...b,a:P0b} : b); }
+    while(bl.length&&bl[0].kind==='gap') bl.shift(); return bl; });
   const all=byDay.flat(); const START=all.length?Math.min(...all.map(b=>b.a)):T('8:30'), END=all.length?Math.max(...all.map(b=>b.b)):T('17:00');
   const port=view.orient==='port', PW=port?210:297, PH=port?297:210, M=9, items=[];
   items.push({t:'x',x:M,y:M+3.4,s:p.name,pt:15,w:800,c:'#1D2433',al:'left'});
   if(p.form) items.push({t:'x',x:M+tw(p.name,15,800)+tw(' ',15,500)*1.5,y:M+3.4,s:p.form,pt:15,w:500,c:'#8A91A1',al:'left'});
   const top=M+10, blocks={}, place=[], prepW=p.section==='LS'?1:2;
   if(!port){
-    const labW=23, x0=M+labW, len=PW-M-x0, hh=4.6, headH=view.ptimes?14.5:hh+1.2, rowH=view.ltimes?17:15.5, gap=1.6;
+    const per=view.periods||'both', labW=23, x0=M+labW, len=PW-M-x0, hh=4.6, headH=per==='both'?14.5:per==='labels'?hh+1.2:0, rowH=view.lt==='all'?17:15.5, gap=1.6;
     const ax=gridAxis(byDay,START,END,x0,len,prepW);
-    for(const g of ax.groups){ const gx=ax.pos(g.a)+.22, gw=ax.pos(g.b)-ax.pos(g.a)-.44;
+    if(per!=='none') for(const g of ax.groups){ if(g.empty) continue; const gx=ax.pos(g.a)+.22, gw=ax.pos(g.b)-ax.pos(g.a)-.44;
       items.push({t:'r',x:gx,y:top,w:gw,h:hh,r:0,f:g.label?'#1D2433':'#9AA1B0'});
       if(g.label){ const pt=fitText(g.label,gw-.6,6.6,4.5,700); if(pt) items.push({t:'x',x:gx+gw/2,y:top+hh/2,s:g.label,pt,w:700,c:'#FFFFFF',al:'center'}); }
-      if(view.ptimes) [[fmt(g.a),'#4A5263'],[fmt(g.b),'#8A91A1']].forEach(([s,c],k)=>{ const yy=top+(k+1)*(hh+.3);
+      const brk=g.type==='gap'||g.type==='lunch';
+      if(per==='both') [[fmt(g.a),'#4A5263'],[fmt(g.b),'#8A91A1']].forEach(([s,c],k)=>{ const yy=top+(k+1)*(hh+.3);
         items.push({t:'r',x:gx,y:yy,w:gw,h:hh,r:0,f:'#F3F4F7'});
+        if(brk && view.btimes===false) return;
         const pt=fitText(s,gw-.5,6.2,4.4,500); if(pt) items.push({t:'x',x:gx+gw/2,y:yy+hh/2,s,pt,w:500,c,al:'center'}); }); }
-    if(view.ptimes){ items.push({t:'x',x:M,y:top+hh+.3+hh/2,s:'Start',pt:6.6,w:700,c:'#4A5263',al:'left'});
+    if(per==='both'){ items.push({t:'x',x:M,y:top+hh+.3+hh/2,s:'Start',pt:6.6,w:700,c:'#4A5263',al:'left'});
       items.push({t:'x',x:M,y:top+2*(hh+.3)+hh/2,s:'End',pt:6.6,w:700,c:'#4A5263',al:'left'}); }
     byDay.forEach((bl,i)=>{ const y=top+headH+i*(rowH+gap);
       items.push({t:'x',x:M,y:y+rowH/2,s:DAYNAME[days[i]],pt:9.5,w:700,c:'#1D2433',al:'left'});
       bl.forEach((b,j)=>{ const x1=ax.pos(b.a), x2=ax.pos(b.b), ref=days[i]+'#'+j; blocks[ref]=b;
         place.push({b,x:x1+.22,y,w:x2-x1-.44,h:rowH,ref}); }); });
   } else {
-    const labW=view.ptimes?18:11, headH=7, gap=1.4, x0=M+labW, n=days.length, colW=(PW-M-x0-gap*(n-1))/n;
+    const per=view.periods||'both', labW=per==='both'?18:per==='labels'?11:0, headH=7, gap=1.4, x0=M+labW, n=days.length, colW=(PW-M-x0-gap*(n-1))/n;
     const y0=top+headH, len=PH-M-y0;
     const ax=gridAxis(byDay,START,END,y0,len,prepW);
     days.forEach((d,i)=>items.push({t:'x',x:x0+i*(colW+gap)+colW/2,y:top+headH/2-.6,s:DAYNAME[d],pt:9.5,w:700,c:'#1D2433',al:'center'}));
-    for(const g of ax.groups){ if(!g.label) continue; const gy=ax.pos(g.a), gh=ax.pos(g.b)-gy, range=`${fmt(g.a)}–${fmt(g.b)}`;
-      if(view.ptimes && gh>=6.2){ items.push({t:'x',x:M,y:gy+gh/2-1.35,s:g.label,pt:7,w:700,c:'#1D2433',al:'left'});
+    if(per!=='none') for(const g of ax.groups){ if(!g.label||g.empty) continue; const gy=ax.pos(g.a), gh=ax.pos(g.b)-gy, range=`${fmt(g.a)}–${fmt(g.b)}`;
+      if(per==='both' && gh>=6.2){ items.push({t:'x',x:M,y:gy+gh/2-1.35,s:g.label,pt:7,w:700,c:'#1D2433',al:'left'});
         const pt=fitText(range,labW-1.2,6,4.6,500); if(pt) items.push({t:'x',x:M,y:gy+gh/2+1.45,s:range,pt,w:500,c:'#6B7385',al:'left'}); }
       else { const pt=fitText(g.label,labW-1.2,7,4.6,700); if(pt&&gh>=2.4) items.push({t:'x',x:M,y:gy+gh/2,s:g.label,pt,w:700,c:'#1D2433',al:'left'}); } }
     byDay.forEach((bl,i)=>{ const x=x0+i*(colW+gap);
@@ -1090,8 +1109,13 @@ function renderList(){
     : '<p class="hint">No timetables yet.</p>';
 }
 function flagsOf(p){ const sec=S.sections[p.section]; return sec.days.filter(d=>p.grid[d]).flatMap(d=>buildDay(p,d).filter(b=>b.flag)); }
+const MODES={top:{periods:'both',lt:'none'},blocks:{periods:'labels',lt:'all'}};
+const modeOf = v => Object.keys(MODES).find(k=>MODES[k].periods===v.periods&&MODES[k].lt===v.lt)||'';
 function renderOpts(){
   document.querySelectorAll('.seg[data-opt]').forEach(s=>s.querySelectorAll('button').forEach(b=>b.classList.toggle('on',S.view[s.dataset.opt]===b.dataset.v)));
+  const m=modeOf(S.view); document.querySelectorAll('.seg[data-mode] button').forEach(b=>b.classList.toggle('on',b.dataset.v===m));
+  $('#modecustom').hidden=!!m; if(!m) $('#moreopts').open=true;
+  $('#btimesrow').hidden=S.view.periods!=='both';
   document.querySelectorAll('[data-tog]').forEach(i=>i.checked=!!S.view[i.dataset.tog]);
   $('#dlall').textContent = P.length>1 ? `Download all ${P.length} as one PDF` : 'Download all as one PDF';
   $('#dl1').disabled=!curP(); $('#dlall').disabled=!P.length;
@@ -1268,6 +1292,7 @@ document.addEventListener('click',async e=>{
   const ds=t.dataset;
   if(ds.tab){ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===t)); document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+ds.tab));
     closeEditor(); if(ds.tab==='col') renderColours(); if(ds.tab==='set') renderSettings(); if(ds.tab==='tt') renderAll(); return; }
+  if(t.closest('.seg[data-mode]') && ds.v){ Object.assign(S.view,MODES[ds.v]); save(); closeEditor(); renderOpts(); renderPreview(); return; }
   if(t.closest('.seg[data-opt]') && ds.v){ S.view[t.closest('.seg').dataset.opt]=ds.v; save(); closeEditor(); renderOpts(); renderPreview(); return; }
   if(ds.del){ e.stopPropagation(); P=P.filter(p=>p.id!=ds.del); if(cur==ds.del) cur=P[0]?.id??null; if(!P.length) examples=false; closeEditor(); renderAll(); return; }
   if(ds.id && t.classList.contains('pi')){ cur=+ds.id; closeEditor(); renderList(); renderPreview(); return; }
