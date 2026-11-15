@@ -653,10 +653,11 @@ function defaults(){
   const wk5=['Mon','Tue','Wed','Thu','Fri'], wk6=[...wk5,'Sat'];
   const p0 = o => Object.fromEntries(DAYS.map(d=>{ const [label='',end='P0',force=false,who='none']=o[d]||[]; return [d,{label,end,force,who}]; }));
   const none = () => Object.fromEntries(DAYS.map(d=>[d,{on:false,start:'14:00',end:'P20',from:'P14',to:'P16'}]));
-  const sec = (days,lunch,prep,match,p0o)=>{ const m=none(), g=none(); for(const [d,e] of Object.entries(match)) Object.assign(m[d],{on:true,start:'14:00',end:e});
-    return {days,lunch,prep,matches:m,games:g,p0:p0(p0o)}; };
+  const sec = (days,lunch,prep,match,p0o,po={})=>{ const m=none(), g=none(); for(const [d,e] of Object.entries(match)) Object.assign(m[d],{on:true,start:'14:00',end:e});
+    return {days,lunch,prep,matches:m,games:g,p0:p0(p0o),prepOv:Object.fromEntries(DAYS.map(d=>{ const [label='',who='none']=po[d]||[]; return [d,{label,who}]; }))}; };
   return {
-    v:4,
+    v:5,
+    notTutors:[],
     view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:''},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:30','17:00'),{Fri:'P17'},
@@ -664,7 +665,7 @@ function defaults(){
       MS: sec(wk6,{Mon:L('13:10','14:00'),Tue:L('13:10','14:00'),Wed:L('12:50','14:00'),Thu:L('13:30','14:00'),Fri:L('13:10','14:00'),Sat:L('12:50','14:00')},L('16:30','17:10'),{Wed:'P20',Sat:'P20'},
               {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',true,'reg'],Wed:['Form Time','P0',false,'reg'],Thu:['House Meeting','P0',true],Fri:['Chapel','P0',true],Sat:['Assembly','P0',true]}),
       US: sec(wk6,{Mon:L('13:30','14:20'),Tue:L('13:30','14:20'),Wed:L('12:50','14:00'),Thu:L('13:10','14:00'),Fri:L('13:30','14:20'),Sat:L('12:50','14:00')},L('16:30','17:20'),{Wed:'P20',Sat:'P20'},
-              {Mon:['Assembly','P0',true],Tue:['Assembly','P0',true],Thu:['House Meeting','P0',true],Fri:['Prep','P0',false,'reg'],Sat:['Chapel','P1',true]})
+              {Mon:['Assembly','P0',true],Tue:['Prep','P0',true,'reg'],Thu:['House Meeting','P0',true],Fri:['Prep','P0',false,'reg'],Sat:['Chapel','P1',true]},{Tue:['Assembly']})
     },
     forms:[{form:'5TJ',tutor:'Mr Joshi',section:'MS'}],
     planner:{w:0,h:0},
@@ -680,11 +681,14 @@ function merge(base,over){ if(Array.isArray(base)||typeof base!=='object'||base=
   const o={...base}; if(over&&typeof over==='object') for(const k of Object.keys(over)) o[k]= k in base ? merge(base[k],over[k]) : over[k]; return o; }
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
-function migrate(){ if((S.v||1)>=4) return false;
+function migrate(){ if((S.v||1)>=5) return false;
+  if((S.v||1)>=4){ const D=defaults().sections; for(const k of Object.keys(D)){ S.sections[k].prepOv = {...D[k].prepOv, ...(S.sections[k].prepOv||{})}; }
+    const t=S.sections.US.p0.Tue; if(t.label==='Assembly'){ S.sections.US.p0.Tue={label:'Prep',end:'P0',force:true,who:'reg'}; } S.sections.US.prepOv.Tue={label:'Assembly',who:'none'};
+    S.notTutors ??= []; S.v=5; return true; }
   if((S.v||1)>=3){ const D=defaults().sections;
     for(const k of Object.keys(D)) for(const d of DAYS){ const def=D[k].p0[d], old=S.sections[k]?.p0?.[d]||{};
       S.sections[k].p0[d] = (!def.label && old.label) ? {label:old.label,end:old.end||'P0',force:false,who:S.subjects?.[old.label]?.event?'none':'reg'} : {...def}; }
-    S.v=4; return true; }
+    S.v=4; migrate(); return true; }
   if((S.v||1)>=2){ S.subjects.Spanish={...(S.subjects.Spanish||{}),short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets[S.preset||'Refined']?.Spanish||PAL.presets.Refined.Spanish; S.v=3; migrate(); return true; }
   const t=S.sections?.US?.p0?.Tue; if(t && (!t.label || t.label==='Prep')) t.label='Assembly';
   for(const n of ['Assembly','Chapel','House Meeting']) if(S.subjects[n]) S.subjects[n].event=true;
@@ -694,7 +698,7 @@ const MIGRATED=migrate();
 { const v=S.view; if('ptimes' in v){ v.periods=v.ptimes?'both':'labels'; delete v.ptimes; } if('ltimes' in v){ v.lt=v.ltimes?'all':'none'; delete v.ltimes; } }
 const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
 const CLOUD_ON = /^https:/.test(CLOUD.url) && CLOUD.key.length>20;
-const SHARED = ['v','sections','forms','staff','subjects','aliases','colors','preset','planner'];
+const SHARED = ['v','sections','forms','staff','subjects','aliases','colors','preset','planner','notTutors'];
 const PWKEY='tt-maker-pw';
 let ADMIN=!CLOUD_ON, PW=null, SYNC='';
 try{ PW=localStorage.getItem(PWKEY); }catch(e){}
@@ -823,7 +827,8 @@ function parseSheet(rows,R,hdr,file){
   if(!name) name=file.replace(/\.xlsx$/i,'');
   return {name,grid};
 }
-const tutorOf = grid => { for(const d of DAYS){ const e=grid[d]?.REG?.[0]; if(e&&e.teacher) return e.teacher; } return ''; };
+const regTeachers = grid => { const c=new Map(); for(const d of DAYS) for(const id of ['REG','P0']) for(const e of grid[d]?.[id]||[]) if(e.teacher && /^registration$/i.test(e.raw)) c.set(e.teacher,(c.get(e.teacher)||0)+1); return c; };
+const tutorOf = grid => { const not=new Set((S.notTutors||[]).map(x=>x.toLowerCase())); let best='',n=0; for(const [t,k] of regTeachers(grid)) if(!not.has(t.toLowerCase()) && k>n){ best=t; n=k; } return best; };
 function detect(grid){
   const tutor=tutorOf(grid), f=S.forms.find(f=>f.tutor && f.tutor.toLowerCase()===tutor.toLowerCase());
   if(f) return {tutor,form:f.form,section:f.section};
@@ -874,14 +879,17 @@ function buildDay(p,d){
   let regP0=null;
   for(const s of slots){
     let ents=g[s.id]||[];
-    if(s.id==='P0' && ents.every(e=>/^registration$/i.test(e.raw))){ regP0=ents[0]||null; ents=[]; }
+    if(s.id==='P0'){ const non=ents.filter(e=>!/^registration$/i.test(e.raw)); if(non.length<ents.length){ regP0=ents.find(e=>/^registration$/i.test(e.raw))||null; ents=non; } }
     s.patch=pt[d+'|'+s.id]||{};
     s.cell=resolveCell(ents, W?W.some(([a,b])=>s.a>=a&&s.b<=b):null, s.patch.choice);
     if(s.kind==='reg' && s.cell){ s.cell={...s.cell,subj:'Reg',names:['Reg'],keys:[subj('Reg').key]}; }
   }
+  const regInfo=()=>{ const rp=pt[d+'|REG']; if(rp&&rp.subj!=null) return {teacher:rp.teacher||'',room:rp.room||''}; return (g.REG||[])[0]||regP0; };
+  const po=sec.prepOv&&sec.prepOv[d];
+  if(po && po.label){ const ps=slots[slots.length-1], r=po.who==='reg'?regInfo():null; const c=cellFor(po.label,r?r.teacher:'',r?r.room:''); c.evt=true; ps.cell=c; }
   const tp=sec.p0[d];
   if(tp && tp.label && (tp.force || !slots[1].cell)){
-    const end=BELL[tp.end||'P0'].b, reg=(g.REG||[])[0]||regP0, useReg=(tp.who||'none')==='reg' && reg;
+    const end=BELL[tp.end||'P0'].b, reg=regInfo(), useReg=(tp.who||'none')==='reg' && reg;
     const c=cellFor(tp.label, useReg?reg.teacher:'', useReg?reg.room:'');
     for(const s of slots.slice(1)){ if(s.b>end) break; if(s.cell && !tp.force && s!==slots[1]) break; s.cell=c; s.kind='tpl'; } }
   for(const s of slots){ const pa=s.patch;
@@ -918,7 +926,7 @@ function contentFor(b,view){
   const room = view.rooms ? (b.rooms||[]).join(' / ') : '';
   return {full,short,tch,tchI,room};
 }
-const isEvent = b => b.kind==='tpl' && !!subj(b.subj).event;
+const isEvent = b => (b.kind==='tpl'||b.evt) && !!subj(b.subj).event;
 function wrapWords(label,maxW,pt){ const words=String(label).split(/\s+/).filter(Boolean), lines=[]; let cur='';
   for(const w of words){ if(tw(w,pt,700)>maxW) return null; const t=cur?cur+' '+w:w; if(tw(t,pt,700)<=maxW) cur=t; else { lines.push(cur); cur=w; } }
   if(cur) lines.push(cur); return lines; }
@@ -1152,7 +1160,7 @@ function undo(){ clearTimeout(snap.t); const st=stateNow(); if(H.stack[H.i]!==st
 function redo(){ if(H.i<H.stack.length-1){ H.i++; restore(H.stack[H.i]); toast('Redone'); } }
 function updUndo(){ const u=document.getElementById('undo'), r=document.getElementById('redo'); if(u) u.disabled=H.i<=0; if(r) r.disabled=H.i>=H.stack.length-1; }
 const baseName = n => n.split(/[\\/]/).pop();
-function fileMeta(file){ const m=/^([A-Z][A-Z' ]*(?:-[A-Z][A-Z' ]*)*)-([A-Z][^_]*?)_\((\d{1,2})\)/.exec(baseName(file).replace(/\.xlsx$/i,''));
+function fileMeta(file){ const m=/^([A-Z][A-Z' ]*(?:-[A-Z][A-Z' ]*)*)-([A-Z][^_]*?)_\(?(\d{1,2})\)?$/.exec(baseName(file).replace(/\.xlsx$/i,''));
   if(!m) return null; const year=+m[3]; return {first:m[2].trim(),surname:m[1].trim(),year,section:year<=4?'LS':year<=6?'MS':'US'}; }
 async function addFiles(files){
   const jobs=[], bad=[];
@@ -1223,7 +1231,7 @@ const origSig = (q,d,id) => JSON.stringify((q.grid[d]?.[id]||[]).map(x=>[canon(x
 function matchesFor(p,day,slots){ const sig=slots.map(id=>origSig(p,day,id));
   return P.filter(q=>q.section===p.section && q.grid[day] && slots.every((id,i)=>origSig(q,day,id)===sig[i])); }
 function flagsOf(p){ const sec=S.sections[p.section]; return sec.days.filter(d=>p.grid[d]).flatMap(d=>buildDay(p,d).filter(b=>b.flag)); }
-const MODES={top:{periods:'both',lt:'none'},blocks:{periods:'labels',lt:'all'}};
+const MODES={top:{periods:'both',lt:'none'},blocks:{periods:'none',lt:'all'}};
 const modeOf = v => Object.keys(MODES).find(k=>MODES[k].periods===v.periods&&MODES[k].lt===v.lt)||'';
 function renderOpts(){
   document.querySelectorAll('.seg[data-opt]').forEach(s=>s.querySelectorAll('button').forEach(b=>b.classList.toggle('on',S.view[s.dataset.opt]===b.dataset.v)));
@@ -1360,7 +1368,9 @@ function computeIssues(){
         if(b.flag) add(`clash|${p.section}|${d}|${b.slots.join(',')}|${[...b.options].sort().join('/')}`,{sev:0,type:'clash',title:`${DAYNAME[d]} ${fmt(b.a)}–${fmt(b.b)}: ${b.options.join(' and ')} both listed`,day:d,slots:b.slots,options:b.options},p.id);
         const nx=bl[i+1]; if(nx && b.kind==='lesson' && nx.kind==='lesson' && b.b===nx.a && b.subj===nx.subj && (b.teachers||[]).join()===(nx.teachers||[]).join() && (b.rooms||[]).join()!==(nx.rooms||[]).join())
           add(`room|${p.section}|${d}|${b.a}|${b.subj}`,{sev:5,type:'room',title:`${DAYNAME[d]} ${fmt(b.a)}: ${b.subj} changes room (${(b.rooms||[]).join('/')} → ${(nx.rooms||[]).join('/')})`},p.id); }); }
-    if(!p.form && p.tutor) add(`tutor|${p.tutor}`,{sev:2,type:'tutor',title:`${p.tutor} isn’t linked to a form`,tutor:p.tutor},p.id);
+    if(!p.form && p.tutor) add(`tutor|${p.tutor}`,{sev:2,type:'tutor',title:`${p.tutor} takes registration but isn’t linked to a form`,tutor:p.tutor},p.id);
+    for(const d of sec.days.filter(d=>p.grid[d])){ const es=(p.grid[d].REG||[]); const ts=[...new Set(es.map(e=>e.teacher).filter(Boolean))]; const rp=p.patches[d+'|REG'];
+      if(ts.length>1 && !(rp&&rp.subj!=null)) add(`regmulti|${p.section}|${d}|${[...ts].sort().join('/')}`,{sev:1,type:'regmulti',title:`${DAYNAME[d]} registration lists ${ts.join(' and ')} – who takes it?`,day:d,opts:ts.map(t=>({t,room:(es.find(e=>e.teacher===t)||{}).room||''}))},p.id); }
   }
   for(const f of GROUPS.forms){ if(f.section==='US' || f.pupils.length<3 || f.versions.length<2 || f.versions[0].ids.length<2) continue;
     for(const v of f.versions.slice(1)) if(v.ids.length===1){ const q=P.find(x=>x.id===v.ids[0]);
@@ -1384,7 +1394,9 @@ function renderChecks(){
       ${it.pupils.length?`<div class="chips" style="margin-top:8px">${formsOf(it.pupils)}</div>`:''}
       ${it.type==='clash'?`<details class="whobox"><summary class="mini">Choose pupils (${it.pupils.length})</summary><div class="who">${it.pupils.map(id=>{ const q=P.find(x=>x.id===id); return `<label><input type="checkbox" data-cw="${esc(it.key)}" value="${id}" checked> ${esc(q.name)} <span class="mini">${esc(formKey(q))}</span></label>`; }).join('')}</div></details>
         <div class="chips" style="margin-top:8px">${it.options.map(o=>`<button class="chip" data-chkact="choose" data-key="${esc(it.key)}" data-arg="${esc(o)}"><i style="background:${colour(subj(o).key)}"></i>${esc(o)}</button>`).join('')}<button class="chip" data-chkact="choose" data-key="${esc(it.key)}" data-arg="both">Show both</button><button class="chip" data-chkact="edit" data-key="${esc(it.key)}">Something else…</button></div>`:''}
-      ${it.type==='tutor'?`<div class="inl" style="margin-top:8px"><input class="in sm" data-ty="${esc(it.key)}" placeholder="Year" maxlength="1" style="width:64px" aria-label="Year"><input class="in sm" data-tl="${esc(it.key)}" placeholder="Letters" maxlength="3" style="width:80px;text-transform:uppercase" aria-label="Form letters"><button class="btn sm" data-chkact="tutor" data-key="${esc(it.key)}" data-arg="${esc(it.tutor)}">Link form</button></div>`:''}
+      ${it.type==='tutor'?`<div class="inl" style="margin-top:8px"><input class="in sm" data-ty="${esc(it.key)}" placeholder="Year" maxlength="1" style="width:64px" aria-label="Year"><input class="in sm" data-tl="${esc(it.key)}" placeholder="Letters" maxlength="3" style="width:80px;text-transform:uppercase" aria-label="Form letters"><button class="btn sm" data-chkact="tutor" data-key="${esc(it.key)}" data-arg="${esc(it.tutor)}">Link form</button><span class="mini">or</span><button class="btn sm" data-chkact="nottutor" data-key="${esc(it.key)}" data-arg="${esc(it.tutor)}">Not a form tutor</button></div>`:''}
+      ${it.type==='regmulti'?`<details class="whobox"><summary class="mini">Choose pupils (${it.pupils.length})</summary><div class="who">${it.pupils.map(id=>{ const q=P.find(x=>x.id===id); return `<label><input type="checkbox" data-cw="${esc(it.key)}" value="${id}" checked> ${esc(q.name)} <span class="mini">${esc(formKey(q))}</span></label>`; }).join('')}</div></details>
+        <div class="chips" style="margin-top:8px">${it.opts.map((o,i)=>`<button class="chip" data-chkact="regpick" data-key="${esc(it.key)}" data-arg="${i}">${esc(o.t)}${o.room?` <span class="mini">${esc(o.room)}</span>`:''}</button>`).join('')}</div>`:''}
       <div class="inl" style="margin-top:8px">
         ${it.type==='odd'?`<button class="btn sm" data-chkact="view" data-arg="${it.pupils[0]}">View timetable</button>`:''}
         ${it.type==='subj'?`<button class="btn sm" data-chkact="colours">Colours &amp; short names</button>`:''}
@@ -1407,6 +1419,9 @@ async function checkAction(act,key,arg){
     toast(`Updated ${ticked.length} pupil${ticked.length>1?'s':''}`); renderChecks(); renderList(); snap(0); return; }
   if(act==='edit'){ cur=ticked[0]||it.pupils[0]; document.querySelector('[data-tab="tt"]').click();
     setTimeout(()=>{ const b=Object.values(RENDER.blocks).find(b=>b.day===it.day&&b.slots.includes(it.slots[0])); if(b) openEditor(b); },60); return; }
+  if(act==='nottutor'){ S.notTutors=[...new Set([...(S.notTutors||[]),arg])]; save(); redetect(); renderChecks(); renderList(); snap(0); toast(`${arg} marked as not a form tutor`); return; }
+  if(act==='regpick'){ const o=it.opts[+arg]; for(const id of ticked){ const q=P.find(x=>x.id===id); q.patches[it.day+'|REG']={subj:'Reg',teacher:o.t,room:o.room}; }
+    toast(`Registration set to ${o.t}`); renderChecks(); renderList(); snap(0); return; }
   if(act==='tutor'){ const y=document.querySelector(`[data-ty="${CSS.escape(key)}"]`).value, l=document.querySelector(`[data-tl="${CSS.escape(key)}"]`).value;
     if(!upsertForm(arg,y,l)){ toast('Type a year (3–8) and the form letters'); return; } save(); redetect(); renderChecks(); renderList(); snap(0); toast('Form linked'); return; }
 }
@@ -1456,7 +1471,7 @@ function upsertForm(tutor,year,letters){
   else S.forms.push({form,tutor,section});
   return true;
 }
-function redetect(){ for(const q of P){ const d=detect(q.grid); if(d.form){ q.form=d.form; q.section=d.section; } } }
+function redetect(){ for(const q of P){ const d=detect(q.grid); q.tutor=d.tutor; if(d.form){ q.form=d.form; if(!q.year) q.section=d.section; } } }
 function staffNames(){ const s=new Set(Object.keys(S.staff)); for(const p of P) for(const d in p.grid) for(const id in p.grid[d]) for(const e of p.grid[d][id]) if(e.teacher) s.add(e.teacher); return [...s].sort((a,b)=>a.replace(/^\S+\s/,'').localeCompare(b.replace(/^\S+\s/,''))); }
 const TIMES=[]; for(let m=T('7:00');m<=T('19:00');m+=5) TIMES.push(fmt(m));
 const norm = v => v ? fmt(T(v)) : '';
@@ -1471,12 +1486,13 @@ function renderSettings(){
   <div class="card" id="sec-sections"><h3>School day by section</h3><p>Lunch, before-school (P0) slots, matches and games lessons. Breaks and the 16:20 sandwich break appear automatically as blank gaps.</p>
     <div class="seg" style="max-width:420px;margin-bottom:12px">${Object.keys(SECNAME).map(k=>`<button data-sectab="${k}" class="${k===SECTAB?'on':''}">${k}</button>`).join('')}</div>
     <fieldset class="ro" ${dis}><p class="mini" style="margin:0 0 8px">${SECNAME[SECTAB]} · evening prep ${timeIn(sec.prep[0],`data-prep="0"`)} to ${timeIn(sec.prep[1],`data-prep="1"`)}</p>
-    <div class="scroll"><table class="tbl stack"><thead><tr><th>Day</th><th>Lunch</th><th>P0 (8:30)</th><th>Matches</th><th>Games lessons (settles clashes)</th></tr></thead><tbody>
+    <div class="scroll"><table class="tbl stack"><thead><tr><th>Day</th><th>Lunch</th><th>P0 (8:30)</th><th>Evening prep slot</th><th>Matches</th><th>Games lessons (settles clashes)</th></tr></thead><tbody>
     ${sec.days.map(d=>{ const l=sec.lunch[d]||['',''], p0=sec.p0[d], m=sec.matches[d], g=sec.games[d];
       return `<tr><td data-l="Day"><b>${DAYNAME[d]}</b></td>
       <td data-l="Lunch"><div class="inl">${timeIn(l[0],`data-lunch="${d}|0"`)}–${timeIn(l[1],`data-lunch="${d}|1"`)}</div></td>
       <td data-l="P0"><div class="inl"><input class="in sm" list="sublist2" data-p0="${d}" value="${esc(p0.label)}" placeholder="blank" style="width:150px"><span class="mini">until</span><select class="in sm tm" data-p0end="${d}"><option value="P0"${p0.end==='P0'?' selected':''}>9:00</option><option value="P1"${p0.end==='P1'?' selected':''}>9:20</option></select></div>
         ${p0.label?`<div class="inl" style="margin-top:4px"><label class="mini ckl"><input type="checkbox" data-p0force="${d}"${p0.force?' checked':''}> always (ignore iSAMS)</label><select class="in sm tm" data-p0who="${d}" aria-label="Teacher and room"><option value="none"${p0.who!=='reg'?' selected':''}>no teacher/room</option><option value="reg"${p0.who==='reg'?' selected':''}>tutor &amp; room from Reg</option></select></div>`:''}</td>
+      <td data-l="Evening prep slot">${(()=>{ const po=(sec.prepOv||{})[d]||{label:'',who:'none'}; return `<input class="in sm" list="sublist2" data-po="${d}" value="${esc(po.label)}" placeholder="as iSAMS" style="width:120px">${po.label?`<div style="margin-top:4px"><select class="in sm tm" data-powho="${d}" aria-label="Teacher and room"><option value="none"${po.who!=='reg'?' selected':''}>no teacher/room</option><option value="reg"${po.who==='reg'?' selected':''}>tutor &amp; room from Reg</option></select></div>`:''}`; })()}</td>
       <td data-l="Matches"><div class="inl"><input type="checkbox" data-mon="${d}"${m.on?' checked':''} aria-label="Matches on ${DAYNAME[d]}">${m.on?`from ${timeIn(m.start,`data-mstart="${d}"`)} to ${periodSel(m.end,`data-mend="${d}"`,'P11')}`:'<span class="mini">none</span>'}</div></td>
       <td data-l="Games lessons"><div class="inl"><input type="checkbox" data-gon="${d}"${g.on?' checked':''} aria-label="Games lessons on ${DAYNAME[d]}">${g.on?`${periodSel(g.from,`data-gfrom="${d}"`,'P1')} to ${periodSel(g.to,`data-gto="${d}"`,'P1')}`:'<span class="mini">not set</span>'}</div></td></tr>`; }).join('')}
     </tbody></table></div>
@@ -1496,7 +1512,8 @@ function renderSettings(){
     ${S.forms.map((f,i)=>`<tr><td data-l="Form"><input class="in sm" data-form="${i}|form" value="${esc(f.form)}"></td><td data-l="Tutor"><input class="in sm" data-form="${i}|tutor" list="stafflist2" value="${esc(f.tutor)}"></td>
       <td data-l="Section"><select class="in sm" data-form="${i}|section">${Object.keys(SECNAME).map(k=>`<option${f.section===k?' selected':''}>${k}</option>`).join('')}</select></td><td><button class="btn sm" data-delform="${i}">Remove</button></td></tr>`).join('')}
     </tbody></table><datalist id="stafflist2">${names.map(s=>`<option value="${esc(s)}">`).join('')}</datalist>
-    <button class="btn sm" id="addform" style="margin-top:10px">Add form</button></div>
+    <button class="btn sm" id="addform" style="margin-top:10px">Add form</button>
+    ${(S.notTutors||[]).length?`<p class="mini" style="margin:12px 0 4px">Take registration but aren’t form tutors (ignored when working out a pupil’s form):</p><div class="chips">${S.notTutors.map(n=>`<span class="chip">${esc(n)}<button class="x" data-unnot="${esc(n)}" aria-label="Remove ${esc(n)}">×</button></span>`).join('')}</div>`:''}</div>
   <div class="card" id="sec-staff"><h3>Staff initials</h3><p>Paste a list (one per line: name, then initials, separated by a comma or tab), or type them into the table. Teachers found in your uploads are listed automatically.</p>
     <textarea class="in" id="staffpaste" placeholder="Mr Smith, ABS&#10;Mrs Jones&#9;CDJ"></textarea>
     <div class="inl" style="margin:8px 0 12px"><button class="btn sm" id="staffimport">Add pasted list</button><span class="mini">${names.filter(n=>!S.staff[n]).length} without initials</span></div>
@@ -1579,6 +1596,7 @@ document.addEventListener('click',async e=>{
       const parts=line.split(/\t|,/).map(x=>x.trim()).filter(Boolean); if(parts.length>=3 && upsertForm(parts[0],parts[1],parts[2])) n++; else bad++; }
     S.forms.sort((a,b)=>a.form.localeCompare(b.form,undefined,{numeric:true})); save(); redetect(); renderSettings();
     toast(n?`Added ${n} form${n>1?'s':''}${bad?` (${bad} line${bad>1?'s':''} not recognised)`:''}`:'Nothing recognised – use “Name, Year, Letters” per line'); return; }
+  if(ds.unnot!==undefined){ S.notTutors=(S.notTutors||[]).filter(x=>x!==ds.unnot); save(); redetect(); renderSettings(); return; }
   if(ds.delstaff!==undefined){ delete S.staff[ds.delstaff]; save(); renderSettings(); toast(`Removed ${ds.delstaff}`); return; }
   if(t.id==='addform'){ S.forms.push({form:'',tutor:'',section:'MS'}); save(); renderSettings(); return; }
   if(ds.delform!==undefined){ S.forms.splice(+ds.delform,1); save(); renderSettings(); return; }
@@ -1617,6 +1635,8 @@ document.addEventListener('change',e=>{
   if(ds.lunch){ const [d,i]=ds.lunch.split('|'); (sec.lunch[d]??=['',''])[+i]=t.value; save(); renderPreview(); return; }
   if(ds.p0end){ sec.p0[ds.p0end].end=t.value; save(); renderPreview(); return; }
   if(ds.p0!==undefined){ renderSettings(); return; }
+  if(ds.po!==undefined){ const v=t.value.trim(); (sec.prepOv??={})[ds.po]={...(sec.prepOv[ds.po]||{who:'none'}),label:v}; if(v) ensureSubject(v); save(); renderSettings(); rerender(); return; }
+  if(ds.powho){ sec.prepOv[ds.powho].who=t.value; save(); rerender(); return; }
   if(ds.p0force){ sec.p0[ds.p0force].force=t.checked; save(); rerender(); return; }
   if(ds.p0who){ sec.p0[ds.p0who].who=t.value; save(); rerender(); return; }
   if(ds.mon){ sec.matches[ds.mon].on=t.checked; save(); renderSettings(); renderPreview(); return; }
