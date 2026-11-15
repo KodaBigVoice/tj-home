@@ -976,6 +976,9 @@ function blockItems(b,x,y,w,h,view,items,ref,tplPt){
     const lab = view.lt!=='none' && tw(rng,5.6,500)<=w-1.6 ? rng : fmt(b.a);
     let Lp=7.4; while(Lp>3.9 && tw('Lunch',Lp,500)>w-1.2) Lp*=.92;
     if(tw('Lunch',Lp,500)>w-1.2) return;
+    if(view.lt!=='none' && h>=9){ const tm=tw(rng,5.6,500)<=w-1.6?rng:tw(fmt(b.a),5.6,500)<=w-1.6?fmt(b.a):'';
+      if(tm) items.push({t:'x',x:cx,y:y+.55+1.25,s:tm,pt:5.6,w:500,c:'#9AA1B0',al:'center'});
+      items.push({t:'x',x:cx,y:y+(tm?2.45:0)+(h-(tm?2.45:0))/2,s:'Lunch',pt:Lp,w:500,c:'#7B8396',al:'center'}); return; }
     const two = h>=Lp*MM*1.1+5.6*MM*1.2+1.6 && tw(lab,5.6,500)<=w-1.6;
     if(two){ const H=Lp*MM*1.1+.4+5.6*MM*1.15, y0=y+(h-H)/2;
       items.push({t:'x',x:cx,y:y0+Lp*MM*.55,s:'Lunch',pt:Lp,w:500,c:'#7B8396',al:'center'});
