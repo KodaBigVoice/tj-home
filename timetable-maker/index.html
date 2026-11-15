@@ -1009,7 +1009,7 @@ function blockItems(b,x,y,w,h,view,items,ref,tplPt){
   for(const dl of fit.det){ items.push({t:'x',x:cx,y:yy+fit.D*MM*.6,s:dl,pt:fit.D,w:500,c:dc,al:'center'}); yy+=fit.D*MM*1.18; }
 }
 function fitText(s,maxW,pt,minPt,w){ while(pt>minPt && tw(s,pt,w)>maxW) pt*=.93; return tw(s,pt,w)<=maxW?pt:0; }
-function gridAxis(byDay,START,END,p0,len,prepW){
+function gridAxis(byDay,START,END,p0,len,prepW,keep=[]){
   const cs=new Set([START,END]);
   for(const bl of byDay) for(const b of bl){ cs.add(b.a); cs.add(b.b); }
   for(const B of BELLS) for(const m of [B.a,B.b]) if(m>START && m<END) cs.add(m);
@@ -1020,7 +1020,7 @@ function gridAxis(byDay,START,END,p0,len,prepW){
     const bell=BELLS.find(B=>a>=B.a&&b<=B.b); let type,id='';
     if(cover(a,b,['prep'])) type='prep';
     else if(bell&&bell.id==='REG') type='reg';
-    else if(bell&&cover(bell.a,bell.b,['lesson','tpl','match'])){ type='period'; id=bell.id; }
+    else if(bell&&(cover(bell.a,bell.b,['lesson','tpl','match'])||keep.includes(bell.id))){ type='period'; id=bell.id; }
     else if(cover(a,b,['lunch'])) type='lunch';
     else type='gap';
     const empty=!byDay.some(bl=>bl.some(x=>x.a<b&&x.b>a)); if(empty){ type='empty'; id=''; }
@@ -1051,7 +1051,7 @@ function layoutPage(p,view,interactive){
   const top=M+10, blocks={}, place=[], prepW=p.section==='LS'?1:2;
   if(!port){
     const per=view.periods||'both', labW=23, x0=M+labW, len=PW-M-x0, hh=4.6, headH=per==='both'?14.5:per==='labels'?hh+1.2:0, rowH=view.lt==='all'?17:15.5, gap=1.6;
-    const ax=gridAxis(byDay,START,END,x0,len,prepW);
+    const ax=gridAxis(byDay,START,END,x0,len,prepW,p.section==='MS'?['P12']:[]);
     if(per!=='none') for(const g of ax.groups){ if(g.empty) continue; const gx=ax.pos(g.a)+.22, gw=ax.pos(g.b)-ax.pos(g.a)-.44;
       items.push({t:'r',x:gx,y:top,w:gw,h:hh,r:0,f:g.label?'#1D2433':'#9AA1B0'});
       if(g.label){ const pt=fitText(g.label,gw-.6,6.6,4.5,700); if(pt) items.push({t:'x',x:gx+gw/2,y:top+hh/2,s:g.label,pt,w:700,c:'#FFFFFF',al:'center'}); }
@@ -1069,7 +1069,7 @@ function layoutPage(p,view,interactive){
   } else {
     const per=view.periods||'both', labW=per==='both'?18:per==='labels'?11:0, headH=7, gap=1.4, x0=M+labW, n=days.length, colW=(PW-M-x0-gap*(n-1))/n;
     const y0=top+headH, len=PH-M-y0;
-    const ax=gridAxis(byDay,START,END,y0,len,prepW);
+    const ax=gridAxis(byDay,START,END,y0,len,prepW,p.section==='MS'?['P12']:[]);
     days.forEach((d,i)=>items.push({t:'x',x:x0+i*(colW+gap)+colW/2,y:top+headH/2-.6,s:DAYNAME[d],pt:9.5,w:700,c:'#1D2433',al:'center'}));
     if(per!=='none') for(const g of ax.groups){ if(!g.label||g.empty) continue; const gy=ax.pos(g.a), gh=ax.pos(g.b)-gy, range=`${fmt(g.a)}–${fmt(g.b)}`;
       if(per==='both' && gh>=6.2){ items.push({t:'x',x:M,y:gy+gh/2-1.35,s:g.label,pt:7,w:700,c:'#1D2433',al:'left'});
