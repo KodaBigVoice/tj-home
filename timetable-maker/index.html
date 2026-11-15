@@ -169,6 +169,8 @@ fieldset.ro:disabled .card{opacity:.85}
 .chk.sev0{border-left:4px solid var(--warn)}.chk.sev1{border-left:4px solid #e0782f}.chk.sev2,.chk.sev3{border-left:4px solid var(--acc)}.chk.sev4,.chk.sev5{border-left:4px solid var(--line)}
 .whobox{margin-top:8px}
 .badge[hidden]{display:none}
+
+.ckl{display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}.ckl input{accent-color:var(--acc);margin:0}
 </style></head><body>
 <header class="top">
  <div class="brand"><i><b></b><b></b><b></b></i>Timetable Maker</div>
@@ -649,20 +651,20 @@ function defaults(){
     'Form Time':['Form','Neutral'],Assembly:['Assem','Neutral',0,1],Chapel:['Chapel','Neutral',0,1],'House Meeting':['House','Neutral',0,1]};
   const subjects={}; for(const [n,[s,k,b,e]] of Object.entries(subj)) subjects[n]={short:s,key:k,bare:!!b,...(e?{event:true}:{})};
   const wk5=['Mon','Tue','Wed','Thu','Fri'], wk6=[...wk5,'Sat'];
-  const p0 = o => Object.fromEntries(DAYS.map(d=>[d,{label:(o[d]||[''])[0],end:(o[d]||[])[1]||'P0'}]));
+  const p0 = o => Object.fromEntries(DAYS.map(d=>{ const [label='',end='P0',force=false,who='none']=o[d]||[]; return [d,{label,end,force,who}]; }));
   const none = () => Object.fromEntries(DAYS.map(d=>[d,{on:false,start:'14:00',end:'P20',from:'P14',to:'P16'}]));
   const sec = (days,lunch,prep,match,p0o)=>{ const m=none(), g=none(); for(const [d,e] of Object.entries(match)) Object.assign(m[d],{on:true,start:'14:00',end:e});
     return {days,lunch,prep,matches:m,games:g,p0:p0(p0o)}; };
   return {
-    v:3,
+    v:4,
     view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:''},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:30','17:00'),{Fri:'P17'},
-              {Mon:['Assembly'],Thu:['House Meeting']}),
+              {Mon:['Assembly','P0',true],Thu:['House Meeting','P0',true]}),
       MS: sec(wk6,{Mon:L('13:10','14:00'),Tue:L('13:10','14:00'),Wed:L('12:50','14:00'),Thu:L('13:30','14:00'),Fri:L('13:10','14:00'),Sat:L('12:50','14:00')},L('16:30','17:10'),{Wed:'P20',Sat:'P20'},
-              {Mon:['Assembly'],Wed:['Form Time'],Thu:['House Meeting'],Fri:['Chapel'],Sat:['Assembly']}),
+              {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',true,'reg'],Wed:['Form Time','P0',false,'reg'],Thu:['House Meeting','P0',true],Fri:['Chapel','P0',true],Sat:['Assembly','P0',true]}),
       US: sec(wk6,{Mon:L('13:30','14:20'),Tue:L('13:30','14:20'),Wed:L('12:50','14:00'),Thu:L('13:10','14:00'),Fri:L('13:30','14:20'),Sat:L('12:50','14:00')},L('16:30','17:20'),{Wed:'P20',Sat:'P20'},
-              {Mon:['Assembly'],Tue:['Assembly'],Thu:['House Meeting'],Fri:['Prep'],Sat:['Chapel','P1']})
+              {Mon:['Assembly','P0',true],Tue:['Assembly','P0',true],Thu:['House Meeting','P0',true],Fri:['Prep','P0',false,'reg'],Sat:['Chapel','P1',true]})
     },
     forms:[{form:'5TJ',tutor:'Mr Joshi',section:'MS'}],
     planner:{w:0,h:0},
@@ -678,12 +680,16 @@ function merge(base,over){ if(Array.isArray(base)||typeof base!=='object'||base=
   const o={...base}; if(over&&typeof over==='object') for(const k of Object.keys(over)) o[k]= k in base ? merge(base[k],over[k]) : over[k]; return o; }
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
-function migrate(){ if((S.v||1)>=3) return false;
-  if((S.v||1)>=2){ S.subjects.Spanish={...(S.subjects.Spanish||{}),short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets[S.preset||'Refined']?.Spanish||PAL.presets.Refined.Spanish; S.v=3; return true; }
+function migrate(){ if((S.v||1)>=4) return false;
+  if((S.v||1)>=3){ const D=defaults().sections;
+    for(const k of Object.keys(D)) for(const d of DAYS){ const def=D[k].p0[d], old=S.sections[k]?.p0?.[d]||{};
+      S.sections[k].p0[d] = (!def.label && old.label) ? {label:old.label,end:old.end||'P0',force:false,who:S.subjects?.[old.label]?.event?'none':'reg'} : {...def}; }
+    S.v=4; return true; }
+  if((S.v||1)>=2){ S.subjects.Spanish={...(S.subjects.Spanish||{}),short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets[S.preset||'Refined']?.Spanish||PAL.presets.Refined.Spanish; S.v=3; migrate(); return true; }
   const t=S.sections?.US?.p0?.Tue; if(t && (!t.label || t.label==='Prep')) t.label='Assembly';
   for(const n of ['Assembly','Chapel','House Meeting']) if(S.subjects[n]) S.subjects[n].event=true;
   if(S.view.style==='times') S.view.lt='all'; delete S.view.style;
-  S.subjects.Spanish={short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets.Refined.Spanish; S.v=3; return true; }
+  S.subjects.Spanish={short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets.Refined.Spanish; S.v=3; migrate(); return true; }
 const MIGRATED=migrate();
 { const v=S.view; if('ptimes' in v){ v.periods=v.ptimes?'both':'labels'; delete v.ptimes; } if('ltimes' in v){ v.lt=v.ltimes?'all':'none'; delete v.ltimes; } }
 const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
@@ -874,9 +880,10 @@ function buildDay(p,d){
     if(s.kind==='reg' && s.cell){ s.cell={...s.cell,subj:'Reg',names:['Reg'],keys:[subj('Reg').key]}; }
   }
   const tp=sec.p0[d];
-  if(tp && tp.label && !slots[1].cell){ const end=BELL[tp.end||'P0'].b, ev=!!subj(tp.label).event;
-    const c=cellFor(tp.label, regP0&&!ev?regP0.teacher:'', regP0&&!ev?regP0.room:'');
-    for(const s of slots.slice(1)){ if(s.b>end) break; if(s.cell) break; s.cell=c; s.kind='tpl'; } }
+  if(tp && tp.label && (tp.force || !slots[1].cell)){
+    const end=BELL[tp.end||'P0'].b, reg=(g.REG||[])[0]||regP0, useReg=(tp.who||'none')==='reg' && reg;
+    const c=cellFor(tp.label, useReg?reg.teacher:'', useReg?reg.room:'');
+    for(const s of slots.slice(1)){ if(s.b>end) break; if(s.cell && !tp.force && s!==slots[1]) break; s.cell=c; s.kind='tpl'; } }
   for(const s of slots){ const pa=s.patch;
     if(pa.clear){ s.cell=null; s.patched=true; }
     else if(pa.subj!=null){ s.cell=cellFor(pa.subj,pa.teacher,pa.room); s.patched=true; if(s.kind==='tpl') s.kind='lesson'; } }
@@ -1464,11 +1471,12 @@ function renderSettings(){
   <div class="card" id="sec-sections"><h3>School day by section</h3><p>Lunch, before-school (P0) slots, matches and games lessons. Breaks and the 16:20 sandwich break appear automatically as blank gaps.</p>
     <div class="seg" style="max-width:420px;margin-bottom:12px">${Object.keys(SECNAME).map(k=>`<button data-sectab="${k}" class="${k===SECTAB?'on':''}">${k}</button>`).join('')}</div>
     <fieldset class="ro" ${dis}><p class="mini" style="margin:0 0 8px">${SECNAME[SECTAB]} · evening prep ${timeIn(sec.prep[0],`data-prep="0"`)} to ${timeIn(sec.prep[1],`data-prep="1"`)}</p>
-    <div class="scroll"><table class="tbl stack"><thead><tr><th>Day</th><th>Lunch</th><th>P0 label (used when iSAMS has no lesson)</th><th>Matches</th><th>Games lessons (settles clashes)</th></tr></thead><tbody>
+    <div class="scroll"><table class="tbl stack"><thead><tr><th>Day</th><th>Lunch</th><th>P0 (8:30)</th><th>Matches</th><th>Games lessons (settles clashes)</th></tr></thead><tbody>
     ${sec.days.map(d=>{ const l=sec.lunch[d]||['',''], p0=sec.p0[d], m=sec.matches[d], g=sec.games[d];
       return `<tr><td data-l="Day"><b>${DAYNAME[d]}</b></td>
       <td data-l="Lunch"><div class="inl">${timeIn(l[0],`data-lunch="${d}|0"`)}–${timeIn(l[1],`data-lunch="${d}|1"`)}</div></td>
-      <td data-l="P0"><div class="inl"><input class="in sm" list="sublist2" data-p0="${d}" value="${esc(p0.label)}" placeholder="blank" style="width:150px"><span class="mini">until</span><select class="in sm tm" data-p0end="${d}"><option value="P0"${p0.end==='P0'?' selected':''}>9:00</option><option value="P1"${p0.end==='P1'?' selected':''}>9:20</option></select></div></td>
+      <td data-l="P0"><div class="inl"><input class="in sm" list="sublist2" data-p0="${d}" value="${esc(p0.label)}" placeholder="blank" style="width:150px"><span class="mini">until</span><select class="in sm tm" data-p0end="${d}"><option value="P0"${p0.end==='P0'?' selected':''}>9:00</option><option value="P1"${p0.end==='P1'?' selected':''}>9:20</option></select></div>
+        ${p0.label?`<div class="inl" style="margin-top:4px"><label class="mini ckl"><input type="checkbox" data-p0force="${d}"${p0.force?' checked':''}> always (ignore iSAMS)</label><select class="in sm tm" data-p0who="${d}" aria-label="Teacher and room"><option value="none"${p0.who!=='reg'?' selected':''}>no teacher/room</option><option value="reg"${p0.who==='reg'?' selected':''}>tutor &amp; room from Reg</option></select></div>`:''}</td>
       <td data-l="Matches"><div class="inl"><input type="checkbox" data-mon="${d}"${m.on?' checked':''} aria-label="Matches on ${DAYNAME[d]}">${m.on?`from ${timeIn(m.start,`data-mstart="${d}"`)} to ${periodSel(m.end,`data-mend="${d}"`,'P11')}`:'<span class="mini">none</span>'}</div></td>
       <td data-l="Games lessons"><div class="inl"><input type="checkbox" data-gon="${d}"${g.on?' checked':''} aria-label="Games lessons on ${DAYNAME[d]}">${g.on?`${periodSel(g.from,`data-gfrom="${d}"`,'P1')} to ${periodSel(g.to,`data-gto="${d}"`,'P1')}`:'<span class="mini">not set</span>'}</div></td></tr>`; }).join('')}
     </tbody></table></div>
@@ -1608,6 +1616,9 @@ document.addEventListener('change',e=>{
   if(ds.prep){ sec.prep[+ds.prep]=t.value; save(); renderPreview(); return; }
   if(ds.lunch){ const [d,i]=ds.lunch.split('|'); (sec.lunch[d]??=['',''])[+i]=t.value; save(); renderPreview(); return; }
   if(ds.p0end){ sec.p0[ds.p0end].end=t.value; save(); renderPreview(); return; }
+  if(ds.p0!==undefined){ renderSettings(); return; }
+  if(ds.p0force){ sec.p0[ds.p0force].force=t.checked; save(); rerender(); return; }
+  if(ds.p0who){ sec.p0[ds.p0who].who=t.value; save(); rerender(); return; }
   if(ds.mon){ sec.matches[ds.mon].on=t.checked; save(); renderSettings(); renderPreview(); return; }
   if(ds.mstart){ sec.matches[ds.mstart].start=t.value; save(); renderPreview(); return; }
   if(ds.mend){ sec.matches[ds.mend].end=t.value; save(); renderPreview(); return; }
