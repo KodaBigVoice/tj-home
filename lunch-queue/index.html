@@ -438,7 +438,7 @@ function annotate(e){
 const gKey=e=>e.gender==='Boys'||e.gender==='Girls'?e.gender:'Other';
 const gk=e=>e.yearKey+'|'+(e.gender||'')+'|'+e.sportKey;
 function defaultSport(g){const x=S.settings.sports.find(s=>s.gender===g);return x?x.name.trim():'';}
-function offSport(e){if(!e.gender||!e.sportKey)return false;const d=defaultSport(e.gender);return !!d&&e.sportKey.toLowerCase()!==d.toLowerCase();}
+function offSport(e){if(!e.gender||!e.sportKey)return false;if(e.gender==='Mixed')return true;const d=defaultSport(e.gender);return !!d&&e.sportKey.toLowerCase()!==d.toLowerCase();}
 function dispName(e){return [e.gender,e.short].filter(Boolean).join(' ');}
 function isTravel(e){const h=(e.ha||'').trim().toUpperCase();if(h==='A'||h==='N')return true;if(h==='H')return false;return !/^home/i.test(e.venue||'');}
 function lateMoved(e){return S.settings.lateToHome&&isTravel(e)&&e.meet!=null&&e.meet>=LATE;}
@@ -736,7 +736,7 @@ function cellHTML(d,c,flagIds){const st=S.settings;const L=d.layout[c]||[];const
     h+='<div class="gap" data-cell="'+c+'" data-idx="'+i+'"><div class="gapin"></div></div>';
     const info=tileInfo(d,t,c);const e0=info.e0;
     h+='<div class="tile g-'+gKey(e0)+'" data-tile="'+t+'" data-gk="'+esc(gk(e0))+'"><div class="tlab" data-tile-handle="'+t+'" title="Drag to move the whole tile"><span class="rot"><b>'+esc(e0.gender||'Other')+'</b><i>'+esc(info.ageL)+'</i></span></div><div class="chips">'+
-      (info.sport?'<span class="sporttag" title="Not this term\u2019s usual sport, so it shows on the sheet">'+esc(info.sport)+'</span>':'')+(info.all?'<span class="alltag" title="Whole year group. Moving a team out removes this."><span>All</span></span>':'')+info.es.map(e=>chipHTML(d,e,flagIds)).join('')+'</div></div>';
+      (info.sport?'<span class="sporttag" title="'+(e0.gender==='Mixed'?'Mixed fixtures always show their sport on the sheet':'Not this term\u2019s usual sport, so it shows on the sheet')+'">'+esc(info.sport)+'</span>':'')+(info.all?'<span class="alltag" title="Whole year group. Moving a team out removes this."><span>All</span></span>':'')+info.es.map(e=>chipHTML(d,e,flagIds)).join('')+'</div></div>';
   });
   h+='<div class="gap last" data-cell="'+c+'" data-idx="'+L.length+'"><div class="gapin"></div></div>';
   return h;}
