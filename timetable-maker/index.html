@@ -1028,7 +1028,7 @@ function gridAxis(byDay,START,END,p0,len,prepW,keep=[]){
     if(g && g.type===type && g.id===id) { g.b=b; g.cuts.push(b); }
     else groups.push({type,id,a,b,cuts:[a,b],empty}); }
   for(const g of groups){ const mins=g.b-g.a;
-    g.w = g.empty ? 0 : g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='lunch'||g.type==='gap' ? .65 : 1;
+    g.w = g.empty ? 0 : g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='gap' ? .65 : 1;
     g.label = g.type==='period'?BELL[g.id].label : g.type==='reg'?'Reg' : g.type==='prep'?'Prep' : ''; }
   const tot=groups.reduce((s,g)=>s+g.w,0); const map=new Map(); let pos=p0;
   for(const g of groups){ const W=g.w/tot*len, span=g.b-g.a; for(const c of g.cuts) map.set(c,pos+(c-g.a)/span*W); pos+=W; }
