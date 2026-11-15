@@ -134,6 +134,9 @@ fieldset.ro:disabled .card{opacity:.85}
 .lockcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:28px;width:min(400px,100%);display:flex;flex-direction:column;gap:12px;box-shadow:0 12px 40px #0002}
 .lockcard h2{margin:6px 0 0;font-size:22px;font-weight:800}
 .lockcard .err{color:#b42318;font-size:14px;margin:0;min-height:1.2em}
+
+.ur{display:flex;gap:4px}
+.lnk{border:0;background:none;color:var(--acc);font-weight:700;font-size:12px;padding:0 0 0 6px;cursor:pointer}
 </style></head><body>
 <header class="top">
  <div class="brand"><i><b></b><b></b><b></b></i>Timetable Maker</div>
@@ -142,6 +145,7 @@ fieldset.ro:disabled .card{opacity:.85}
   <button data-tab="col">Colours</button>
   <button data-tab="set">Settings</button>
  </nav>
+ <div class="ur"><button class="btn sm" id="undo" title="Undo (Ctrl+Z)" disabled>↶ Undo</button><button class="btn sm" id="redo" title="Redo (Ctrl+Shift+Z)" disabled>↷ Redo</button></div>
  <span class="sync" id="sync" hidden></span>
  <button class="btn sm" id="lockbtn" hidden>Lock</button>
 </header>
@@ -151,9 +155,10 @@ fieldset.ro:disabled .card{opacity:.85}
    <label class="drop" id="drop"><input type="file" id="file" accept=".xlsx" multiple hidden><b>Drop iSAMS exports here</b><span>or click to choose .xlsx files (several at once is fine)</span></label>
    <div><p class="lbl" id="plabel">Pupils</p><div class="plist" id="plist"></div></div>
    <div class="opt">
-    <div><p class="lbl">Layout</p><div class="seg" data-opt="style"><button data-v="grid">Period grid</button><button data-v="times">Times on blocks</button></div></div>
     <div><p class="lbl">Page</p><div class="seg" data-opt="orient"><button data-v="land">Landscape</button><button data-v="port">Portrait</button></div></div>
     <div><p class="lbl">Teachers</p><div class="seg" data-opt="names"><button data-v="full">Full names</button><button data-v="init">Initials</button><button data-v="none">None</button></div></div>
+    <label class="tg">Period times<input type="checkbox" data-tog="ptimes"></label>
+    <label class="tg">Times on lessons<input type="checkbox" data-tog="ltimes"></label>
     <label class="tg">Show rooms<input type="checkbox" data-tog="rooms"></label>
     <label class="tg">Show registration (8:20)<input type="checkbox" data-tog="reg"></label>
    </div>
@@ -601,23 +606,23 @@ function defaults(){
     History:['Hist','History'],Geography:['Geog','Geography'],RS:['RS','RS'],TPR:['TPR','RS'],IT:['IT','IT'],DT:['DT','DT'],Art:['Art','Art'],
     Drama:['Drama','Drama'],Music:['Music','Music'],PE:['PE','PE',1],Games:['Games','Games',1],Enrichment:['Enrich','Enrichment',1],
     Wellbeing:['Wlbg','Pastoral'],Prep:['Prep','Pastoral'],Reg:['Reg','Pastoral'],'Saturday Series':['Sat Series','Saturday Series'],
-    'Form Time':['Form','Neutral'],Assembly:['Assem','Neutral'],Chapel:['Chapel','Neutral'],'House Meeting':['House','Neutral']};
-  const subjects={}; for(const [n,[s,k,b]] of Object.entries(subj)) subjects[n]={short:s,key:k,bare:!!b};
+    'Form Time':['Form','Neutral'],Assembly:['Assem','Neutral',0,1],Chapel:['Chapel','Neutral',0,1],'House Meeting':['House','Neutral',0,1]};
+  const subjects={}; for(const [n,[s,k,b,e]] of Object.entries(subj)) subjects[n]={short:s,key:k,bare:!!b,...(e?{event:true}:{})};
   const wk5=['Mon','Tue','Wed','Thu','Fri'], wk6=[...wk5,'Sat'];
   const p0 = o => Object.fromEntries(DAYS.map(d=>[d,{label:(o[d]||[''])[0],end:(o[d]||[])[1]||'P0'}]));
   const none = () => Object.fromEntries(DAYS.map(d=>[d,{on:false,start:'14:00',end:'P20',from:'P14',to:'P16'}]));
   const sec = (days,lunch,prep,match,p0o)=>{ const m=none(), g=none(); for(const [d,e] of Object.entries(match)) Object.assign(m[d],{on:true,start:'14:00',end:e});
     return {days,lunch,prep,matches:m,games:g,p0:p0(p0o)}; };
   return {
-    v:1,
-    view:{style:'grid',orient:'land',names:'full',rooms:true,reg:true},
+    v:2,
+    view:{ptimes:true,ltimes:false,orient:'land',names:'full',rooms:true,reg:true},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:30','17:00'),{Fri:'P17'},
               {Mon:['Assembly'],Thu:['House Meeting']}),
       MS: sec(wk6,{Mon:L('13:10','14:00'),Tue:L('13:10','14:00'),Wed:L('12:50','14:00'),Thu:L('13:30','14:00'),Fri:L('13:10','14:00'),Sat:L('12:50','14:00')},L('16:30','17:10'),{Wed:'P20',Sat:'P20'},
               {Mon:['Assembly'],Wed:['Form Time'],Thu:['House Meeting'],Fri:['Chapel'],Sat:['Assembly']}),
       US: sec(wk6,{Mon:L('13:30','14:20'),Tue:L('13:30','14:20'),Wed:L('12:50','14:00'),Thu:L('13:10','14:00'),Fri:L('13:30','14:20'),Sat:L('12:50','14:00')},L('16:30','17:20'),{Wed:'P20',Sat:'P20'},
-              {Mon:['Assembly'],Tue:['Prep'],Thu:['House Meeting'],Fri:['Prep'],Sat:['Chapel','P1']})
+              {Mon:['Assembly'],Tue:['Assembly'],Thu:['House Meeting'],Fri:['Prep'],Sat:['Chapel','P1']})
     },
     forms:[{form:'5TJ',tutor:'Mr Joshi',section:'MS'}],
     staff:{},
@@ -632,9 +637,15 @@ function merge(base,over){ if(Array.isArray(base)||typeof base!=='object'||base=
   const o={...base}; if(over&&typeof over==='object') for(const k of Object.keys(over)) o[k]= k in base ? merge(base[k],over[k]) : over[k]; return o; }
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
+function migrate(){ if((S.v||1)>=2) return false;
+  const t=S.sections?.US?.p0?.Tue; if(t && (!t.label || t.label==='Prep')) t.label='Assembly';
+  for(const n of ['Assembly','Chapel','House Meeting']) if(S.subjects[n]) S.subjects[n].event=true;
+  if(S.view.style==='times') S.view.ltimes=true; delete S.view.style;
+  S.v=2; return true; }
+const MIGRATED=migrate();
 const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
 const CLOUD_ON = /^https:/.test(CLOUD.url) && CLOUD.key.length>20;
-const SHARED = ['sections','forms','staff','subjects','aliases','colors','preset'];
+const SHARED = ['v','sections','forms','staff','subjects','aliases','colors','preset'];
 const PWKEY='tt-maker-pw';
 let ADMIN=!CLOUD_ON, PW=null, SYNC='';
 try{ PW=localStorage.getItem(PWKEY); }catch(e){}
@@ -648,12 +659,12 @@ async function rpc(fn,body){
   if(!r.ok){ const e=new Error(j&&j.message||r.statusText); e.wrong=(j&&(j.code==='28P01'||/wrong password/i.test(j.message||''))); throw e; }
   return j; }
 const sharedOf = () => Object.fromEntries(SHARED.map(k=>[k,S[k]]));
-function applyShared(d){ if(!d||!Object.keys(d).length) return; const base=defaults(); for(const k of SHARED) S[k]= d[k]!==undefined ? merge(base[k],d[k]) : base[k]; }
+function applyShared(d){ if(!d||!Object.keys(d).length) return; const base=defaults(); for(const k of SHARED) S[k]= k==='v' ? (d.v||1) : d[k]!==undefined ? merge(base[k],d[k]) : base[k]; return migrate(); }
 async function push(){ try{ await rpc('tt_save',{pw:PW,new_data:sharedOf()}); setSync('Saved for all staff'); }catch(e){ setSync(e.wrong?'Admin password no longer works':'Not saved – will retry',true); if(!e.wrong){ clearTimeout(pushT); pushT=setTimeout(push,8000); } } }
 function setSync(t,bad){ SYNC=t; const el=document.getElementById('sync'); if(el){ el.textContent=t; el.classList.toggle('bad',!!bad); el.hidden=!t; } }
 async function unlock(pw){ const j=await rpc('tt_get',{pw}); PW=pw; ADMIN=!!j.admin; try{localStorage.setItem(PWKEY,pw);}catch(e){}
-  const empty=!j.data||!Object.keys(j.data).length; applyShared(j.data); try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
-  if(ADMIN && empty) push(); setSync(ADMIN?'Saved for all staff':'Settings from school'); return j; }
+  const empty=!j.data||!Object.keys(j.data).length; const migrated=applyShared(j.data); try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(ADMIN && (empty||migrated)) push(); setSync(ADMIN?'Saved for all staff':'Settings from school'); return j; }
 const canEdit = () => ADMIN;
 
 /* ========================== helpers ========================== */
@@ -808,16 +819,18 @@ function buildDay(p,d){
   const lunch = Lr ? (M?[Lr[0],Math.max(Lr[0]+10,M.a)]:Lr) : null;
   const prep=sec.prep.map(T);
   const slots=[{id:'REG',a:BELL.REG.a,b:BELL.REG.b,kind:'reg'},...PSLOTS.map(id=>({id,a:BELL[id].a,b:BELL[id].b,kind:'lesson'})),{id:'PREP',a:prep[0],b:prep[1],kind:'prep'}];
+  let regP0=null;
   for(const s of slots){
     let ents=g[s.id]||[];
-    if(s.id==='P0' && ents.every(e=>/^registration$/i.test(e.raw))) ents=[];
+    if(s.id==='P0' && ents.every(e=>/^registration$/i.test(e.raw))){ regP0=ents[0]||null; ents=[]; }
     s.patch=pt[d+'|'+s.id]||{};
     s.cell=resolveCell(ents, W?W.some(([a,b])=>s.a>=a&&s.b<=b):null, s.patch.choice);
     if(s.kind==='reg' && s.cell){ s.cell={...s.cell,subj:'Reg',names:['Reg'],keys:[subj('Reg').key]}; }
   }
   const tp=sec.p0[d];
-  if(tp && tp.label && !slots[1].cell){ const end=BELL[tp.end||'P0'].b;
-    for(const s of slots.slice(1)){ if(s.b>end) break; if(s.cell) break; s.cell=cellFor(tp.label); s.kind='tpl'; } }
+  if(tp && tp.label && !slots[1].cell){ const end=BELL[tp.end||'P0'].b, ev=!!subj(tp.label).event;
+    const c=cellFor(tp.label, regP0&&!ev?regP0.teacher:'', regP0&&!ev?regP0.room:'');
+    for(const s of slots.slice(1)){ if(s.b>end) break; if(s.cell) break; s.cell=c; s.kind='tpl'; } }
   for(const s of slots){ const pa=s.patch;
     if(pa.clear){ s.cell=null; s.patched=true; }
     else if(pa.subj!=null){ s.cell=cellFor(pa.subj,pa.teacher,pa.room); s.patched=true; if(s.kind==='tpl') s.kind='lesson'; } }
@@ -846,18 +859,30 @@ const tw = (s,pt,w) => { mctx??=document.createElement('canvas').getContext('2d'
 function contentFor(b,view){
   const names=b.names||[b.subj];
   const full=names.join(' / '), short=names.map(n=>subj(n).short||n).join(' / ');
-  const tch = view.names==='none' ? '' : (b.teachers||[]).map(t=>view.names==='init'?initials(t):t).join(' / ');
+  const ts=b.teachers||[];
+  const tch = view.names==='none' ? '' : ts.map(t=>view.names==='init'?initials(t):t).join(' / ');
+  const tchI = view.names==='full' && ts.length && ts.every(t=>S.staff[t]) ? ts.map(t=>S.staff[t]).join(' / ') : '';
   const room = view.rooms ? (b.rooms||[]).join(' / ') : '';
-  return {full,short,tch,room};
+  return {full,short,tch,tchI,room};
 }
-function fitBlock(b,w,h,view,style){
-  const {full,short,tch,room}=contentFor(b,view);
+const isEvent = b => b.kind==='tpl' && !!subj(b.subj).event;
+function wrapWords(label,maxW,pt){ const words=String(label).split(/\s+/).filter(Boolean), lines=[]; let cur='';
+  for(const w of words){ if(tw(w,pt,700)>maxW) return null; const t=cur?cur+' '+w:w; if(tw(t,pt,700)<=maxW) cur=t; else { lines.push(cur); cur=w; } }
+  if(cur) lines.push(cur); return lines; }
+function eventFit(label,w,h){ for(let pt=8.5; pt>=4.6; pt*=.95){ const L=wrapWords(label,w-1.6,pt); if(L && L.length*pt*MM*1.15<=h-1.2) return pt; } return 4.6; }
+function fitBlock(b,w,h,view){
+  const {full,short,tch,tchI,room}=contentFor(b,view);
   const padX=1.1,padY=.55,timeH=2.45, avW=w-2*padX;
-  let time = style==='times' && b.kind!=='reg' ? `${fmt(b.a)}–${fmt(b.b)}` : '';
-  if(time && (tw(time,5.6,500)>avW || h<9)) time='';
-  const det1 = view.names==='init' && tch && room ? [`${tch} · ${room}`] : [tch,room].filter(Boolean);
-  const det2 = [tch,room].filter(Boolean), detR = room?[room]:[];
-  const raw=[[full,det1,1],[full,det2,1],[full,detR,1],[short,det2,1],[short,detR,1],[full,[],1],[short,[],1],[short,detR,0],[short,[],0]];
+  let time='';
+  if(view.ltimes && b.kind!=='reg' && h>=9){ const r=`${fmt(b.a)}–${fmt(b.b)}`; time = tw(r,5.6,500)<=avW ? r : tw(fmt(b.a),5.6,500)<=avW ? fmt(b.a) : ''; }
+  const dets = (t,joined) => { if(!t) return room?[[room]]:[[]]; if(!room) return [[t]]; return joined?[[`${t} · ${room}`],[t,room]]:[[t,room]]; };
+  const raw=[];
+  for(const nm of [full,short]){
+    for(const d of dets(tch,view.names==='init')) raw.push([nm,d,1]);
+    if(tchI) for(const d of dets(tchI,true)) raw.push([nm,d,1]);
+    raw.push([nm,room?[room]:[],1]);
+  }
+  raw.push([full,[],1],[short,[],1],[short,room?[room]:[],0],[short,[],0]);
   const seen=new Set(), cfgs=raw.filter(c=>{ const k=c[0]+'|'+c[1].join('~')+'|'+c[2]; if(seen.has(k)) return false; seen.add(k); return true; });
   const fits=(nm,det,t,Sz,D)=>{ const avH=h-2*padY-(t&&time?timeH:0);
     if(tw(nm,Sz,700)>avW) return false; for(const x of det) if(tw(x,D,500)>avW) return false;
@@ -869,15 +894,16 @@ function fitBlock(b,w,h,view,style){
   for(let Sz=8; Sz>=4.8; Sz*=.92){ if(fits(short,[],0,Sz,6)) return {nm:short,det:[],Sz,D:6,time:''}; }
   return null;
 }
-function blockItems(b,x,y,w,h,view,style,items,ref){
-  const r=Math.min(1.3,w/3,h/3);
+function blockItems(b,x,y,w,h,view,items,ref,tplPt){
   if(w<=.2||h<=.2) return;
+  const r=0;
   if(b.kind==='gap'){ items.push({t:'r',x,y,w,h,r,f:GAP,ref:b.slots.length?ref:null}); return; }
   if(b.kind==='lunch'){
     items.push({t:'r',x,y,w,h,r,f:'#FFFFFF',s:'#D5D9E0',sw:.3,ref});
-    const lab=style==='times'?`${fmt(b.a)}–${fmt(b.b)}`:fmt(b.a), cx=x+w/2;
-    let Lp=7.4; while(Lp>4.6 && tw('Lunch',Lp,500)>w-1.6) Lp*=.92;
-    if(Lp<=4.6) return;
+    const rng=`${fmt(b.a)}–${fmt(b.b)}`, cx=x+w/2;
+    const lab = view.ltimes && tw(rng,5.6,500)<=w-1.6 ? rng : fmt(b.a);
+    let Lp=7.4; while(Lp>3.9 && tw('Lunch',Lp,500)>w-1.2) Lp*=.92;
+    if(tw('Lunch',Lp,500)>w-1.2) return;
     const two = h>=Lp*MM*1.1+5.6*MM*1.2+1.6 && tw(lab,5.6,500)<=w-1.6;
     if(two){ const H=Lp*MM*1.1+.4+5.6*MM*1.15, y0=y+(h-H)/2;
       items.push({t:'x',x:cx,y:y0+Lp*MM*.55,s:'Lunch',pt:Lp,w:500,c:'#7B8396',al:'center'});
@@ -888,8 +914,14 @@ function blockItems(b,x,y,w,h,view,style,items,ref){
   const base = c2 ? mix(c1,c2,.5) : c1, ink=inkOn(base);
   items.push({t:'r',x,y,w,h,r,f:c1,split:c2||null,ref});
   if(b.flag && ref) items.push({t:'r',x:x+.25,y:y+.25,w:w-.5,h:h-.5,r,s:'#E8A21A',sw:.55,dash:[1.1,.7],preview:true});
-  const fit=fitBlock(b,w,h,view,style); if(!fit) return;
-  const dc=mix(ink,base,.16), tc=mix(ink,base,.3), cx=x+w/2;
+  const cx=x+w/2;
+  if(isEvent(b)){
+    const L=wrapWords(b.subj,w-1.6,tplPt) || [subj(b.subj).short||b.subj];
+    const lh=tplPt*MM*1.15, y0=y+(h-L.length*lh)/2;
+    L.forEach((ln,i)=>items.push({t:'x',x:cx,y:y0+lh*(i+.5),s:ln,pt:tplPt,w:700,c:ink,al:'center'}));
+    return; }
+  const fit=fitBlock(b,w,h,view); if(!fit) return;
+  const dc=mix(ink,base,.16), tc=mix(ink,base,.3);
   const topOff = fit.time ? 2.45 : 0;
   if(fit.time) items.push({t:'x',x:cx,y:y+.55+1.25,s:fit.time,pt:5.6,w:500,c:tc,al:'center'});
   const H=fit.Sz*MM*1.1+(fit.det.length? .35+fit.det.length*fit.D*MM*1.18:0);
@@ -899,7 +931,7 @@ function blockItems(b,x,y,w,h,view,style,items,ref){
   for(const dl of fit.det){ items.push({t:'x',x:cx,y:yy+fit.D*MM*.6,s:dl,pt:fit.D,w:500,c:dc,al:'center'}); yy+=fit.D*MM*1.18; }
 }
 function fitText(s,maxW,pt,minPt,w){ while(pt>minPt && tw(s,pt,w)>maxW) pt*=.93; return tw(s,pt,w)<=maxW?pt:0; }
-function gridAxis(byDay,START,END,p0,len){
+function gridAxis(byDay,START,END,p0,len,prepW){
   const cs=new Set([START,END]);
   for(const bl of byDay) for(const b of bl){ cs.add(b.a); cs.add(b.b); }
   for(const B of BELLS) for(const m of [B.a,B.b]) if(m>START && m<END) cs.add(m);
@@ -914,11 +946,11 @@ function gridAxis(byDay,START,END,p0,len){
     else if(cover(a,b,['lunch'])) type='lunch';
     else type='gap';
     const g=groups[groups.length-1];
-    if(g && g.type===type && g.id===id && type!=='period' || g && type==='period' && g.type==='period' && g.id===id) { g.b=b; g.cuts.push(b); }
+    if(g && g.type===type && g.id===id) { g.b=b; g.cuts.push(b); }
     else groups.push({type,id,a,b,cuts:[a,b]}); }
   for(const g of groups){ const mins=g.b-g.a;
-    g.w = g.type==='reg'?.55 : g.type==='prep'?1.4 : g.type==='lunch'?1.2 : g.type==='gap'?(mins<=10?.45:.65) : Math.max(.6,Math.min(1.5,(BELL[g.id].b-BELL[g.id].a)/20));
-    g.label = g.type==='period'?BELL[g.id].label : g.type==='reg'?'Reg' : g.type==='prep'?'Prep' : g.type==='lunch'?'Lunch' : ''; }
+    g.w = g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='lunch'?.65 : g.type==='gap'?(mins<=10?1:.65) : 1;
+    g.label = g.type==='period'?BELL[g.id].label : g.type==='reg'?'Reg' : g.type==='prep'?'Prep' : ''; }
   const tot=groups.reduce((s,g)=>s+g.w,0); const map=new Map(); let pos=p0;
   for(const g of groups){ const W=g.w/tot*len, span=g.b-g.a; for(const c of g.cuts) map.set(c,pos+(c-g.a)/span*W); pos+=W; }
   return {groups,pos:m=>map.has(m)?map.get(m):p0+(m-START)/(END-START)*len};
@@ -929,52 +961,41 @@ function layoutPage(p,view,interactive){
   const days=sec.days.filter(d=>p.grid[d]);
   const byDay=days.map(d=>{ let bl=buildDay(p,d); if(!view.reg) bl=bl.filter(b=>b.kind!=='reg'); while(bl.length&&bl[0].kind==='gap') bl.shift(); return bl; });
   const all=byDay.flat(); const START=all.length?Math.min(...all.map(b=>b.a)):T('8:30'), END=all.length?Math.max(...all.map(b=>b.b)):T('17:00');
-  const port=view.orient==='port', PW=port?210:297, PH=port?297:210, M=9, items=[], style=view.style;
-  // title
-  items.push({t:'x',x:M,y:M+3.4,s:'Timetable',pt:15,w:800,c:'#1D2433',al:'left'});
-  const rest='· '+[p.name,p.form].filter(Boolean).join(' · ');
-  items.push({t:'x',x:M+tw('Timetable',15,800)+tw(' ',15,500)*1.6,y:M+3.4,s:rest,pt:15,w:500,c:'#8A91A1',al:'left'});
-  const top=M+10; const blocks={};
+  const port=view.orient==='port', PW=port?210:297, PH=port?297:210, M=9, items=[];
+  items.push({t:'x',x:M,y:M+3.4,s:p.name,pt:15,w:800,c:'#1D2433',al:'left'});
+  if(p.form) items.push({t:'x',x:M+tw(p.name,15,800)+tw(' ',15,500)*1.5,y:M+3.4,s:p.form,pt:15,w:500,c:'#8A91A1',al:'left'});
+  const top=M+10, blocks={}, place=[], prepW=p.section==='LS'?1:2;
   if(!port){
-    const labW=23, x0=M+labW, len=PW-M-x0, headH=style==='grid'?14.5:6, rowH=style==='grid'?15.5:17, gap=1.6;
-    const ax = style==='grid' ? gridAxis(byDay,START,END,x0,len) : {pos:m=>x0+(m-START)/(END-START)*len};
-    const boardB=top+headH+days.length*(rowH+gap)-gap;
-    if(style==='grid'){ const hh=4.6;
-      for(const g of ax.groups){ const gx=ax.pos(g.a)+.22, gw=ax.pos(g.b)-ax.pos(g.a)-.44;
-        items.push({t:'r',x:gx,y:top,w:gw,h:hh,r:.6,f:g.label?'#1D2433':'#9AA1B0'});
-        if(g.label){ const pt=fitText(g.label,gw-.6,6.6,4.5,700); if(pt) items.push({t:'x',x:gx+gw/2,y:top+hh/2,s:g.label,pt,w:700,c:'#FFFFFF',al:'center'}); }
-        [[fmt(g.a),'#4A5263'],[fmt(g.b),'#8A91A1']].forEach(([s,c],k)=>{ const yy=top+(k+1)*(hh+.3);
-          items.push({t:'r',x:gx,y:yy,w:gw,h:hh,r:.6,f:'#F3F4F7'});
-          const pt=fitText(s,gw-.5,6.2,4.4,500); if(pt) items.push({t:'x',x:gx+gw/2,y:yy+hh/2,s,pt,w:500,c,al:'center'}); }); }
-      items.push({t:'x',x:M,y:top+hh+.3+hh/2,s:'Start',pt:6.6,w:700,c:'#4A5263',al:'left'});
-      items.push({t:'x',x:M,y:top+2*(hh+.3)+hh/2,s:'End',pt:6.6,w:700,c:'#4A5263',al:'left'});
-    } else {
-      for(let hr=Math.ceil(START/60);hr*60<=END;hr++){ const xx=ax.pos(hr*60);
-        items.push({t:'l',x1:xx,y1:top+4.2,x2:xx,y2:boardB,c:'#E3E6EB',sw:.25,dash:[.9,.7]});
-        items.push({t:'x',x:xx,y:top+2,s:hr+':00',pt:6.6,w:700,c:'#6B7385',al:'center'}); } }
+    const labW=23, x0=M+labW, len=PW-M-x0, hh=4.6, headH=view.ptimes?14.5:hh+1.2, rowH=view.ltimes?17:15.5, gap=1.6;
+    const ax=gridAxis(byDay,START,END,x0,len,prepW);
+    for(const g of ax.groups){ const gx=ax.pos(g.a)+.22, gw=ax.pos(g.b)-ax.pos(g.a)-.44;
+      items.push({t:'r',x:gx,y:top,w:gw,h:hh,r:0,f:g.label?'#1D2433':'#9AA1B0'});
+      if(g.label){ const pt=fitText(g.label,gw-.6,6.6,4.5,700); if(pt) items.push({t:'x',x:gx+gw/2,y:top+hh/2,s:g.label,pt,w:700,c:'#FFFFFF',al:'center'}); }
+      if(view.ptimes) [[fmt(g.a),'#4A5263'],[fmt(g.b),'#8A91A1']].forEach(([s,c],k)=>{ const yy=top+(k+1)*(hh+.3);
+        items.push({t:'r',x:gx,y:yy,w:gw,h:hh,r:0,f:'#F3F4F7'});
+        const pt=fitText(s,gw-.5,6.2,4.4,500); if(pt) items.push({t:'x',x:gx+gw/2,y:yy+hh/2,s,pt,w:500,c,al:'center'}); }); }
+    if(view.ptimes){ items.push({t:'x',x:M,y:top+hh+.3+hh/2,s:'Start',pt:6.6,w:700,c:'#4A5263',al:'left'});
+      items.push({t:'x',x:M,y:top+2*(hh+.3)+hh/2,s:'End',pt:6.6,w:700,c:'#4A5263',al:'left'}); }
     byDay.forEach((bl,i)=>{ const y=top+headH+i*(rowH+gap);
       items.push({t:'x',x:M,y:y+rowH/2,s:DAYNAME[days[i]],pt:9.5,w:700,c:'#1D2433',al:'left'});
       bl.forEach((b,j)=>{ const x1=ax.pos(b.a), x2=ax.pos(b.b), ref=days[i]+'#'+j; blocks[ref]=b;
-        blockItems(b,x1+.22,y,x2-x1-.44,rowH,view,style,items,ref); }); });
+        place.push({b,x:x1+.22,y,w:x2-x1-.44,h:rowH,ref}); }); });
   } else {
-    const labW=style==='grid'?18:11, headH=7, gap=1.4, x0=M+labW, n=days.length, colW=(PW-M-x0-gap*(n-1))/n;
+    const labW=view.ptimes?18:11, headH=7, gap=1.4, x0=M+labW, n=days.length, colW=(PW-M-x0-gap*(n-1))/n;
     const y0=top+headH, len=PH-M-y0;
-    const ax = style==='grid' ? gridAxis(byDay,START,END,y0,len) : {pos:m=>y0+(m-START)/(END-START)*len};
+    const ax=gridAxis(byDay,START,END,y0,len,prepW);
     days.forEach((d,i)=>items.push({t:'x',x:x0+i*(colW+gap)+colW/2,y:top+headH/2-.6,s:DAYNAME[d],pt:9.5,w:700,c:'#1D2433',al:'center'}));
-    if(style==='grid'){
-      for(const g of ax.groups){ if(!g.label) continue; const gy=ax.pos(g.a), gh=ax.pos(g.b)-gy;
-        const range = g.type==='lunch' ? '' : `${fmt(g.a)}–${fmt(g.b)}`;
-        if(range && gh>=6.2){ items.push({t:'x',x:M,y:gy+gh/2-1.35,s:g.label,pt:7,w:700,c:'#1D2433',al:'left'});
-          const pt=fitText(range,labW-1.2,6,4.6,500); if(pt) items.push({t:'x',x:M,y:gy+gh/2+1.45,s:range,pt,w:500,c:'#6B7385',al:'left'}); }
-        else { const pt=fitText(g.label,labW-1.2,7,4.6,700); if(pt&&gh>=2.4) items.push({t:'x',x:M,y:gy+gh/2,s:g.label,pt,w:700,c:'#1D2433',al:'left'}); } }
-    } else {
-      for(let hr=Math.ceil(START/60);hr*60<=END;hr++){ const yy=ax.pos(hr*60);
-        items.push({t:'l',x1:x0-1,y1:yy,x2:PW-M,y2:yy,c:'#E3E6EB',sw:.25,dash:[.9,.7]});
-        items.push({t:'x',x:M,y:yy,s:hr+':00',pt:6.6,w:700,c:'#6B7385',al:'left'}); } }
+    for(const g of ax.groups){ if(!g.label) continue; const gy=ax.pos(g.a), gh=ax.pos(g.b)-gy, range=`${fmt(g.a)}–${fmt(g.b)}`;
+      if(view.ptimes && gh>=6.2){ items.push({t:'x',x:M,y:gy+gh/2-1.35,s:g.label,pt:7,w:700,c:'#1D2433',al:'left'});
+        const pt=fitText(range,labW-1.2,6,4.6,500); if(pt) items.push({t:'x',x:M,y:gy+gh/2+1.45,s:range,pt,w:500,c:'#6B7385',al:'left'}); }
+      else { const pt=fitText(g.label,labW-1.2,7,4.6,700); if(pt&&gh>=2.4) items.push({t:'x',x:M,y:gy+gh/2,s:g.label,pt,w:700,c:'#1D2433',al:'left'}); } }
     byDay.forEach((bl,i)=>{ const x=x0+i*(colW+gap);
       bl.forEach((b,j)=>{ const ya=ax.pos(b.a), yb=ax.pos(b.b), ref=days[i]+'#'+j; blocks[ref]=b;
-        blockItems(b,x,ya+.22,colW,yb-ya-.44,view,style,items,ref); }); });
+        place.push({b,x,y:ya+.22,w:colW,h:yb-ya-.44,ref}); }); });
   }
+  const evs=place.filter(q=>isEvent(q.b));
+  const tplPt=evs.length?Math.min(8,...evs.map(q=>eventFit(q.b.subj,q.w,q.h))):8;
+  for(const q of place) blockItems(q.b,q.x,q.y,q.w,q.h,view,items,q.ref,tplPt);
   if(interactive) RENDER.blocks=blocks;
   return {w:PW,h:PH,items,port,flags:all.filter(b=>b.flag)};
 }
@@ -1035,6 +1056,19 @@ const safe = s => String(s).replace(/[\\/:*?"<>|]+/g,'').trim();
 
 /* ========================== app state ========================== */
 let P=[], cur=null, examples=false, uid=0;
+const GRIDS=new Map(), PKEY='tt-maker-pupils';
+function persistP(){ try{ if(examples||!P.length) localStorage.removeItem(PKEY); else localStorage.setItem(PKEY,JSON.stringify({cur,P})); }catch(e){} }
+function loadSavedP(){ try{ const o=JSON.parse(localStorage.getItem(PKEY)||'null'); if(!o||!o.P||!o.P.length) return false;
+  P=o.P; for(const p of P){ GRIDS.set(p.id,p.grid); p.patches??={}; } uid=Math.max(...P.map(p=>p.id)); cur=P.some(p=>p.id===o.cur)?o.cur:P[0].id; return true; }catch(e){ return false; } }
+const H={stack:[],i:-1};
+const stateNow=()=>JSON.stringify({S,cur,examples,P:P.map(({grid,...m})=>m)});
+function snap(delay=200){ clearTimeout(snap.t); snap.t=setTimeout(()=>{ const st=stateNow(); if(H.stack[H.i]===st) return;
+  H.stack=H.stack.slice(0,H.i+1); H.stack.push(st); if(H.stack.length>120) H.stack.shift(); H.i=H.stack.length-1; updUndo(); persistP(); },delay); }
+function restore(st){ const o=JSON.parse(st); S=o.S; cur=o.cur; examples=o.examples; P=o.P.map(m=>({...m,grid:GRIDS.get(m.id)})).filter(p=>p.grid);
+  save(); persistP(); closeEditor(); renderAll(); updUndo(); }
+function undo(){ clearTimeout(snap.t); const st=stateNow(); if(H.stack[H.i]!==st){ H.stack=H.stack.slice(0,H.i+1); H.stack.push(st); H.i++; } if(H.i>0){ H.i--; restore(H.stack[H.i]); toast('Undone'); } }
+function redo(){ if(H.i<H.stack.length-1){ H.i++; restore(H.stack[H.i]); toast('Redone'); } }
+function updUndo(){ const u=document.getElementById('undo'), r=document.getElementById('redo'); if(u) u.disabled=H.i<=0; if(r) r.disabled=H.i>=H.stack.length-1; }
 async function addFiles(files){
   const ok=[], bad=[];
   for(const f of files){
@@ -1043,14 +1077,14 @@ async function addFiles(files){
   if(ok.length){ if(examples){ P=[]; examples=false; } P.push(...ok); P.sort((a,b)=>(!a.form)-(!b.form)||a.form.localeCompare(b.form)||a.name.localeCompare(b.name)); cur=ok[0].id; }
   if(bad.length) toast(bad.length===1?bad[0]:`${bad.length} files couldn’t be read`);
   else if(ok.length) toast(`Added ${ok.length} timetable${ok.length>1?'s':''}`);
-  renderAll();
+  renderAll(); snap(0);
 }
-function makePupil({name,grid}){ const d=detect(grid); return {id:++uid,name,grid,tutor:d.tutor,form:d.form,section:d.section,patches:{}}; }
+function makePupil({name,grid}){ const d=detect(grid), id=++uid; GRIDS.set(id,grid); return {id,name,grid,tutor:d.tutor,form:d.form,section:d.section,patches:{}}; }
 const curP = () => P.find(p=>p.id===cur);
 
 /* ========================== rendering: timetable tab ========================== */
 function renderList(){
-  $('#plabel').textContent = P.length ? (examples?'Examples (drop your own files to replace)':`Pupils (${P.length})`) : 'Pupils';
+  $('#plabel').innerHTML = (P.length ? (examples?'Examples (drop your own files to replace)':`Pupils (${P.length})`) : 'Pupils') + (P.length&&!examples?' <button class="lnk" id="clearall">Clear all</button>':'');
   $('#plist').innerHTML = P.length ? P.map(p=>{ const n=flagsOf(p).length;
     return `<div class="pi${p.id===cur?' on':''}" data-id="${p.id}" role="button" tabindex="0"><span class="nm">${esc(p.name)}</span>${p.form?`<span class="tag">${esc(p.form)}</span>`:`<span class="tag">${p.section}</span>`}${n?`<span class="tag w" title="Clashes to check">${n}</span>`:''}<button class="x" data-del="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></div>`; }).join('')
     : '<p class="hint">No timetables yet.</p>';
@@ -1082,7 +1116,7 @@ function renderPreview(){
   notes.push(`<div class="note"><span class="mini">Click any block to edit it, or a grey gap to add a lesson.</span></div>`);
   $('#notes').innerHTML=notes.join('');
 }
-function renderAll(){ renderList(); renderOpts(); renderPreview(); if($('#tab-col').classList.contains('on')) renderColours(); if($('#tab-set').classList.contains('on')) renderSettings(); }
+function renderAll(){ updUndo(); renderList(); renderOpts(); renderPreview(); if($('#tab-col').classList.contains('on')) renderColours(); if($('#tab-set').classList.contains('on')) renderSettings(); }
 
 /* ========================== editor ========================== */
 let ED=null;
@@ -1259,7 +1293,10 @@ document.addEventListener('click',async e=>{
   if(ds.preset){ S.colors={...S.colors,...PAL.presets[ds.preset]}; S.preset=ds.preset; save(); renderColours(); renderPreview(); return; }
   if(ds.pick){ openPicker(ds.pick,t); return; }
   if(ds.sectab){ SECTAB=ds.sectab; renderSettings(); return; }
-  if(t.id==='lockbtn'){ try{localStorage.removeItem(PWKEY);}catch(e){} PW=null; ADMIN=false; setSync(''); closeEditor(); lockScreen(); return; }
+  if(t.id==='undo'){ undo(); return; }
+  if(t.id==='redo'){ redo(); return; }
+  if(t.id==='clearall'){ if(t.dataset.sure){ P=[]; cur=null; examples=false; closeEditor(); renderAll(); toast('All timetables cleared'); } else { t.dataset.sure=1; t.textContent='Sure?'; } return; }
+  if(t.id==='lockbtn'){ try{localStorage.removeItem(PWKEY); localStorage.removeItem(PKEY);}catch(e){} PW=null; ADMIN=false; P=[]; cur=null; setSync(''); closeEditor(); renderAll(); lockScreen(); return; }
   if(t.id==='setpw'){ const v=$('#newpw').value; if(v.length<6){ toast('Use at least 6 characters'); return; }
     try{ await rpc('tt_set_staff_password',{pw:PW,new_pw:v}); $('#newpw').value=''; toast('Staff password changed'); }catch(e){ toast('Couldn’t change it: '+e.message); } return; }
   if(t.id==='qaadd'){ quickAdd(); return; }
@@ -1275,6 +1312,10 @@ document.addEventListener('click',async e=>{
   if(t.id==='reset'){ if(t.dataset.sure){ S=defaults(); save(); renderAll(); renderSettings(); toast('Settings reset'); } else { t.dataset.sure=1; t.textContent='Click again to reset everything'; } return; }
 });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeEditor(); $('#picker').hidden=true; }
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) && !['checkbox','radio','file'].includes(e.target.type);
+  if((e.ctrlKey||e.metaKey) && !typing){ const k=e.key.toLowerCase();
+    if(k==='z' && !e.shiftKey){ e.preventDefault(); undo(); return; }
+    if((k==='z' && e.shiftKey) || k==='y'){ e.preventDefault(); redo(); return; } }
   if(e.key==='Enter' && ['qatutor','qayear','qaletters'].includes(e.target.id)){ e.preventDefault(); if(e.target.id==='qaletters') quickAdd(); else (e.target.id==='qatutor'?$('#qayear'):$('#qaletters')).focus(); }
   if((e.key==='Enter'||e.key===' ') && e.target.classList?.contains('pi')){ e.preventDefault(); e.target.click(); } });
 document.addEventListener('change',e=>{
@@ -1314,6 +1355,9 @@ document.addEventListener('input',e=>{ const t=e.target;
   if(t.id==='pkc'){ setColour(PICK,t.value); $('#pkh').value=t.value.toUpperCase(); }
   if(t.id==='pkh' && /^#[0-9a-f]{6}$/i.test(t.value)){ setColour(PICK,t.value); $('#pkc').value=t.value.toLowerCase(); }
 });
+document.addEventListener('click',()=>snap(250));
+document.addEventListener('change',()=>snap(250));
+document.addEventListener('input',()=>snap(700));
 const drop=$('#drop');
 ['dragenter','dragover'].forEach(ev=>document.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
 ['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{ e.preventDefault(); if(ev==='drop'||!e.relatedTarget) drop.classList.remove('over'); }));
@@ -1332,17 +1376,19 @@ function lockScreen(msg){ return new Promise(res=>{
 /* ========================== start ========================== */
 (async()=>{
   try{ await Promise.all([500,700,800].map(w=>document.fonts.load(`${w} 12px Inter`))); }catch(e){}
+  if(MIGRATED && !CLOUD_ON) save();
   if(CLOUD_ON){
     let ok=false;
     if(PW){ try{ await unlock(PW); ok=true; }catch(e){ if(!e.wrong){ ok=true; setSync('Offline – using saved settings',true); } else { PW=null; try{localStorage.removeItem(PWKEY);}catch(_){} } } }
     if(!ok) await lockScreen();
     $('#lockbtn').hidden=false;
   }
+  if(loadSavedP()){ renderAll(); snap(0); return; }
   try{
     for(const [file,b64] of EXAMPLES){ const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)); P.push(makePupil(parseTimetable(await readXlsx(bin.buffer),file))); }
     examples=true; cur=P[0]?.id??null;
   }catch(e){ console.error(e); }
-  renderAll();
+  renderAll(); snap(0);
 })();
 }
 </script>
