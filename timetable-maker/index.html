@@ -1487,8 +1487,8 @@ function renderSettings(){
   <div class="card" id="sec-staff"><h3>Staff initials</h3><p>Paste a list (one per line: name, then initials, separated by a comma or tab), or type them into the table. Teachers found in your uploads are listed automatically.</p>
     <textarea class="in" id="staffpaste" placeholder="Mr Smith, ABS&#10;Mrs Jones&#9;CDJ"></textarea>
     <div class="inl" style="margin:8px 0 12px"><button class="btn sm" id="staffimport">Add pasted list</button><span class="mini">${names.filter(n=>!S.staff[n]).length} without initials</span></div>
-    <div class="scroll"><table class="tbl"><thead><tr><th>Name</th><th style="width:120px">Initials</th></tr></thead><tbody>
-    ${names.map(n=>`<tr class="${S.staff[n]?'':'miss'}"><td>${esc(n)}</td><td><input class="in sm" data-staff="${esc(n)}" value="${esc(S.staff[n]||'')}" maxlength="6"></td></tr>`).join('')||'<tr><td colspan="2" class="mini">Upload a timetable or paste a list.</td></tr>'}
+    <div class="scroll"><table class="tbl"><thead><tr><th>Name (as in iSAMS)</th><th style="width:120px">Initials</th><th style="width:40px"></th></tr></thead><tbody>
+    ${names.map(n=>`<tr class="${S.staff[n]?'':'miss'}"><td><input class="in sm" data-staffname="${esc(n)}" value="${esc(n)}" aria-label="Name"></td><td><input class="in sm" data-staff="${esc(n)}" value="${esc(S.staff[n]||'')}" maxlength="6" aria-label="Initials for ${esc(n)}"></td><td>${S.staff[n]?`<button class="x" data-delstaff="${esc(n)}" aria-label="Remove ${esc(n)}" title="Remove">×</button>`:''}</td></tr>`).join('')||'<tr><td colspan="3" class="mini">Upload a timetable or paste a list.</td></tr>'}
     </tbody></table></div></div>
   <div class="card"><h3>iSAMS subject names</h3><p>How each subject name from iSAMS is shown. Games for any day (e.g. “Tuesday Games”) is always shown as Games.</p>
     <div class="scroll"><table class="tbl stack"><thead><tr><th>In iSAMS</th><th>Shown as</th></tr></thead><tbody>
@@ -1565,6 +1565,7 @@ document.addEventListener('click',async e=>{
       const parts=line.split(/\t|,/).map(x=>x.trim()).filter(Boolean); if(parts.length>=3 && upsertForm(parts[0],parts[1],parts[2])) n++; else bad++; }
     S.forms.sort((a,b)=>a.form.localeCompare(b.form,undefined,{numeric:true})); save(); redetect(); renderSettings();
     toast(n?`Added ${n} form${n>1?'s':''}${bad?` (${bad} line${bad>1?'s':''} not recognised)`:''}`:'Nothing recognised – use “Name, Year, Letters” per line'); return; }
+  if(ds.delstaff!==undefined){ delete S.staff[ds.delstaff]; save(); renderSettings(); toast(`Removed ${ds.delstaff}`); return; }
   if(t.id==='addform'){ S.forms.push({form:'',tutor:'',section:'MS'}); save(); renderSettings(); return; }
   if(ds.delform!==undefined){ S.forms.splice(+ds.delform,1); save(); renderSettings(); return; }
   if(t.id==='staffimport'){ let n=0; for(const line of $('#staffpaste').value.split(/\n/)){ const m=/^\s*(.+?)\s*[,\t]\s*([A-Za-z]{1,6})\s*$/.exec(line); if(m){ S.staff[m[1]]=m[2].toUpperCase(); n++; } }
@@ -1608,6 +1609,11 @@ document.addEventListener('change',e=>{
   if(ds.gfrom){ sec.games[ds.gfrom].from=t.value; save(); rerender(); return; }
   if(ds.gto){ sec.games[ds.gto].to=t.value; save(); rerender(); return; }
   if(ds.form){ const [i,k]=ds.form.split('|'); S.forms[+i][k]=t.value.trim(); save(); redetect(); return; }
+  if(ds.staffname!==undefined){ const old=ds.staffname, nw=t.value.trim().replace(/\s+/g,' ');
+    if(!nw){ t.value=old; return; } if(nw===old) return;
+    if(S.staff[old]!==undefined){ if(!S.staff[nw]) S.staff[nw]=S.staff[old]; delete S.staff[old]; }
+    for(const f of S.forms) if(f.tutor===old) f.tutor=nw;
+    save(); renderSettings(); toast(`Renamed to ${nw}`); return; }
   if(ds.staff){ const v=t.value.trim().toUpperCase(); if(v) S.staff[ds.staff]=v; else delete S.staff[ds.staff]; t.value=v; t.closest('tr').classList.toggle('miss',!v); save(); return; }
   if(ds.alias){ const v=t.value.trim()||ds.alias; S.aliases[ds.alias]=v; ensureSubject(v); save(); return; }
 });
