@@ -655,7 +655,7 @@ function defaults(){
     History:['Hist','History'],Geography:['Geog','Geography'],RS:['RS','RS'],TPR:['TPR','RS'],IT:['IT','IT'],DT:['DT','DT'],Art:['Art','Art'],
     Drama:['Drama','Drama'],Music:['Music','Music'],PE:['PE','PE',1],Games:['Games','Games',1],Enrichment:['Enrich','Enrichment',1],
     Wellbeing:['Wlbg','Pastoral'],Prep:['Prep','Pastoral'],Reg:['Reg','Pastoral'],'Saturday Series':['Sat Series','Saturday Series'],
-    'Form Time':['Form','Pastoral'],Assembly:['Assem','Neutral',0,1],Chapel:['Chapel','Neutral',0,1],'House Meeting':['House','Neutral',0,1]};
+    'Form Time':['Form','Pastoral'],Assembly:['Assem','Neutral',0,1],Chapel:['Chapel','Neutral',0,1],'House Meeting':['House','Neutral',0,1],'Singing Practice':['Singing','Neutral',0,1]};
   const subjects={}; for(const [n,[s,k,b,e]] of Object.entries(subj)) subjects[n]={short:s,key:k,bare:!!b,...(e?{event:true}:{})};
   const wk5=['Mon','Tue','Wed','Thu','Fri'], wk6=[...wk5,'Sat'];
   const p0 = o => Object.fromEntries(DAYS.map(d=>{ const [label='',end='P0',force=false,who='none']=o[d]||[]; return [d,{label,end,force,who}]; }));
@@ -663,14 +663,15 @@ function defaults(){
   const sec = (days,lunch,prep,match,p0o,po={})=>{ const m=none(), g=none(); for(const [d,e] of Object.entries(match)) Object.assign(m[d],{on:true,start:'14:00',end:e});
     return {days,lunch,prep,matches:m,games:g,p0:p0(p0o),prepOv:Object.fromEntries(DAYS.map(d=>{ const [label='',who='none']=po[d]||[]; return [d,{label,who}]; }))}; };
   return {
-    v:6,
+    v:7,
     streamSubjects:['English','Geography','History','TPR'],
     setSubjects:['Maths','Latin','French','Science','Spanish'],
     notTutors:[],
     view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:''},
     sections:{
-      LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:30','17:00'),{Fri:'P17'},
-              {Mon:['Assembly','P0',true],Thu:['House Meeting','P0',true]}),
+      LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:20','17:00'),{Fri:'P17'},
+              {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',false,'reg'],Wed:['Chapel','P0',true],Thu:['House Meeting','P0',true],Fri:['Assembly','P0',true]},
+              {Thu:['Singing Practice'],Fri:['Form Time','reg']}),
       MS: sec(wk6,{Mon:L('13:10','14:00'),Tue:L('13:10','14:00'),Wed:L('12:50','14:00'),Thu:L('13:30','14:00'),Fri:L('13:10','14:00'),Sat:L('12:50','14:00')},L('16:30','17:10'),{Wed:'P20',Sat:'P20'},
               {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',true,'reg'],Wed:['Form Time','P0',false,'reg'],Thu:['House Meeting','P0',true],Fri:['Chapel','P0',true],Sat:['Assembly','P0',true]}),
       US: sec(wk6,{Mon:L('13:30','14:20'),Tue:L('13:30','14:20'),Wed:L('12:50','14:00'),Thu:L('13:10','14:00'),Fri:L('13:30','14:20'),Sat:L('12:50','14:00')},L('16:30','17:20'),{Wed:'P20',Sat:'P20'},
@@ -690,9 +691,12 @@ function merge(base,over){ if(Array.isArray(base)||typeof base!=='object'||base=
   const o={...base}; if(over&&typeof over==='object') for(const k of Object.keys(over)) o[k]= k in base ? merge(base[k],over[k]) : over[k]; return o; }
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
-function migrate(){ if((S.v||1)>=6) return false;
+function migrate(){ if((S.v||1)>=7) return false;
+  if((S.v||1)>=6){ const D=defaults(); const ls=S.sections.LS, dl=D.sections.LS;
+    ls.prep=[...dl.prep]; ls.p0={...dl.p0}; ls.prepOv={...(ls.prepOv||{}),Thu:{...dl.prepOv.Thu},Fri:{...dl.prepOv.Fri}};
+    S.subjects['Singing Practice']={...D.subjects['Singing Practice']}; S.v=7; return true; }
   if((S.v||1)>=5){ if(S.subjects['Form Time']?.key==='Neutral') S.subjects['Form Time'].key='Pastoral';
-    S.streamSubjects ??= ['English','Geography','History','TPR']; S.setSubjects ??= ['Maths','Latin','French','Science','Spanish']; S.v=6; return true; }
+    S.streamSubjects ??= ['English','Geography','History','TPR']; S.setSubjects ??= ['Maths','Latin','French','Science','Spanish']; S.v=6; migrate(); return true; }
   if((S.v||1)>=4){ const D=defaults().sections; for(const k of Object.keys(D)){ S.sections[k].prepOv = {...D[k].prepOv, ...(S.sections[k].prepOv||{})}; }
     const t=S.sections.US.p0.Tue; if(t.label==='Assembly'){ S.sections.US.p0.Tue={label:'Prep',end:'P0',force:true,who:'reg'}; } S.sections.US.prepOv.Tue={label:'Assembly',who:'none'};
     S.notTutors ??= []; S.v=5; migrate(); return true; }
@@ -897,7 +901,7 @@ function buildDay(p,d){
   }
   const regInfo=()=>{ const rp=pt[d+'|REG']; if(rp&&rp.subj!=null) return {teacher:rp.teacher||'',room:rp.room||''}; return (g.REG||[])[0]||regP0; };
   const po=sec.prepOv&&sec.prepOv[d];
-  if(po && po.label){ const ps=slots[slots.length-1], r=po.who==='reg'?regInfo():null; const c=cellFor(po.label,r?r.teacher:'',r?r.room:''); c.evt=true; ps.cell=c; }
+  if(po && po.label){ const ps=slots[slots.length-1], r=po.who==='reg'?regInfo():null; const c=cellFor(po.label,r?r.teacher:'',r?r.room:''); c.evt=true; c.joinPrev=true; ps.cell=c; }
   const tp=sec.p0[d];
   if(tp && tp.label && (tp.force || !slots[1].cell)){
     const end=BELL[tp.end||'P0'].b, reg=regInfo(), useReg=(tp.who||'none')==='reg' && reg;
@@ -912,6 +916,7 @@ function buildDay(p,d){
   const blocks=[]; let cur=null;
   for(const s of slots){ if(!s.cell){ cur=null; continue; }
     const k=cellKey(s.cell)+'|'+s.kind, flag=!!(s.cell.clash&&!s.cell.resolved);
+    if(cur && s.kind==='prep' && s.cell.joinPrev && cur.subj===s.cell.subj && cur.b===s.a && cur.kind!=='reg'){ cur.b=s.b; cur.slots.push(s.id); continue; }
     if(cur && cur.key===k && cur.b===s.a && s.kind!=='reg' && s.kind!=='prep'){ cur.b=s.b; cur.slots.push(s.id); cur.flag=cur.flag||flag; cur.patched=cur.patched||s.patched; }
     else { cur={...s.cell,kind:s.kind,a:s.a,b:s.b,slots:[s.id],key:k,flag,day:d,patched:!!s.patched}; blocks.push(cur); } }
   if(lunch) blocks.push({kind:'lunch',a:lunch[0],b:lunch[1],day:d,slots:[]});
@@ -1048,7 +1053,7 @@ function layoutPage(p,view,interactive){
   const port=view.orient==='port', PW=port?210:297, PH=port?297:210, M=9, items=[];
   items.push({t:'x',x:M,y:M+3.4,s:p.name,pt:15,w:800,c:'#1D2433',al:'left'});
   if(p.form) items.push({t:'x',x:M+tw(p.name,15,800)+tw(' ',15,500)*1.5,y:M+3.4,s:p.form,pt:15,w:500,c:'#8A91A1',al:'left'});
-  const top=M+10, blocks={}, place=[], prepW=p.section==='LS'?1:2;
+  const top=M+10, blocks={}, place=[], prepW=2;
   if(!port){
     const per=view.periods||'both', labW=23, x0=M+labW, len=PW-M-x0, hh=4.6, headH=per==='both'?14.5:per==='labels'?hh+1.2:0, rowH=view.lt==='all'?17:15.5, gap=1.6;
     const ax=gridAxis(byDay,START,END,x0,len,prepW,p.section==='MS'?['P12']:[]);
