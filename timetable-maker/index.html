@@ -667,7 +667,7 @@ function defaults(){
     streamSubjects:['English','Geography','History','TPR'],
     setSubjects:['Maths','Latin','French','Science','Spanish'],
     notTutors:[],
-    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:''},
+    view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:'',evt:'wide'},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:20','17:00'),{Fri:'P17'},
               {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',false,'reg'],Wed:['Chapel','P0',true],Thu:['House Meetings','P0',true],Fri:['Assembly','P0',true]},
@@ -951,6 +951,8 @@ function wrapWords(label,maxW,pt){ const words=String(label).split(/\s+/).filter
   for(const w of words){ if(tw(w,pt,700)>maxW) return null; const t=cur?cur+' '+w:w; if(tw(t,pt,700)<=maxW) cur=t; else { lines.push(cur); cur=w; } }
   if(cur) lines.push(cur); return lines; }
 function eventFit(label,w,h){ for(let pt=8.5; pt>=4.6; pt*=.95){ const L=wrapWords(label,w-1.6,pt); if(L && L.length*pt*MM*1.15<=h-1.2) return pt; } return 4.6; }
+const evRot = (view,w,h) => view.evt==='rotate' && w<h*.85;
+function eventFitV(label,w,h,view){ return evRot(view,w,h) ? eventFit(label,h,w) : eventFit(label,w,h); }
 const DET=6.4;
 function fitBlock(b,w,h,view){
   const {full,short,tch,tchI,room}=contentFor(b,view);
@@ -1004,8 +1006,11 @@ function blockItems(b,x,y,w,h,view,items,ref,tplPt){
     let top=0;
     if(view.lt==='all' && h>=9){ const r=`${fmt(b.a)}–${fmt(b.b)}`, tm=tw(r,5.6,500)<=w-2.2?r:tw(fmt(b.a),5.6,500)<=w-2.2?fmt(b.a):'';
       if(tm){ items.push({t:'x',x:cx,y:y+.55+1.25,s:tm,pt:5.6,w:500,c:mix(ink,base,.3),al:'center'}); top=2.45; } }
+    const hh=h-top;
+    if(evRot(view,w,hh)){ const L=wrapWords(b.subj,hh-1.6,tplPt) || [subj(b.subj).short||b.subj], lh=tplPt*MM*1.15, cy=y+top+hh/2, x0=cx-(L.length-1)*lh/2;
+      L.forEach((ln,i)=>items.push({t:'x',x:x0+i*lh,y:cy,s:ln,pt:tplPt,w:700,c:ink,al:'center',rot:true,tw:tw(ln,tplPt,700)})); return; }
     const L=wrapWords(b.subj,w-1.6,tplPt) || [subj(b.subj).short||b.subj];
-    const lh=tplPt*MM*1.15, y0=y+top+(h-top-L.length*lh)/2;
+    const lh=tplPt*MM*1.15, y0=y+top+(hh-L.length*lh)/2;
     L.forEach((ln,i)=>items.push({t:'x',x:cx,y:y0+lh*(i+.5),s:ln,pt:tplPt,w:700,c:ink,al:'center'}));
     return; }
   const fit=fitBlock(b,w,h,view); if(!fit) return;
@@ -1038,7 +1043,7 @@ function gridAxis(byDay,START,END,p0,len,prepW,keep=[]){
     if(g && g.type===type && g.id===id) { g.b=b; g.cuts.push(b); }
     else groups.push({type,id,a,b,cuts:[a,b],empty}); }
   for(const g of groups){ const mins=g.b-g.a;
-    g.w = g.empty ? 0 : g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='gap' ? .65 : 1;
+    g.w = g.empty ? 0 : g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='gap' ? .65 : (g.type==='period'&&g.id==='P0'&&S.view.evt==='wide') ? 1.4 : 1;
     g.label = g.type==='period'?BELL[g.id].label : g.type==='reg'?'Reg' : g.type==='prep'?'Prep' : ''; }
   const tot=groups.reduce((s,g)=>s+g.w,0); const map=new Map(); let pos=p0;
   for(const g of groups){ const W=g.w/tot*len, span=g.b-g.a; for(const c of g.cuts) map.set(c,pos+(c-g.a)/span*W); pos+=W; }
@@ -1090,7 +1095,7 @@ function layoutPage(p,view,interactive){
         place.push({b,x,y:ya+.22,w:colW,h:yb-ya-.44,ref}); }); });
   }
   const evs=place.filter(q=>isEvent(q.b));
-  const tplPt=evs.length?Math.min(8,...evs.map(q=>eventFit(q.b.subj,q.w,q.h-(view.lt==='all'&&q.h>=9?2.45:0)))):8;
+  const tplPt=evs.length?Math.min(view.evt&&view.evt!=='fit'?7.5:8,...evs.map(q=>eventFitV(q.b.subj,q.w,q.h-(view.lt==='all'&&q.h>=9?2.45:0),view))):8;
   for(const q of place) blockItems(q.b,q.x,q.y,q.w,q.h,view,items,q.ref,tplPt);
   if(interactive) RENDER.blocks=blocks;
   return {w:PW,h:PH,items,port,flags:all.filter(b=>b.flag)};
@@ -1107,7 +1112,7 @@ function toSVG(pg){
         s+=`<g${g}><rect x="${it.x}" y="${it.y}" width="${it.w}" height="${it.h}" rx="${it.r}" fill="${it.f}"/><rect x="${hx}" y="${it.y}" width="${hw}" height="${it.h}" rx="${it.r}" fill="${it.split}"/><rect x="${hx}" y="${it.y}" width="${Math.min(it.r,hw)}" height="${it.h}" fill="${it.split}"/></g>`; }
       else s+=`<rect x="${it.x}" y="${it.y}" width="${it.w}" height="${it.h}" rx="${it.r}" fill="${it.f||'none'}"${st}${g}${it.preview?' pointer-events="none"':''}/>`;
     } else if(it.t==='x'){
-      s+=`<text x="${it.x}" y="${it.y}" font-size="${(it.pt*MM).toFixed(3)}" font-weight="${it.w}" fill="${it.c}" text-anchor="${it.al==='center'?'middle':it.al==='right'?'end':'start'}" dominant-baseline="central" pointer-events="none">${esc(it.s)}</text>`;
+      s+=`<text x="${it.x}" y="${it.y}"${it.rot?` transform="rotate(-90 ${it.x} ${it.y})"`:''} font-size="${(it.pt*MM).toFixed(3)}" font-weight="${it.w}" fill="${it.c}" text-anchor="${it.al==='center'?'middle':it.al==='right'?'end':'start'}" dominant-baseline="central" pointer-events="none">${esc(it.s)}</text>`;
     } else if(it.t==='l'){
       s+=`<line x1="${it.x1}" y1="${it.y1}" x2="${it.x2}" y2="${it.y2}" stroke="${it.c}" stroke-width="${it.sw}"${it.dash?` stroke-dasharray="${it.dash.join(' ')}"`:''}/>`;
     } }
@@ -1142,7 +1147,7 @@ function pdfFor(list){
         doc.setLineDashPattern([],0);
       } else if(it.t==='x'){
         doc.setFont(`Inter${it.w}`,'normal'); doc.setFontSize(it.pt); doc.setTextColor(it.c);
-        doc.text(it.s,it.x,it.y,{align:it.al||'left',baseline:'middle'});
+        if(it.rot) doc.text(it.s,it.x,it.y+it.tw/2,{angle:90,baseline:'middle'}); else doc.text(it.s,it.x,it.y,{align:it.al||'left',baseline:'middle'});
       } else if(it.t==='l'){
         doc.setDrawColor(it.c); doc.setLineWidth(it.sw); doc.setLineDashPattern(it.dash||[],0);
         doc.line(it.x1,it.y1,it.x2,it.y2); doc.setLineDashPattern([],0);
