@@ -655,7 +655,7 @@ function defaults(){
     History:['Hist','History'],Geography:['Geog','Geography'],RS:['RS','RS'],TPR:['TPR','RS'],IT:['IT','IT'],DT:['DT','DT'],Art:['Art','Art'],
     Drama:['Drama','Drama'],Music:['Music','Music'],PE:['PE','PE',1],Games:['Games','Games',1],Enrichment:['Enrich','Enrichment',1],
     Wellbeing:['Wlbg','Pastoral'],Prep:['Prep','Pastoral'],Reg:['Reg','Pastoral'],'Saturday Series':['Sat Series','Saturday Series'],
-    'Form Time':['Form','Pastoral'],Assembly:['Assem','Neutral',0,1],Chapel:['Chapel','Neutral',0,1],'House Meeting':['House','Neutral',0,1],'Singing Practice':['Singing','Neutral',0,1]};
+    'Form Time':['Form','Pastoral'],Assembly:['Assem','Neutral',0,1],Chapel:['Chapel','Neutral',0,1],'House Meetings':['House','Neutral',0,1],'Singing Practice':['Singing','Neutral',0,1]};
   const subjects={}; for(const [n,[s,k,b,e]] of Object.entries(subj)) subjects[n]={short:s,key:k,bare:!!b,...(e?{event:true}:{})};
   const wk5=['Mon','Tue','Wed','Thu','Fri'], wk6=[...wk5,'Sat'];
   const p0 = o => Object.fromEntries(DAYS.map(d=>{ const [label='',end='P0',force=false,who='none']=o[d]||[]; return [d,{label,end,force,who}]; }));
@@ -663,19 +663,19 @@ function defaults(){
   const sec = (days,lunch,prep,match,p0o,po={})=>{ const m=none(), g=none(); for(const [d,e] of Object.entries(match)) Object.assign(m[d],{on:true,start:'14:00',end:e});
     return {days,lunch,prep,matches:m,games:g,p0:p0(p0o),prepOv:Object.fromEntries(DAYS.map(d=>{ const [label='',who='none']=po[d]||[]; return [d,{label,who}]; }))}; };
   return {
-    v:7,
+    v:8,
     streamSubjects:['English','Geography','History','TPR'],
     setSubjects:['Maths','Latin','French','Science','Spanish'],
     notTutors:[],
     view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:''},
     sections:{
       LS: sec(wk5,{Mon:L('12:50','13:40'),Tue:L('12:50','13:40'),Wed:L('13:10','14:00'),Thu:L('12:50','13:40'),Fri:L('12:50','14:00')},L('16:20','17:00'),{Fri:'P17'},
-              {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',false,'reg'],Wed:['Chapel','P0',true],Thu:['House Meeting','P0',true],Fri:['Assembly','P0',true]},
+              {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',false,'reg'],Wed:['Chapel','P0',true],Thu:['House Meetings','P0',true],Fri:['Assembly','P0',true]},
               {Thu:['Singing Practice'],Fri:['Form Time','reg']}),
       MS: sec(wk6,{Mon:L('13:10','14:00'),Tue:L('13:10','14:00'),Wed:L('12:50','14:00'),Thu:L('13:30','14:00'),Fri:L('13:10','14:00'),Sat:L('12:50','14:00')},L('16:30','17:10'),{Wed:'P20',Sat:'P20'},
-              {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',true,'reg'],Wed:['Form Time','P0',false,'reg'],Thu:['House Meeting','P0',true],Fri:['Chapel','P0',true],Sat:['Assembly','P0',true]}),
+              {Mon:['Assembly','P0',true],Tue:['Wellbeing','P0',true,'reg'],Wed:['Form Time','P0',false,'reg'],Thu:['House Meetings','P0',true],Fri:['Chapel','P0',true],Sat:['Assembly','P0',true]}),
       US: sec(wk6,{Mon:L('13:30','14:20'),Tue:L('13:30','14:20'),Wed:L('12:50','14:00'),Thu:L('13:10','14:00'),Fri:L('13:30','14:20'),Sat:L('12:50','14:00')},L('16:30','17:20'),{Wed:'P20',Sat:'P20'},
-              {Mon:['Assembly','P0',true],Tue:['Prep','P0',true,'reg'],Thu:['House Meeting','P0',true],Fri:['Prep','P0',false,'reg'],Sat:['Chapel','P1',true]},{Tue:['Assembly']})
+              {Mon:['Assembly','P0',true],Tue:['Prep','P0',true,'reg'],Thu:['House Meetings','P0',true],Fri:['Prep','P0',false,'reg'],Sat:['Chapel','P1',true]},{Tue:['Assembly']})
     },
     forms:[{form:'5TJ',tutor:'Mr Joshi',section:'MS'}],
     planner:{w:0,h:0},
@@ -691,10 +691,14 @@ function merge(base,over){ if(Array.isArray(base)||typeof base!=='object'||base=
   const o={...base}; if(over&&typeof over==='object') for(const k of Object.keys(over)) o[k]= k in base ? merge(base[k],over[k]) : over[k]; return o; }
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
-function migrate(){ if((S.v||1)>=7) return false;
+function migrate(){ if((S.v||1)>=8) return false;
+  if((S.v||1)>=7){ const old='House Meeting', nw='House Meetings';
+    if(S.subjects[old]){ S.subjects[nw]={...S.subjects[old]}; delete S.subjects[old]; } S.subjects[nw] ??= {short:'House',key:'Neutral',bare:false}; S.subjects[nw].event=true;
+    S.aliases[old]=nw; for(const k of Object.keys(S.sections)) for(const d of DAYS){ const t=S.sections[k].p0?.[d]; if(t&&t.label===old) t.label=nw; const po=S.sections[k].prepOv?.[d]; if(po&&po.label===old) po.label=nw; }
+    S.v=8; return true; }
   if((S.v||1)>=6){ const D=defaults(); const ls=S.sections.LS, dl=D.sections.LS;
     ls.prep=[...dl.prep]; ls.p0={...dl.p0}; ls.prepOv={...(ls.prepOv||{}),Thu:{...dl.prepOv.Thu},Fri:{...dl.prepOv.Fri}};
-    S.subjects['Singing Practice']={...D.subjects['Singing Practice']}; S.v=7; return true; }
+    S.subjects['Singing Practice']={...D.subjects['Singing Practice']}; S.v=7; migrate(); return true; }
   if((S.v||1)>=5){ if(S.subjects['Form Time']?.key==='Neutral') S.subjects['Form Time'].key='Pastoral';
     S.streamSubjects ??= ['English','Geography','History','TPR']; S.setSubjects ??= ['Maths','Latin','French','Science','Spanish']; S.v=6; migrate(); return true; }
   if((S.v||1)>=4){ const D=defaults().sections; for(const k of Object.keys(D)){ S.sections[k].prepOv = {...D[k].prepOv, ...(S.sections[k].prepOv||{})}; }
@@ -706,7 +710,7 @@ function migrate(){ if((S.v||1)>=7) return false;
     S.v=4; migrate(); return true; }
   if((S.v||1)>=2){ S.subjects.Spanish={...(S.subjects.Spanish||{}),short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets[S.preset||'Refined']?.Spanish||PAL.presets.Refined.Spanish; S.v=3; migrate(); return true; }
   const t=S.sections?.US?.p0?.Tue; if(t && (!t.label || t.label==='Prep')) t.label='Assembly';
-  for(const n of ['Assembly','Chapel','House Meeting']) if(S.subjects[n]) S.subjects[n].event=true;
+  for(const n of ['Assembly','Chapel','House Meetings']) if(S.subjects[n]) S.subjects[n].event=true;
   if(S.view.style==='times') S.view.lt='all'; delete S.view.style;
   S.subjects.Spanish={short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets.Refined.Spanish; S.v=3; migrate(); return true; }
 const MIGRATED=migrate();
@@ -947,6 +951,7 @@ function wrapWords(label,maxW,pt){ const words=String(label).split(/\s+/).filter
   for(const w of words){ if(tw(w,pt,700)>maxW) return null; const t=cur?cur+' '+w:w; if(tw(t,pt,700)<=maxW) cur=t; else { lines.push(cur); cur=w; } }
   if(cur) lines.push(cur); return lines; }
 function eventFit(label,w,h){ for(let pt=8.5; pt>=4.6; pt*=.95){ const L=wrapWords(label,w-1.6,pt); if(L && L.length*pt*MM*1.15<=h-1.2) return pt; } return 4.6; }
+const DET=6.4;
 function fitBlock(b,w,h,view){
   const {full,short,tch,tchI,room}=contentFor(b,view);
   const padX=1.1,padY=.55,timeH=2.45, avW=w-2*padX;
@@ -966,7 +971,7 @@ function fitBlock(b,w,h,view){
     return Sz*MM*1.1 + (det.length? .35+det.length*D*MM*1.18 : 0) <= avH; };
   for(const [nm,det,t] of cfgs){
     const floor = det.length ? 7.4 : 6.6;
-    for(let Sz=10.5; Sz>=floor; Sz*=.95){ const D=Math.max(5.5,Math.min(7,Sz*.68));
+    for(let Sz=10.5; Sz>=floor; Sz*=.95){ const D=DET;
       if(fits(nm,det,t,Sz,D)) return {nm,det,Sz,D,time:t?time:''}; } }
   for(let Sz=8; Sz>=4.8; Sz*=.92){ if(fits(short,[],0,Sz,6)) return {nm:short,det:[],Sz,D:6,time:''}; }
   return null;
@@ -1533,7 +1538,7 @@ function renderSettings(){
       <td data-l="Matches"><div class="inl"><input type="checkbox" data-mon="${d}"${m.on?' checked':''} aria-label="Matches on ${DAYNAME[d]}">${m.on?`from ${timeIn(m.start,`data-mstart="${d}"`)} to ${periodSel(m.end,`data-mend="${d}"`,'P11')}`:'<span class="mini">none</span>'}</div></td>
       <td data-l="Games lessons"><div class="inl"><input type="checkbox" data-gon="${d}"${g.on?' checked':''} aria-label="Games lessons on ${DAYNAME[d]}">${g.on?`${periodSel(g.from,`data-gfrom="${d}"`,'P1')} to ${periodSel(g.to,`data-gto="${d}"`,'P1')}`:'<span class="mini">not set</span>'}</div></td></tr>`; }).join('')}
     </tbody></table></div>
-    <datalist id="sublist2">${['Assembly','Chapel','House Meeting','Form Time','Prep','Wellbeing'].map(s=>`<option value="${s}">`).join('')}</datalist>
+    <datalist id="sublist2">${['Assembly','Chapel','House Meetings','Form Time','Prep','Wellbeing'].map(s=>`<option value="${s}">`).join('')}</datalist>
     <p class="mini" style="margin:10px 0 0">Games lessons: when iSAMS shows Games alongside another subject, Games wins inside these periods and the other subject wins outside them. Matches days count automatically.</p>
   </fieldset></div><fieldset class="ro" ${dis}>
   <div class="card" id="sec-forms"><h3>Forms and tutors</h3><p>The tutor name must match the Registration line in the export (e.g. Mr Joshi). The form and section are then picked automatically.</p>
