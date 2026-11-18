@@ -129,6 +129,23 @@ body.hide-mode .hidebar{display:flex}
 
 /* menus */
 .menu{position:fixed;z-index:60}
+/* Publish to Morning Slide */
+.pubrow{display:flex;flex-direction:column;gap:6px;border-top:1px solid #E2DED5;margin-top:10px;padding-top:10px}
+.pubbtn{height:44px;border-radius:10px;border:1px solid #2E6E6E;background:#fff;color:#2E6E6E;font:600 14px Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.pubbtn:hover{background:#E1EEED}
+.pubnote{font:400 12px Inter,sans-serif;color:#5E6573;text-align:center}
+.pubnote button{border:0;background:none;padding:0;color:#2E6E6E;font:600 12px Inter,sans-serif;text-decoration:underline;cursor:pointer}
+.signin-back{position:fixed;inset:0;z-index:90;background:rgba(20,27,45,.45);display:grid;place-items:center;padding:16px}
+.signin-back[hidden]{display:none}
+.signin{width:min(400px,100%);background:#fff;border-radius:16px;padding:22px 24px;box-shadow:0 24px 60px -20px rgba(20,27,45,.55);display:flex;flex-direction:column;gap:12px;font:400 14px Inter,sans-serif;color:#141B2D}
+.signin h2{margin:0;font-size:18px}
+.signin p{margin:0;color:#5E6573}
+.signin label{display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:13px}
+.signin input{height:42px;padding:0 12px;border:1px solid #D5D0C6;border-radius:9px;font:400 15px Inter,sans-serif}
+.signin .err{background:#FDEEEE;color:#8E2F2F;border-radius:9px;padding:8px 10px}
+.signin .btns{display:flex;gap:8px;justify-content:flex-end}
+.signin .btns button{height:42px;padding:0 16px;border-radius:9px;font:600 14px Inter,sans-serif;cursor:pointer;border:1px solid #D5D0C6;background:#fff}
+.signin .btns .go{background:#2E6E6E;border-color:#2E6E6E;color:#fff}
 .menu[hidden]{display:none !important}
 .menu.file{width:230px;background:#fff;border-radius:18px;border:1px solid #E2DED5;box-shadow:0 18px 40px rgba(20,27,45,.18);padding:8px;display:flex;flex-direction:column;gap:2px}
 .mi{height:44px;border:0;border-radius:10px;background:transparent;color:#141B2D;font:500 14px Inter,sans-serif;display:flex;align-items:center;gap:10px;padding:0 12px;cursor:pointer;text-align:left}
@@ -255,7 +272,16 @@ body.hide-mode .hidebar{display:flex}
   <div class="prev" id="prev">Preparing preview…</div>
   <button class="eb1" role="menuitem" data-act="copyimg"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>Copy as image</button>
   <div class="two"><button class="eb2" role="menuitem" data-act="copyhtml">Copy as table</button><button class="eb2" role="menuitem" data-act="png">Download PNG</button></div>
+  <div class="pubrow"><button class="pubbtn" role="menuitem" data-act="publish"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>Publish to Morning Slide</button><div class="pubnote" id="pubNote"></div></div>
 </div>
+<div class="signin-back" id="signinBack" hidden><form class="signin" id="signinForm">
+  <h2>Sign in to publish</h2>
+  <p>Use your Morning Slide account. Only Morning Slide admins can publish.</p>
+  <div class="err" id="signinErr" hidden></div>
+  <label>School email<input type="email" id="siEmail" autocomplete="email" required></label>
+  <label>Password<input type="password" id="siPw" autocomplete="current-password" required></label>
+  <div class="btns"><button type="button" id="siCancel">Cancel</button><button class="go" id="siGo">Sign in and publish</button></div>
+</form></div>
 <form class="pop" id="pop" hidden></form>
 <div class="modal" id="settingsModal"><div class="sheet" id="settingsSheet" role="dialog" aria-label="Settings"></div></div>
 <div class="toast" id="toast"></div>
@@ -819,7 +845,7 @@ function closeFloating(){ui.menu=null;$('#menuFile').hidden=true;$('#menuExport'
 function openMenu(which){const btn=which==='file'?$('#fileBtn'):$('#exportBtn');const m=which==='file'?$('#menuFile'):$('#menuExport');
   if(ui.menu===which){closeFloating();return;}closeFloating();ui.menu=which;m.hidden=false;if(which==='file')btn.classList.add('open');
   const r=btn.getBoundingClientRect();m.style.top=(r.bottom+10)+'px';m.style.left=Math.max(12,Math.min(innerWidth-m.offsetWidth-12,r.right-m.offsetWidth))+'px';
-  if(which==='export')buildPreview();}
+  if(which==='export'){buildPreview();pubNote();}}
 async function buildPreview(){const pv=$('#prev');if(!day()){pv.textContent='';return;}await fontsReady();const c=drawSheet(sheetModel(day()));pv.innerHTML='<img alt="Preview of the exported sheet" src="'+c.toDataURL('image/png')+'">';}
 
 /* ============ settings ============ */
@@ -890,6 +916,8 @@ document.addEventListener('click',ev=>{
     case 'copyimg':copyImage();break;
     case 'copyhtml':copyTable();break;
     case 'png':downloadPNG();break;
+    case 'publish':publishDay();break;
+    case 'signout':signOutMS();break;
     case 'day':S.cur=b.dataset.day;ui.hideMode=false;closeFloating();render();break;
     case 'auto':commit(()=>autoArrange(day()));toast('Auto-arranged '+day().title);break;
     case 'add':ui.hideMode=false;render();openEdit(null,document.querySelector('[data-act="add"]'));break;
@@ -915,6 +943,57 @@ async function copyTable(){const m=sheetModel(day());const html=sheetHTML(m),txt
   try{const box=document.createElement('div');box.contentEditable='true';box.style.cssText='position:fixed;left:-9999px;top:0';box.innerHTML=html;document.body.appendChild(box);
     const r=document.createRange();r.selectNodeContents(box);const s=getSelection();s.removeAllRanges();s.addRange(r);const ok=document.execCommand('copy');s.removeAllRanges();box.remove();
     toast(ok?'Copied as a table. Paste it into Outlook or Teams.':"Couldn't copy here.");}catch(e){toast("Couldn't copy here.");}}
+/* ============ Publish to Morning Slide ============
+   Saves this day's queues (no names: team labels, doors and times) to Morning Slide's database.
+   On matchdays, each form's slide shows the lines for its own year group under Lunchtime Arrangements. */
+const MS={url:'https://jbvemxhfndjkofcbubmn.supabase.co',key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP',
+  js:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js',store:'sb-jbvemxhfndjkofcbubmn-auth-token'};
+let msClient=null,msLoading=null;
+function msLib(){if(window.supabase&&window.supabase.createClient)return Promise.resolve();if(msLoading)return msLoading;
+  msLoading=new Promise((ok,bad)=>{const s=document.createElement('script');s.src=MS.js;s.onload=ok;s.onerror=()=>{msLoading=null;bad(new Error('Couldn’t reach Morning Slide. Check the internet connection.'));};document.head.appendChild(s);});return msLoading;}
+async function msSb(){if(msClient)return msClient;await msLib();msClient=window.supabase.createClient(MS.url,MS.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false,storageKey:MS.store}});return msClient;}
+function publishData(d){
+  const teams=[];
+  for(const c of CELLS){const [slot,door]=c.split('-');
+    for(const t of (d.layout[c]||[]))for(const id of (d.tiles[t]||[])){const e=entryById(d,id);
+      if(!e||!visible(e)||e.yearKey==='LS')continue;
+      teams.push({years:e.yearKey==='78'?[7,8]:[+e.yearKey],gender:e.gender||'',sport:e.sportKey||'',
+        named:!e.gender||e.gender==='Mixed'||offSport(e),label:(e.suffix||'').trim(),away:isTravel(e),
+        door:doorName(door),time:S.settings.times[slot],meet:e.meet!=null?fmt(e.meet):null});}}
+  return {v:1,date:d.dateISO,title:d.title,term:S.settings.term,teams};
+}
+function pubNote(){const el=$('#pubNote');if(!el)return;const d=day();let t='';
+  try{const p=JSON.parse(localStorage.getItem('matchdayQueues.published')||'{}')[d&&d.dateISO];if(p)t='Published '+new Date(p).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+'. Publish again after any changes.';}catch(e){}
+  const signed=(()=>{try{return !!localStorage.getItem(MS.store);}catch(e){return false;}})();
+  el.innerHTML=(t||'Each form sees its own year group under Lunchtime Arrangements.')+(signed?' <button type="button" data-act="signout">Sign out</button>':'');}
+async function publishDay(){
+  const d=day();if(!d){toast('Upload the fixtures first');return;}
+  closeFloating();
+  try{const sb=await msSb();const {data}=await sb.auth.getSession();
+    if(!data.session){openSignin();return;}
+    await doPublish(sb,d);}catch(err){toast(err.message||String(err),4500);}
+}
+async function doPublish(sb,d){
+  const payload=publishData(d);
+  if(!payload.teams.length){toast('There are no Year 5–8 teams on this day to publish.');return;}
+  const {error}=await sb.from('ms_matchday').upsert({date:d.dateISO,data:payload},{onConflict:'date'});
+  if(error){toast(/row-level security|permission/i.test(error.message)?'Only Morning Slide admins can publish. Ask an admin to give you admin access in Morning Slide.':'Couldn’t publish: '+error.message,5000);return;}
+  try{const p=JSON.parse(localStorage.getItem('matchdayQueues.published')||'{}');p[d.dateISO]=Date.now();localStorage.setItem('matchdayQueues.published',JSON.stringify(p));}catch(e){}
+  toast('Published '+d.title+'. Slides update within a few minutes.',4000);pubNote();
+}
+function openSignin(){$('#signinErr').hidden=true;$('#signinBack').hidden=false;setTimeout(()=>$('#siEmail').focus(),0);}
+function closeSignin(){$('#signinBack').hidden=true;}
+$('#siCancel').addEventListener('click',closeSignin);
+$('#signinBack').addEventListener('click',ev=>{if(ev.target===$('#signinBack'))closeSignin();});
+$('#signinBack').addEventListener('keydown',ev=>{if(ev.key==='Escape')closeSignin();});
+$('#signinForm').addEventListener('submit',async ev=>{ev.preventDefault();const go=$('#siGo');go.disabled=true;
+  try{const sb=await msSb();const {error}=await sb.auth.signInWithPassword({email:$('#siEmail').value.trim().toLowerCase(),password:$('#siPw').value});
+    if(error)throw new Error(/invalid login/i.test(error.message)?'That email and password don’t match. You can reset your password in Morning Slide.':/not confirmed/i.test(error.message)?'Confirm your email first: click the link Morning Slide sent you.':error.message);
+    closeSignin();$('#siPw').value='';await doPublish(sb,day());}
+  catch(err){$('#signinErr').textContent=err.message||String(err);$('#signinErr').hidden=false;}
+  finally{go.disabled=false;}});
+async function signOutMS(){closeFloating();try{const sb=await msSb();await sb.auth.signOut();}catch(e){}toast('Signed out of Morning Slide');pubNote();}
+
 async function downloadPNG(){await fontsReady();const c=drawSheet(sheetModel(day()));c.toBlob(bl=>saveFile('matchday-queues-'+day().dateISO+'.png',bl),'image/png');}
 
 $('#csvInput').addEventListener('change',e=>{const f=e.target.files[0];if(f)readFile(f);e.target.value='';});
