@@ -177,6 +177,8 @@ fieldset.ro:disabled .card{opacity:.85}
 .plh:hover{color:var(--ink)}
 .vdet{flex-basis:100%}.vdet summary{cursor:pointer}.vdet div{margin-top:3px}
 .plist[hidden]{display:none}
+
+.work{display:flex;gap:6px}.work>*{flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center}
 </style></head><body>
 <header class="top">
  <div class="brand"><i><b></b><b></b><b></b></i>Timetable Maker</div>
@@ -193,7 +195,7 @@ fieldset.ro:disabled .card{opacity:.85}
 <main>
  <section id="tab-tt" class="tab on">
   <aside class="side">
-   <label class="drop" id="drop"><input type="file" id="file" accept=".xlsx,.zip" multiple hidden><b>Drop iSAMS exports here</b><span>a .zip from iSAMS, or any number of .xlsx files</span></label>
+   <label class="drop" id="drop"><input type="file" id="file" accept=".xlsx,.zip,.json" multiple hidden><b>Drop iSAMS exports here</b><span>a .zip from iSAMS, or any number of .xlsx files</span></label>
    <div><p class="lbl" id="plabel">Pupils</p><div class="plist" id="plist"></div></div>
    <div class="opt">
     <div><p class="lbl">Page</p><div class="seg" data-opt="orient"><button data-v="land">Landscape</button><button data-v="port">Portrait</button></div></div>
@@ -211,6 +213,7 @@ fieldset.ro:disabled .card{opacity:.85}
    <div class="acts">
     <button class="btn pri" id="dlall">Download timetables…</button>
     <button class="btn" id="dl1">Just this pupil</button>
+    <div class="work"><button class="btn sm" id="savework" title="Save the loaded timetables and all your edits to a file">Save my work</button><label class="btn sm" title="Open a file saved with Save my work">Open saved work<input type="file" id="openwork" accept=".json" hidden></label></div>
    </div>
   </aside>
   <div class="stage">
@@ -1195,6 +1198,7 @@ const baseName = n => n.split(/[\\/]/).pop();
 function fileMeta(file){ const m=/^([A-Z][A-Z' ]*(?:-[A-Z][A-Z' ]*)*)-([A-Z][^_]*?)_\(?(\d{1,2})\)?$/.exec(baseName(file).replace(/\.xlsx$/i,''));
   if(!m) return null; const year=+m[3]; return {first:m[2].trim(),surname:m[1].trim(),year,section:year<=4?'LS':year<=6?'MS':'US'}; }
 async function addFiles(files){
+  const js=files.find(f=>/\.json$/i.test(f.name)); if(js){ await openSession(js); files=files.filter(f=>f!==js); if(!files.length) return; }
   const jobs=[], bad=[];
   for(const f of files){
     if(/\.zip$/i.test(f.name)){
@@ -1204,7 +1208,7 @@ async function addFiles(files){
         for(const n of names) jobs.push({name:baseName(n),get:()=>read.bytes(n)}); }
       catch(e){ bad.push(`${f.name}: ${e.message}`); } }
     else if(/\.xlsx$/i.test(f.name)) jobs.push({name:f.name,get:()=>f.arrayBuffer()});
-    else bad.push(`${f.name}: not an .xlsx or .zip file`); }
+    else bad.push(`${f.name}: not an .xlsx, .zip or saved-work file`); }
   if(jobs.length>3) toast(`Reading ${jobs.length} timetables…`);
   const ok=[]; let dup=0;
   for(const j of jobs){
@@ -1217,6 +1221,20 @@ async function addFiles(files){
   if(parts.length) toast(parts.join(' · '));
   renderAll(); snap(0);
 }
+async function saveSession(){
+  if(!P.length||examples){ toast('Load some timetables first'); return; }
+  const now=new Date(), stamp=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const forms=[...new Set(P.map(q=>q.form).filter(Boolean))];
+  const data={type:'timetable-maker-work',version:1,saved:now.toISOString(),cur,pupils:P,view:S.view,ignored:[...IGN]};
+  await saveFile(new Blob([JSON.stringify(data)],{type:'application/json'}),safe(`Timetable work${forms.length===1?' '+forms[0]:''} ${stamp}.json`)); }
+async function openSession(file){
+  let o; try{ o=JSON.parse(await file.text()); }catch(e){ toast('That file couldn’t be read'); return; }
+  if(o?.type!=='timetable-maker-work' || !Array.isArray(o.pupils)){ toast(o?.v&&o?.sections?'That’s a settings file – load it in Settings':'That isn’t a saved-work file'); return; }
+  if(P.length && !examples && !(await confirmDlg(`Replace the ${P.length} timetable${P.length>1?'s':''} currently loaded with the saved work?`,'Open saved work'))) return;
+  GRIDS.clear(); P=o.pupils.filter(q=>q&&q.grid).map(q=>({...q,patches:q.patches||{}})); for(const q of P) GRIDS.set(q.id,q.grid);
+  uid=Math.max(0,...P.map(q=>q.id)); cur=P.some(q=>q.id===o.cur)?o.cur:(P[0]?.id??null); examples=false;
+  if(o.view) S.view=merge(defaults().view,o.view); if(Array.isArray(o.ignored)){ IGN=new Set(o.ignored); saveIgn(); }
+  save(); closeEditor(); renderAll(); snap(0); toast(`Opened ${P.length} timetable${P.length===1?'':'s'} with your edits`); }
 const sortP = () => P.sort((a,b)=>(!a.form)-(!b.form)||a.form.localeCompare(b.form,undefined,{numeric:true})||(a.sort||a.name).localeCompare(b.sort||b.name));
 function makePupil({name,grid},meta){ const d=detect(grid), id=++uid; GRIDS.set(id,grid);
   const p={id,name,grid,tutor:d.tutor,form:d.form,section:d.section,patches:{}};
@@ -1623,6 +1641,7 @@ document.addEventListener('click',async e=>{
   if(ds.fold!==undefined){ if(COLL.has(ds.fold)) COLL.delete(ds.fold); else COLL.add(ds.fold); renderList(); return; }
   if(t.id==='edundo' && ED && p){ for(const id of ED.slots) delete p.patches[ED.day+'|'+id]; closeEditor(); rerender(); return; }
   if(t.id==='undoall' && p){ p.patches={}; closeEditor(); rerender(); toast('Edits undone'); return; }
+  if(t.id==='savework'){ await saveSession(); return; }
   if(t.id==='dl1' && p){ t.disabled=true; try{ await saveFile(pdfFor([p]),safe(`${p.form?p.form+' - ':''}${p.name}.pdf`)); } finally{ t.disabled=false; } return; }
   if(t.id==='dlall' && P.length){ openExport(); return; }
   if(t.id==='exgo'){ await runExport(t); return; }
@@ -1670,7 +1689,7 @@ document.addEventListener('change',e=>{
   if(t.id==='cuw'||t.id==='cuh'){ S.view.custom={w:+$('#cuw').value||148,h:+$('#cuh').value||210}; save(); return; }
   if(t.id==='strsub'||t.id==='setsub'){ const list=t.value.split(',').map(x=>x.trim()).filter(Boolean).map(x=>S.aliases[x]||x); if(t.id==='strsub') S.streamSubjects=list; else S.setSubjects=list; t.value=list.join(', '); save(); renderList(); return; }
   if(t.id==='plw'||t.id==='plh'){ S.planner={w:+$('#plw').value||0,h:+$('#plh').value||0}; save(); return; }
-  if(t.id==='file'){ addFiles([...t.files]); t.value=''; return; }
+  if(t.id==='file'||t.id==='openwork'){ addFiles([...t.files]); t.value=''; return; }
   if(t.id==='imp'){ const f=t.files[0]; if(!f) return; f.text().then(s=>{ try{ S=merge(defaults(),JSON.parse(s)); save(); renderAll(); renderSettings(); toast('Settings loaded'); }catch(err){ toast('That file isn’t a settings file'); } }); return; }
   if(t.id==='pname' && p){ p.name=t.value.trim()||p.name; rerender(); return; }
   if(t.id==='pform' && p){ const form=t.value.trim(); p.form=form;
