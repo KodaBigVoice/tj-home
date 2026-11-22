@@ -179,9 +179,21 @@ fieldset.ro:disabled .card{opacity:.85}
 .plist[hidden]{display:none}
 
 .work{display:flex;gap:6px}.work>*{flex:1;text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+.modesw{margin-left:14px}
+.modesw button{min-width:84px}
+.tonly{display:none}
+body.tmode .tonly{display:block}
+body.tmode .ponly{display:none}
+.clsum{flex-basis:100%;display:flex;flex-direction:column;gap:6px}
+.clsum .chip .mini{font-weight:500;margin-left:2px}
+.sw.big{width:64px;height:40px;border-radius:8px;border:1px solid var(--line);font-weight:800;vertical-align:middle}
+.dutyl{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.dutyl .x{border:0;background:none;font-size:18px;color:var(--mute);cursor:pointer}
 </style></head><body>
 <header class="top">
  <div class="brand"><i><b></b><b></b><b></b></i>Timetable Maker</div>
+ <div class="seg modesw" role="group" aria-label="Timetable type"><button data-msw="p" class="on">Pupils</button><button data-msw="t">Teachers</button></div>
  <nav class="tabs" id="tabs" style="margin-left:auto">
   <button data-tab="tt" class="on">Timetables</button>
   <button data-tab="chk">Checks <span class="badge" id="chkbadge" hidden></span></button>
@@ -199,7 +211,7 @@ fieldset.ro:disabled .card{opacity:.85}
    <div><p class="lbl" id="plabel">Pupils</p><div class="plist" id="plist"></div></div>
    <div class="opt">
     <div><p class="lbl">Page</p><div class="seg" data-opt="orient"><button data-v="land">Landscape</button><button data-v="port">Portrait</button></div></div>
-    <div><p class="lbl">Teachers</p><div class="seg" data-opt="names"><button data-v="full">Full names</button><button data-v="init">Initials</button><button data-v="none">None</button></div></div>
+    <div class="ponly"><p class="lbl">Teachers</p><div class="seg" data-opt="names"><button data-v="full">Full names</button><button data-v="init">Initials</button><button data-v="none">None</button></div></div>
     <div><p class="lbl">Show times <span class="mini" id="modecustom" hidden>· custom</span></p><div class="seg" data-mode><button data-v="top">Along the top</button><button data-v="blocks">On each lesson</button></div></div>
     <details id="moreopts" class="more"><summary>More options</summary>
      <div class="opt" style="margin-top:10px">
@@ -207,7 +219,8 @@ fieldset.ro:disabled .card{opacity:.85}
       <label class="tg" id="btimesrow">Times for breaks and lunch<input type="checkbox" data-tog="btimes"></label>
       <div><p class="lbl">Timings on lesson blocks</p><div class="seg" data-opt="lt"><button data-v="all">All</button><button data-v="lunch">Lunch only</button><button data-v="none">None</button></div></div>
      </div></details>
-    <label class="tg">Show rooms<input type="checkbox" data-tog="rooms"></label>
+    <div class="tonly"><p class="lbl">Colour by</p><div class="seg" data-opt="colby"><button data-v="year">Year group</button><button data-v="subject">Subject</button></div></div>
+    <label class="tg" id="roomslab">Show rooms<input type="checkbox" data-tog="rooms"></label>
     <div><p class="lbl">Show</p><div class="cks"><label><input type="checkbox" data-tog="reg">Registration</label><label><input type="checkbox" data-tog="p0">P0</label><label><input type="checkbox" data-tog="prep">Prep</label></div></div>
    </div>
    <div class="acts">
@@ -654,7 +667,7 @@ const GAP='#F0F2F5', MM=25.4/72;
 
 function merge(base,over){ if(Array.isArray(base)||typeof base!=='object'||base===null) return over===undefined?base:over;
   const o={...base}; if(over&&typeof over==='object') for(const k of Object.keys(over)) o[k]= k in base ? merge(base[k],over[k]) : over[k]; return o; }
-const SHARED_KEYS = ['v','rev','bells','sections','forms','staff','subjects','aliases','colors','preset','planner','notTutors','streamSubjects','setSubjects'];
+const SHARED_KEYS = ['v','rev','bells','dutyTimes','sections','forms','staff','subjects','aliases','colors','preset','planner','notTutors','streamSubjects','setSubjects'];
 /* ========================== defaults ========================== */
 // The public app knows no school. School settings come from the shared database (or SEED in a private build).
 const SEED = null;
@@ -669,24 +682,29 @@ function generic(){
   const sec = () => ({days:[...DAYS],lunch:{},prep:L('16:30','17:00'),matches:blank(),games:blank(),
     p0:Object.fromEntries(DAYS.map(d=>[d,{label:'',end:'P0',force:false,who:'none'}])),prepOv:Object.fromEntries(DAYS.map(d=>[d,{label:'',who:'none'}]))});
   return {
-    v:10,
+    v:11,
     bells:genericBells(),
     streamSubjects:[], setSubjects:[], notTutors:[],
     view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:'',evt:'wide'},
+    tview:{periods:'both',lt:'none',btimes:true,orient:'land',names:'init',rooms:true,reg:true,p0:true,prep:true,evt:'wide',colby:'year'},
+    dutyTimes:[],
     sections:{LS:sec(),MS:sec(),US:sec()},
     forms:[], planner:{w:0,h:0}, staff:{}, subjects,
     aliases:{Mathematics:'Maths','Religious Studies':'RS','Info Tech':'IT','Design Tech':'DT',Registration:'Reg'},
     colors:{...PAL.presets.Refined}, preset:'Refined'
   };
 }
-function defaults(){ const g=generic(); return SEED ? merge(g,{...SEED,v:g.v,view:g.view}) : g; }
+function defaults(){ const g=generic(); return SEED ? merge(g,{...SEED,v:g.v,view:g.view,tview:g.tview}) : g; }
 const KEY='tt-maker-v1';
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
-function migrate(){ if((S.v||1)>=10) return false;
+// ONE-OFF (remove once the school's settings are on format 11): the lunch duty times
+const ONEOFF_DUTY=[['12:50','13:00'],['13:00','13:20'],['13:20','13:40'],['13:40','14:00'],['14:00','14:20']];
+function migrate(){ if((S.v||1)>=11) return false;
+  if((S.v||1)>=10){ if(!S.dutyTimes||!S.dutyTimes.length) S.dutyTimes=ONEOFF_DUTY.map(x=>[...x]); S.v=11; return true; }
   // Settings older than format 10 (only an old copy saved on one computer): keep what's there, fill gaps from the defaults.
   const D=defaults(); for(const k of SHARED_KEYS) if(S[k]===undefined) S[k]=D[k];
-  if(!S.bells||!Object.keys(S.bells).length) S.bells=D.bells; S.v=10; return true; }
+  if(!S.bells||!Object.keys(S.bells).length) S.bells=D.bells; S.v=10; migrate(); return true; }
 const MIGRATED=migrate(); rebuildBells(S.bells);
 { const v=S.view; if('ptimes' in v){ v.periods=v.ptimes?'both':'labels'; delete v.ptimes; } if('ltimes' in v){ v.lt=v.ltimes?'all':'none'; delete v.ltimes; } }
 const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
@@ -738,7 +756,7 @@ function ensureSubject(n){
   save();
 }
 const subj = n => S.subjects[n] || {short:n,key:n,bare:false};
-const colour = k => (!canEdit() && S.view.colors && S.view.colors[k]) || S.colors[k] || '#CFD6E0';
+const colour = k => (!canEdit() && S.view.colors && S.view.colors[k]) || S.colors[k] || (typeof YEARCOL!=='undefined' && (YEARCOL[k] || (k==='Duty'&&DUTYCOL))) || '#CFD6E0';
 const initials = t => S.staff[t] || S.staff[String(t).trim()] || t;
 
 /* ========================== xlsx reading ========================== */
@@ -805,21 +823,26 @@ function parseTimetable(sheets,file){
     const R=Object.keys(rows).map(Number).sort((a,b)=>a-b);
     const hdr=R.find(r=>Object.values(rows[r]).filter(v=>dayOf(v)).length>=3);
     if(hdr===undefined){ peek.push(...R.slice(0,4).flatMap(r=>Object.values(rows[r]).slice(0,4)).map(v=>String(v).split('\n')[0].slice(0,24))); continue; }
-    return parseSheet(rows,R,hdr,file); }
+    const r=parseSheet(rows,R,hdr,file), n=Object.values(r.grid).reduce((a,g)=>a+Object.keys(g).length,0);
+    if(!peek.best || n>peek.best.n) peek.best={r,n}; }
+  if(peek.best) return peek.best.r;
   throw new Error('Couldn’t find the Monday–Saturday header row'+(peek.length?` (the file starts: “${peek.slice(0,6).join('”, “')}”)`:' (the sheet looks empty)'));
 }
 function parseSheet(rows,R,hdr,file){
   let title=''; for(const r of R){ if(r>hdr) break; for(const v of Object.values(rows[r])) if(!title && /timetable/i.test(v)) title=String(v).trim(); }
   const dayCol={}; for(const [c,v] of Object.entries(rows[hdr])){ const d=dayOf(v); if(d && !(d in dayCol)) dayCol[d]=+c; }
   const labCol=Math.min(...Object.values(dayCol))-1 >= 0 ? Object.keys(rows[hdr]).map(Number).filter(c=>c<Math.min(...Object.values(dayCol))).sort((a,b)=>a-b)[0] ?? 0 : 0;
-  const grid={}; for(const d in dayCol) grid[d]={};
+  const kind=/^\s*teacher\s+timetable/i.test(title)?'t':/^\s*room\s+timetable/i.test(title)?'r':'p';
+  const grid={}; for(const d in dayCol) grid[d]={}; let lastP=0;
   for(const r of R){ if(r<=hdr) continue; const lab=String(rows[r][labCol]??rows[r][0]??'').trim(); let id=null;
-    if(/^reg/i.test(lab)) id='REG'; else if(/^(evening\s+)?prep$/i.test(lab)) id='PREP'; else { const m=/^(?:period|p)\s*(\d+)$/i.exec(lab); if(m&&BELL['P'+m[1]]) id='P'+m[1]; }
+    if(/^reg/i.test(lab)) id='REG'; else if(/^(evening\s+)?prep$/i.test(lab)) id='PREP'; else { const m=/^(?:period|p)\s*(\d+)$/i.exec(lab); if(m&&BELL['P'+m[1]]){ id='P'+m[1]; lastP=+m[1]; } else if(lab && lastP) id='G'+lastP; }
     if(!id) continue;
-    for(const d in dayCol){ const raw=rows[r][dayCol[d]]; if(raw && String(raw).trim()) grid[d][id]=parseCell(String(raw)); } }
-  let name=title.replace(/^.*?timetable\s*:\s*/i,'').trim().replace(/^(mr|mrs|miss|ms|mx|master|dr)\.?\s+/i,'');
+    for(const d in dayCol){ const raw=rows[r][dayCol[d]]; if(raw && String(raw).trim()) grid[d][id]=kind==='p'?parseCell(String(raw)):parseTCell(String(raw),kind); } }
+  const after=title.replace(/^.*?timetable\s*:\s*/i,'').trim(), code=(/\[([^\]]+)\]\s*$/.exec(after)||[])[1]||'';
+  if(kind!=='p'){ const name=after.replace(/\s*\[[^\]]*\]\s*$/,'').trim()||file.replace(/\.xlsx$/i,''); return {name,grid,kind,code:code.trim()}; }
+  let name=after.replace(/^(mr|mrs|miss|ms|mx|master|dr)\.?\s+/i,'');
   if(!name) name=file.replace(/\.xlsx$/i,'');
-  return {name,grid};
+  return {name,grid,kind};
 }
 const regTeachers = grid => { const c=new Map(); for(const d of DAYS) for(const id of ['REG','P0']) for(const e of grid[d]?.[id]||[]) if(e.teacher && /^registration$/i.test(e.raw)) c.set(e.teacher,(c.get(e.teacher)||0)+1); return c; };
 const tutorOf = grid => { const not=new Set((S.notTutors||[]).map(x=>x.toLowerCase())); let best='',n=0; for(const [t,k] of regTeachers(grid)) if(!not.has(t.toLowerCase()) && k>n){ best=t; n=k; } return best; };
@@ -913,6 +936,7 @@ function buildDay(p,d){
 let mctx;
 const tw = (s,pt,w) => { mctx??=document.createElement('canvas').getContext('2d'); mctx.font=`${w} 100px Inter`; return mctx.measureText(s).width/100*pt*MM; };
 function contentFor(b,view){
+  if(b.tl) return {full:b.tl.full,short:b.tl.short,tch:b.tl.tch||'',tchI:'',room:view.rooms!==false?(b.rooms||[]).join(' / '):''};
   const names=b.names||[b.subj];
   const full=names.join(' / '), short=names.map(n=>subj(n).short||n).join(' / ');
   const ts=b.teachers||[];
@@ -972,19 +996,20 @@ function blockItems(b,x,y,w,h,view,items,ref,tplPt){
       items.push({t:'x',x:cx,y:y0+Lp*MM*1.1+.4+5.6*MM*.58,s:lab,pt:5.6,w:500,c:'#9AA1B0',al:'center'}); }
     else items.push({t:'x',x:cx,y:y+h/2,s:'Lunch',pt:Lp,w:500,c:'#7B8396',al:'center'});
     return; }
-  const cols=(b.keys||[]).map(colour); const c1=cols[0]||'#CFD6E0', c2=cols[1];
+  const cols=b.col?[b.col]:(b.keys||[]).map(colour); const c1=cols[0]||'#CFD6E0', c2=cols[1];
   const base = c2 ? mix(c1,c2,.5) : c1, ink=inkOn(base);
   items.push({t:'r',x,y,w,h,r,f:c1,split:c2||null,ref});
   if(b.flag && ref) items.push({t:'r',x:x+.25,y:y+.25,w:w-.5,h:h-.5,r,s:'#E8A21A',sw:.55,dash:[1.1,.7],preview:true});
   const cx=x+w/2;
-  if(isEvent(b)){
+  if(isEvent(b) || b.wrap){
+    const label=b.wrap?b.tl.full:b.subj; if(b.wrap){ const vv={evt:w<h*.85?'rotate':'wide'}; view={...view,evt:vv.evt}; tplPt=Math.min(8,eventFitV(label,w,h-(view.lt==='all'&&h>=9?2.45:0),view)); }
     let top=0;
     if(view.lt==='all' && h>=9){ const r=`${fmt(b.a)}–${fmt(b.b)}`, tm=tw(r,5.6,500)<=w-2.2?r:tw(fmt(b.a),5.6,500)<=w-2.2?fmt(b.a):'';
       if(tm){ items.push({t:'x',x:cx,y:y+.55+1.25,s:tm,pt:5.6,w:500,c:mix(ink,base,.3),al:'center'}); top=2.45; } }
     const hh=h-top;
-    if(evRot(view,w,hh)){ const L=wrapWords(b.subj,hh-1.6,tplPt) || [subj(b.subj).short||b.subj], lh=tplPt*MM*1.15, cy=y+top+hh/2, x0=cx-(L.length-1)*lh/2;
+    if(evRot(view,w,hh)){ const L=wrapWords(label,hh-1.6,tplPt) || [b.wrap?label:subj(b.subj).short||b.subj], lh=tplPt*MM*1.15, cy=y+top+hh/2, x0=cx-(L.length-1)*lh/2;
       L.forEach((ln,i)=>items.push({t:'x',x:x0+i*lh,y:cy,s:ln,pt:tplPt,w:700,c:ink,al:'center',rot:true,tw:tw(ln,tplPt,700)})); return; }
-    const L=wrapWords(b.subj,w-1.6,tplPt) || [subj(b.subj).short||b.subj];
+    const L=wrapWords(label,w-1.6,tplPt) || [b.wrap?label:subj(b.subj).short||b.subj];
     const lh=tplPt*MM*1.15, y0=y+top+(hh-L.length*lh)/2;
     L.forEach((ln,i)=>items.push({t:'x',x:cx,y:y0+lh*(i+.5),s:ln,pt:tplPt,w:700,c:ink,al:'center'}));
     return; }
@@ -999,7 +1024,7 @@ function blockItems(b,x,y,w,h,view,items,ref,tplPt){
   for(const dl of fit.det){ items.push({t:'x',x:cx,y:yy+fit.D*MM*.6,s:dl,pt:fit.D,w:500,c:dc,al:'center'}); yy+=fit.D*MM*1.18; }
 }
 function fitText(s,maxW,pt,minPt,w){ while(pt>minPt && tw(s,pt,w)>maxW) pt*=.93; return tw(s,pt,w)<=maxW?pt:0; }
-function gridAxis(byDay,START,END,p0,len,prepW,keep=[]){
+function gridAxis(byDay,START,END,p0,len,prepW,keep=[],all=false){
   const cs=new Set([START,END]);
   for(const bl of byDay) for(const b of bl){ cs.add(b.a); cs.add(b.b); }
   for(const B of BELLS) for(const m of [B.a,B.b]) if(m>START && m<END) cs.add(m);
@@ -1010,38 +1035,40 @@ function gridAxis(byDay,START,END,p0,len,prepW,keep=[]){
     const bell=BELLS.find(B=>a>=B.a&&b<=B.b); let type,id='';
     if(cover(a,b,['prep'])) type='prep';
     else if(bell&&bell.id==='REG') type='reg';
-    else if(bell&&(cover(bell.a,bell.b,['lesson','tpl','match'])||keep.includes(bell.id))){ type='period'; id=bell.id; }
+    else if(bell&&(all||cover(bell.a,bell.b,['lesson','tpl','match'])||keep.includes(bell.id))){ type='period'; id=bell.id; }
     else if(cover(a,b,['lunch'])) type='lunch';
     else type='gap';
-    const empty=!byDay.some(bl=>bl.some(x=>x.a<b&&x.b>a)); if(empty){ type='empty'; id=''; }
+    const empty=!all&&!byDay.some(bl=>bl.some(x=>x.a<b&&x.b>a)); if(empty){ type='empty'; id=''; }
     const g=groups[groups.length-1];
     if(g && g.type===type && g.id===id) { g.b=b; g.cuts.push(b); }
     else groups.push({type,id,a,b,cuts:[a,b],empty}); }
   for(const g of groups){ const mins=g.b-g.a;
-    g.w = g.empty ? 0 : g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='gap' ? .65 : (g.type==='period'&&g.id==='P0'&&S.view.evt==='wide') ? 1.4 : 1;
+    g.w = g.empty ? 0 : g.type==='reg'?1 : g.type==='prep'?prepW : g.type==='gap' ? (all?(mins>=25?1:.5):.65) : (g.type==='period'&&g.id==='P0'&&(all?S.tview:S.view).evt==='wide') ? 1.4 : 1;
     g.label = g.type==='period'?BELL[g.id].label : g.type==='reg'?'Reg' : g.type==='prep'?'Prep' : ''; }
   const tot=groups.reduce((s,g)=>s+g.w,0); const map=new Map(); let pos=p0;
   for(const g of groups){ const W=g.w/tot*len, span=g.b-g.a; for(const c of g.cuts) map.set(c,pos+(c-g.a)/span*W); pos+=W; }
   return {groups,pos:m=>map.has(m)?map.get(m):p0+(m-START)/(END-START)*len};
 }
-let RENDER={blocks:{}};
+let RENDER={blocks:{}}; window.__blk=r=>{ const b=RENDER.blocks[r]; return b&&{day:b.day,a:b.a,b:b.b,kind:b.kind,label:b.tl?b.tl.full:b.subj,flag:!!b.flag,col:b.col}; };
 function layoutPage(p,view,interactive){
-  const sec=S.sections[p.section];
-  const days=sec.days.filter(d=>p.grid[d]);
-  const P0a=BELL.P0.a, P0b=BELL.P0.b;
-  const byDay=days.map(d=>{ let bl=buildDay(p,d);
+  const TT=isT(p), sec=TT?null:S.sections[p.section];
+  const days=TT?tDays(p):sec.days.filter(d=>p.grid[d]);
+  const P0a=BELL.P0.a, P0b=BELL.P0.b, CL=TT?tClasses(p,view):null, TS=TT?tSlots(p,view):null;
+  const byDay=days.map(d=>{ if(TT) return tDay(p,d,view,CL); let bl=buildDay(p,d);
     if(!view.reg) bl=bl.filter(b=>b.kind!=='reg');
     if(view.p0===false){ bl=bl.filter(b=>!(b.a>=P0a && b.b<=P0b)).map(b=> b.a<P0b && b.b>P0b && b.a>=P0a ? {...b,a:P0b} : b); }
     if(view.prep===false) bl=bl.filter(b=>b.kind!=='prep');
     while(bl.length&&bl[0].kind==='gap') bl.shift(); while(bl.length&&bl[bl.length-1].kind==='gap') bl.pop(); return bl; });
-  const all=byDay.flat(); const START=all.length?Math.min(...all.map(b=>b.a)):T('8:30'), END=all.length?Math.max(...all.map(b=>b.b)):T('17:00');
+  const all=byDay.flat(); let START=all.length?Math.min(...all.map(b=>b.a)):T('8:30'), END=all.length?Math.max(...all.map(b=>b.b)):T('17:00');
+  if(TT && TS.length){ START=Math.min(TS[0].a,START); END=Math.max(TS[TS.length-1].b,END); }
   const port=view.orient==='port', PW=port?210:297, PH=port?297:210, M=9, items=[];
   items.push({t:'x',x:M,y:M+3.4,s:p.name,pt:15,w:800,c:'#1D2433',al:'left'});
-  if(p.form) items.push({t:'x',x:M+tw(p.name,15,800)+tw(' ',15,500)*1.5,y:M+3.4,s:p.form,pt:15,w:500,c:'#8A91A1',al:'left'});
+  const sub=TT?(p.kind==='r'?'Room':p.code):p.form;
+  if(sub) items.push({t:'x',x:M+tw(p.name,15,800)+tw(' ',15,500)*1.5,y:M+3.4,s:sub,pt:15,w:500,c:'#8A91A1',al:'left'});
   const top=M+10, blocks={}, place=[], prepW=2;
   if(!port){
     const per=view.periods||'both', labW=23, x0=M+labW, len=PW-M-x0, hh=4.6, headH=per==='both'?14.5:per==='labels'?hh+1.2:0, rowH=view.lt==='all'?17:15.5, gap=1.6;
-    const ax=gridAxis(byDay,START,END,x0,len,prepW,p.section==='MS'?['P12']:[]);
+    const ax=gridAxis(byDay,START,END,x0,len,prepW,!TT&&p.section==='MS'?['P12']:[],TT);
     if(per!=='none') for(const g of ax.groups){ if(g.empty) continue; const gx=ax.pos(g.a)+.22, gw=ax.pos(g.b)-ax.pos(g.a)-.44;
       items.push({t:'r',x:gx,y:top,w:gw,h:hh,r:0,f:g.label?'#1D2433':'#9AA1B0'});
       if(g.label){ const pt=fitText(g.label,gw-.6,6.6,4.5,700); if(pt) items.push({t:'x',x:gx+gw/2,y:top+hh/2,s:g.label,pt,w:700,c:'#FFFFFF',al:'center'}); }
@@ -1059,7 +1086,7 @@ function layoutPage(p,view,interactive){
   } else {
     const per=view.periods||'both', labW=per==='both'?18:per==='labels'?11:0, headH=7, gap=1.4, x0=M+labW, n=days.length, colW=(PW-M-x0-gap*(n-1))/n;
     const y0=top+headH, len=PH-M-y0;
-    const ax=gridAxis(byDay,START,END,y0,len,prepW,p.section==='MS'?['P12']:[]);
+    const ax=gridAxis(byDay,START,END,y0,len,prepW,!TT&&p.section==='MS'?['P12']:[],TT);
     days.forEach((d,i)=>items.push({t:'x',x:x0+i*(colW+gap)+colW/2,y:top+headH/2-.6,s:DAYNAME[d],pt:9.5,w:700,c:'#1D2433',al:'center'}));
     if(per!=='none') for(const g of ax.groups){ if(!g.label||g.empty) continue; const gy=ax.pos(g.a), gh=ax.pos(g.b)-gy, range=`${fmt(g.a)}–${fmt(g.b)}`;
       if(per==='both' && gh>=6.2){ items.push({t:'x',x:M,y:gy+gh/2-1.35,s:g.label,pt:7,w:700,c:'#1D2433',al:'left'});
@@ -1069,7 +1096,7 @@ function layoutPage(p,view,interactive){
       bl.forEach((b,j)=>{ const ya=ax.pos(b.a), yb=ax.pos(b.b), ref=days[i]+'#'+j; blocks[ref]=b;
         place.push({b,x,y:ya+.22,w:colW,h:yb-ya-.44,ref}); }); });
   }
-  const evs=place.filter(q=>isEvent(q.b));
+  const evs=place.filter(q=>isEvent(q.b)&&!q.b.wrap);
   const tplPt=evs.length?Math.min(view.evt&&view.evt!=='fit'?7.5:8,...evs.map(q=>eventFitV(q.b.subj,q.w,q.h-(view.lt==='all'&&q.h>=9?2.45:0),view))):8;
   for(const q of place) blockItems(q.b,q.x,q.y,q.w,q.h,view,items,q.ref,tplPt);
   if(interactive) RENDER.blocks=blocks;
@@ -1093,7 +1120,7 @@ function toSVG(pg){
     } }
   return s+'</svg>';
 }
-function pageSize(){ const v=S.view, port=v.orient==='port';
+function pageSize(view=S.view){ const v=S.view, port=view.orient==='port';
   let w=210,h=297;
   if(v.size==='planner' && S.planner && S.planner.w>0 && S.planner.h>0){ w=+S.planner.w; h=+S.planner.h; }
   else if(v.size==='custom' && v.custom && v.custom.w>0 && v.custom.h>0){ w=+v.custom.w; h=+v.custom.h; }
@@ -1103,9 +1130,9 @@ function scaled(pg,W,H){ const sc=Math.min(W/pg.w,H/pg.h); if(Math.abs(sc-1)<1e-
   return pg.items.map(it=> it.t==='r' ? {...it,x:X(it.x),y:Y(it.y),w:it.w*sc,h:it.h*sc,r:it.r*sc,sw:(it.sw||0)*sc,dash:it.dash&&it.dash.map(d=>d*sc)}
     : it.t==='x' ? {...it,x:X(it.x),y:Y(it.y),pt:it.pt*sc} : {...it,x1:X(it.x1),y1:Y(it.y1),x2:X(it.x2),y2:Y(it.y2),sw:it.sw*sc,dash:it.dash&&it.dash.map(d=>d*sc)}); }
 function pdfFor(list){
-  const {jsPDF}=window.jspdf; let doc=null; const [W,H]=pageSize();
+  const {jsPDF}=window.jspdf; let doc=null; const [W,H]=pageSize(viewOf(list[0]));
   for(const p of list){
-    const pg=layoutPage(p,S.view,false), o=W>H?'l':'p';
+    const pg=layoutPage(p,viewOf(p),false), o=W>H?'l':'p';
     if(!doc){ doc=new jsPDF({orientation:o,unit:'mm',format:[W,H],compress:true});
       for(const w of [500,700,800]){ doc.addFileToVFS(`Inter-${w}.ttf`,FONTS[w]); doc.addFont(`Inter-${w}.ttf`,`Inter${w}`,'normal'); }
       doc.setProperties({title:list.length===1?`Timetable – ${p.name}`:'Timetables',creator:'Timetable Maker'}); }
@@ -1154,14 +1181,21 @@ const safe = s => String(s).replace(/[\\/:*?"<>|]+/g,'').replace(/\.+(\.\w+)$/,'
 /* ========================== app state ========================== */
 let P=[], cur=null, examples=false, uid=0;
 const GRIDS=new Map(), PKEY='tt-maker-pupils';
-function persistP(){ try{ if(examples||!P.length) localStorage.removeItem(PKEY); else localStorage.setItem(PKEY,JSON.stringify({cur,P})); }catch(e){} }
-function loadSavedP(){ try{ const o=JSON.parse(localStorage.getItem(PKEY)||'null'); if(!o||!o.P||!o.P.length) return false;
-  P=o.P; for(const p of P){ GRIDS.set(p.id,p.grid); p.patches??={}; if(p.sort && /^\S+ \S\.$/.test(p.name)) p.name=p.name.slice(0,-1); } uid=Math.max(...P.map(p=>p.id)); cur=P.some(p=>p.id===o.cur)?o.cur:P[0].id; return true; }catch(e){ return false; } }
+function persistP(){ syncL(); try{
+  if(EXS.p||!LISTS.p.length) localStorage.removeItem(PKEY); else localStorage.setItem(PKEY,JSON.stringify({cur:CURS.p,P:LISTS.p}));
+  if(!LISTS.t.length) localStorage.removeItem(TKEY); else localStorage.setItem(TKEY,JSON.stringify({cur:CURS.t,P:LISTS.t}));
+  localStorage.setItem('tt-maker-mode',MODE); }catch(e){} }
+function loadSavedP(){ let had=false;
+  for(const [m,key] of [['p',PKEY],['t',TKEY]]){ try{ const o=JSON.parse(localStorage.getItem(key)||'null'); if(!o||!o.P||!o.P.length) continue;
+    for(const q of o.P){ GRIDS.set(q.id,q.grid); q.patches??={}; if(isT(q)){ q.cls??={}; q.extra??=[]; q.tedit??={}; } if(q.sort && /^\S+ \S\.$/.test(q.name)) q.name=q.name.slice(0,-1); }
+    LISTS[m]=o.P; CURS[m]=o.P.some(q=>q.id===o.cur)?o.cur:o.P[0].id; uid=Math.max(uid,...o.P.map(q=>q.id)); if(m==='p') had=true; }catch(e){} }
+  P=LISTS[MODE]; cur=CURS[MODE]; examples=EXS[MODE]; return had; }
 const H={stack:[],i:-1};
-const stateNow=()=>JSON.stringify({S,cur,examples,P:P.map(({grid,...m})=>m)});
+const stateNow=()=>{ syncL(); const st=L=>L.map(({grid,...m})=>m); return JSON.stringify({S,MODE,CURS,EXS,L:{p:st(LISTS.p),t:st(LISTS.t)}}); };
 function snap(delay=200){ clearTimeout(snap.t); snap.t=setTimeout(()=>{ const st=stateNow(); if(H.stack[H.i]===st) return;
   H.stack=H.stack.slice(0,H.i+1); H.stack.push(st); if(H.stack.length>120) H.stack.shift(); H.i=H.stack.length-1; updUndo(); persistP(); },delay); }
-function restore(st){ const o=JSON.parse(st); S=o.S; cur=o.cur; examples=o.examples; P=o.P.map(m=>({...m,grid:GRIDS.get(m.id)})).filter(p=>p.grid);
+function restore(st){ const o=JSON.parse(st); S=o.S; const back=L=>L.map(m=>({...m,grid:GRIDS.get(m.id)})).filter(p=>p.grid);
+  LISTS={p:back(o.L.p),t:back(o.L.t)}; CURS=o.CURS; EXS=o.EXS; if(o.MODE!==MODE){ MODE=o.MODE; document.querySelectorAll('[data-msw]').forEach(b=>b.classList.toggle('on',b.dataset.msw===MODE)); document.body.classList.toggle('tmode',MODE==='t'); } P=LISTS[MODE]; cur=CURS[MODE]; examples=EXS[MODE];
   save(); persistP(); closeEditor(); renderAll(); updUndo(); }
 function undo(){ clearTimeout(snap.t); const st=stateNow(); if(H.stack[H.i]!==st){ H.stack=H.stack.slice(0,H.i+1); H.stack.push(st); H.i++; } if(H.i>0){ H.i--; restore(H.stack[H.i]); toast('Undone'); } }
 function redo(){ if(H.i<H.stack.length-1){ H.i++; restore(H.stack[H.i]); toast('Redone'); } }
@@ -1182,32 +1216,40 @@ async function addFiles(files){
     else if(/\.xlsx$/i.test(f.name)) jobs.push({name:f.name,get:()=>f.arrayBuffer()});
     else bad.push(`${f.name}: not an .xlsx, .zip or saved-work file`); }
   if(jobs.length>3) toast(`Reading ${jobs.length} timetables…`);
-  const ok=[]; let dup=0;
+  const ok=[], okBy={p:[],t:[]}; let dup=0; syncL();
   for(const j of jobs){
-    try{ const p=makePupil(parseTimetable(await readXlsx(await j.get()),j.name),fileMeta(j.name));
-      const gj=JSON.stringify(p.grid); if(!examples && P.some(q=>q.name===p.name && JSON.stringify(q.grid)===gj)){ dup++; continue; }
-      ok.push(p); }
+    try{ const parsed=parseTimetable(await readXlsx(await j.get()),j.name), m=parsed.kind==='p'?'p':'t';
+      const p=m==='p'?makePupil(parsed,fileMeta(j.name)):makeTeacher(parsed);
+      const gj=JSON.stringify(p.grid); if(!EXS[m] && LISTS[m].concat(okBy[m]).some(q=>q.name===p.name && JSON.stringify(q.grid)===gj)){ dup++; continue; }
+      ok.push(p); okBy[m].push(p); }
     catch(e){ bad.push(`${j.name}: ${e.message}`); } }
-  if(ok.length){ if(examples){ P=[]; examples=false; } P.push(...ok); sortP(); cur=ok[0].id; }
+  for(const m of ['p','t']) if(okBy[m].length){ if(EXS[m]){ LISTS[m]=[]; EXS[m]=false; } LISTS[m].push(...okBy[m]); sortList(LISTS[m]); CURS[m]=okBy[m][0].id; }
+  if(ok.length){ const to=okBy[MODE].length?MODE:(okBy.t.length?'t':'p'); P=LISTS[MODE]; cur=CURS[MODE]; examples=EXS[MODE]; if(to!==MODE) switchMode(to); }
   const parts=[]; if(ok.length) parts.push(`Added ${ok.length} timetable${ok.length>1?'s':''}`); if(dup) parts.push(`${dup} already loaded`); if(bad.length) parts.push(bad.length===1?bad[0]:`${bad.length} couldn’t be read`);
   if(parts.length) toast(parts.join(' · '));
   renderAll(); snap(0);
 }
 async function saveSession(){
-  if(!P.length||examples){ toast('Load some timetables first'); return; }
+  syncL(); const pu=EXS.p?[]:LISTS.p; if(!pu.length && !LISTS.t.length){ toast('Load some timetables first'); return; }
   const now=new Date(), stamp=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
-  const forms=[...new Set(P.map(q=>q.form).filter(Boolean))];
-  const data={type:'timetable-maker-work',version:1,saved:now.toISOString(),cur,pupils:P,view:S.view,ignored:[...IGN]};
+  const forms=[...new Set(pu.map(q=>q.form).filter(Boolean))];
+  const data={type:'timetable-maker-work',version:2,saved:now.toISOString(),cur:CURS.p,pupils:pu,teachers:LISTS.t,curT:CURS.t,mode:MODE,view:S.view,tview:S.tview,ignored:[...IGN]};
   await saveFile(new Blob([JSON.stringify(data)],{type:'application/json'}),safe(`Timetable work${forms.length===1?' '+forms[0]:''} ${stamp}.json`)); }
 async function openSession(file){
   let o; try{ o=JSON.parse(await file.text()); }catch(e){ toast('That file couldn’t be read'); return; }
   if(o?.type!=='timetable-maker-work' || !Array.isArray(o.pupils)){ toast(o?.v&&o?.sections?'That’s a settings file – load it in Settings':'That isn’t a saved-work file'); return; }
-  if(P.length && !examples && !(await confirmDlg(`Replace the ${P.length} timetable${P.length>1?'s':''} currently loaded with the saved work?`,'Open saved work'))) return;
-  GRIDS.clear(); P=o.pupils.filter(q=>q&&q.grid).map(q=>({...q,patches:q.patches||{}})); for(const q of P) GRIDS.set(q.id,q.grid);
-  uid=Math.max(0,...P.map(q=>q.id)); cur=P.some(q=>q.id===o.cur)?o.cur:(P[0]?.id??null); examples=false;
-  if(o.view) S.view=merge(defaults().view,o.view); if(Array.isArray(o.ignored)){ IGN=new Set(o.ignored); saveIgn(); }
-  save(); closeEditor(); renderAll(); snap(0); toast(`Opened ${P.length} timetable${P.length===1?'':'s'} with your edits`); }
-const sortP = () => P.sort((a,b)=>(!a.form)-(!b.form)||a.form.localeCompare(b.form,undefined,{numeric:true})||(a.sort||a.name).localeCompare(b.sort||b.name));
+  syncL(); const n=(EXS.p?0:LISTS.p.length)+LISTS.t.length;
+  if(n && !(await confirmDlg(`Replace the ${n} timetable${n>1?'s':''} currently loaded with the saved work?`,'Open saved work'))) return;
+  GRIDS.clear(); const fix=L=>(L||[]).filter(q=>q&&q.grid).map(q=>({...q,patches:q.patches||{},...(isT(q)?{cls:q.cls||{},extra:q.extra||[],tedit:q.tedit||{}}:{})}));
+  LISTS={p:fix(o.pupils),t:fix(o.teachers)}; for(const q of [...LISTS.p,...LISTS.t]) GRIDS.set(q.id,q.grid);
+  uid=Math.max(0,...LISTS.p.map(q=>q.id),...LISTS.t.map(q=>q.id));
+  CURS={p:LISTS.p.some(q=>q.id===o.cur)?o.cur:(LISTS.p[0]?.id??null),t:LISTS.t.some(q=>q.id===o.curT)?o.curT:(LISTS.t[0]?.id??null)}; EXS={p:false,t:false};
+  const to=o.mode==='t'||(!LISTS.p.length&&LISTS.t.length)?'t':'p'; MODE=to; P=LISTS[MODE]; cur=CURS[MODE]; examples=false;
+  document.querySelectorAll('[data-msw]').forEach(b=>b.classList.toggle('on',b.dataset.msw===MODE)); document.body.classList.toggle('tmode',MODE==='t');
+  if(o.view) S.view=merge(defaults().view,o.view); if(o.tview) S.tview=merge(defaults().tview,o.tview); if(Array.isArray(o.ignored)){ IGN=new Set(o.ignored); saveIgn(); }
+  save(); closeEditor(); renderAll(); snap(0); toast(`Opened ${LISTS.p.length+LISTS.t.length} timetable${LISTS.p.length+LISTS.t.length===1?'':'s'} with your edits`); }
+const sortList = L => isT(L[0]) ? L.sort((a,b)=>(a.kind===b.kind?0:a.kind==='t'?-1:1)||a.name.localeCompare(b.name,undefined,{numeric:true})) : L.sort((a,b)=>(!a.form)-(!b.form)||a.form.localeCompare(b.form,undefined,{numeric:true})||(a.sort||a.name).localeCompare(b.sort||b.name));
+const sortP = () => sortList(P);
 function makePupil({name,grid},meta){ const d=detect(grid), id=++uid; GRIDS.set(id,grid);
   const p={id,name,grid,tutor:d.tutor,form:d.form,section:d.section,patches:{}};
   if(meta){ p.name=`${meta.first} ${meta.surname[0]}`; p.sort=`${meta.surname} ${meta.first}`; p.year=meta.year;
@@ -1215,9 +1257,232 @@ function makePupil({name,grid},meta){ const d=detect(grid), id=++uid; GRIDS.set(
   return p; }
 const curP = () => P.find(p=>p.id===cur);
 
+/* ========================== teacher & room timetables ========================== */
+const YEARCOL={Y3:'#F2C14E',Y4:'#EE9A4D',Y5:'#E2706A',Y6:'#A17BD0',Y7:'#5B9BE0',Y8:'#4DB089'};
+const DUTYCOL='#F7D488', HALFCOL='#E7EAEF';
+const isT = p => !!p && (p.kind==='t'||p.kind==='r');
+const viewOf = p => isT(p) ? S.tview : S.view;
+const V = () => MODE==='t' ? S.tview : S.view;
+const secOfForm = f => (S.forms.find(x=>x.form && x.form.toUpperCase()===String(f).toUpperCase())||{}).section || secForYear(parseInt(f,10)||5);
+
+// One line of an iSAMS teacher/room cell: subject / class code / (teacher) / room
+function parseTCell(raw,kind){
+  return String(raw).replace(/\r/g,'').split(/\n*-{4,}\n*/).map(part=>{
+    const L=part.split('\n').map(s=>s.trim()); while(L.length && !L[L.length-1]) L.pop();
+    return kind==='r' ? {raw:L[0]||'',code:L[1]||'',teacher:L[2]||'',room:L[3]||''} : {raw:L[0]||'',code:L[1]||'',room:L[2]||''};
+  }).filter(e=>e.raw);
+}
+function makeTeacher({name,grid,kind,code}){ const id=++uid; GRIDS.set(id,grid);
+  const p={id,kind,name,code:code||'',grid,cls:{},extra:[],tedit:{},patches:{}};
+  p.p0on=!!tutorFormOf(p); return p; }
+const regEnts = p => DAYS.flatMap(d=>['REG','P0'].flatMap(id=>(p.grid[d]?.[id]||[]).filter(e=>/^registration$/i.test(e.raw))));
+function tutorFormOf(p){ for(const e of regEnts(p)){ const t=String(e.code).replace(/^\d+\s*-?\s*/,'').split(/\s+/)[0]; if(/^\d[A-Za-z]/.test(t||'')) return t.toUpperCase(); } return ''; }
+function knownForms(p){ const s=new Set(S.forms.map(f=>String(f.form).toUpperCase()).filter(Boolean)); const t=tutorFormOf(p); if(t) s.add(t); return s; }
+
+// What a lesson is: Y8 Maths / 8Mat, 5TJ Wellbeing, Games, free text, Half day
+function tCanon(raw){ const r=String(raw).trim();
+  if(/^half\s*day$/i.test(r)) return {half:true};
+  const known=/^(mon|tues|wednes|thurs|fri|satur|sun)day\s+games$/i.test(r) || S.aliases[r] || S.subjects[r];
+  return {name:known?canon(r):null,text:r}; }
+function classInfo(e,p,forms){
+  const c=tCanon(e.raw);
+  if(c.half) return {kind:'half',key:'half',full:'Half day',short:'Half day',year:0,subj:''};
+  let code=String(e.code||'').trim();
+  if(!c.name && !code) return {kind:'other',key:'o:'+c.text,full:c.text,short:c.text,year:0,subj:''};
+  const name=c.name||canon(e.raw), sh=subj(name).short||name;
+  code=code.replace(/^\d+\s*-\s*|^\d+\s+/,'');
+  const toks=code.split(/\s+/).filter(Boolean), m=/^(\d)[A-Za-z]/.exec(toks[0]||'');
+  const kindOf = n => n==='Reg'?'reg':n==='Prep'?'prep':'lesson';
+  if(m){ const y=+m[1], t0=toks[0].toUpperCase();
+    const isForm = forms.has(t0) || toks.length>=3 || (toks[1] && /[a-z]/.test(toks[1]));
+    const who = p.kind==='r' && e.teacher ? ' '+e.teacher : '';
+    if(isForm) return {kind:kindOf(name),key:`f:${t0}|${name}${who}`,form:t0,year:y,subj:name,full:`${t0} ${name}`,short:name==='Reg'?'Reg':`${t0} ${sh}`};
+    return {kind:kindOf(name),key:`y:${toks[0]}|${name}${who}`,year:y,subj:name,full:`Y${y} ${name}`,short:`${y}${sh}`}; }
+  return {kind:kindOf(name),key:'s:'+name,year:0,subj:name,full:name,short:sh};
+}
+function defaultCol(ci,view){ const sb=subj(ci.subj);
+  if(ci.kind==='half') return HALFCOL; if(ci.kind==='other') return colour('Neutral');
+  if(view.colby!=='subject' && ci.year && !['Pastoral','Neutral'].includes(sb.key) && !sb.bare) return colour('Y'+ci.year);
+  return colour(sb.key); }
+// Every class this teacher has, with its label (renamed or A/B-suffixed), colour and weekly time
+function tClasses(p,view=S.tview){
+  const forms=knownForms(p), map=new Map();
+  for(const d of DAYS) for(const s of tSlots(p,{})) for(const e of p.grid[d]?.[s.id]||[]){
+    if(s.id==='P0' && /^registration$/i.test(e.raw)) continue;
+    const ci=classInfo(e,p,forms); if(ci.kind==='half'||ci.kind==='other') continue;
+    const o=map.get(ci.key)||{...ci,mins:0}; o.mins+=s.b-s.a; map.set(ci.key,o); }
+  const byLab=new Map(); for(const o of map.values()){ const k=o.full+(p.kind==='r'?'|'+o.key.split(' ').slice(1).join(' '):''); if(!byLab.has(k)) byLab.set(k,[]); byLab.get(k).push(o); }
+  for(const list of byLab.values()) if(list.length>1) list.sort((a,b)=>a.key.localeCompare(b.key)).forEach((o,i)=>{ const L=String.fromCharCode(65+i); o.full+=' '+L; o.short+=L; });
+  for(const o of map.values()){ const ov=p.cls[o.key]||{}; o.defFull=o.full; o.defShort=o.short;
+    if(ov.label) o.full=ov.label; if(ov.short) o.short=ov.short; o.col=ov.col||defaultCol(o,view); o.custom=!!ov.col; }
+  return map; }
+
+// The teacher's day: every period, plus breaks, lunch and the slot before prep
+function tPrep(p){ const forms=knownForms(p);
+  for(const d of DAYS) for(const e of p.grid[d]?.PREP||[]){ const ci=classInfo(e,p,forms); if(ci.kind==='half') continue;
+    const sec=S.sections[ci.form?secOfForm(ci.form):ci.year?secForYear(ci.year):secOfForm(tutorFormOf(p)||'5')]; if(sec) return sec.prep.map(T); }
+  return null; }
+function tSlots(p,view){
+  const L=[], add=(id,a,b)=>{ if(b>a) L.push({id,a,b}); };
+  if(view.reg!==false) add('REG',BELL.REG.a,BELL.REG.b);
+  if(view.p0!==false) add('P0',BELL.P0.a,BELL.P0.b);
+  for(let i=1;i<=20;i++){ const B=BELL['P'+i], pr=i>1?BELL['P'+(i-1)]:null; if(pr && B.a>pr.b) add('G'+(i-1),pr.b,B.a); add('P'+i,B.a,B.b); }
+  const pp=tPrep(p), end=BELL.P20.b, nxt=pp?pp[0]:Math.max(...Object.values(S.sections).map(s=>T(s.prep[0])));
+  add('G20',end,nxt);
+  if(pp && view.prep!==false) add('PREP',Math.max(pp[0],end),pp[1]);
+  return L; }
+function tDays(p){ return DAYS.filter(d=>p.grid[d] && (d!=='Sat' || Object.keys(p.grid.Sat||{}).length) || p.extra.some(x=>x.day===d)); }
+function cutAround(list,a,b){ const out=[]; let hit=false;
+  for(const x of list){ if(x.b<=a || x.a>=b){ out.push(x); continue; } hit=true;
+    if(x.a<a) out.push({...x,b:a}); if(x.b>b) out.push({...x,a:b}); }
+  return {out,hit}; }
+function tDay(p,d,view,cls){
+  const g=p.grid[d]||{}, slots=tSlots(p,view), forms=knownForms(p);
+  let blocks=[], cur=null; const sb=slots.find(s=>s.id==='G20');
+  for(const s of slots){
+    let ents=g[s.id]||[]; if(s.id==='P0') ents=ents.filter(e=>!/^registration$/i.test(e.raw));
+    if(!ents.length){ if(s.id!=='G20') cur=null; continue; }
+    const infos=ents.map(e=>({ci:classInfo(e,p,forms),room:e.room||'',teacher:e.teacher||''}));
+    const half=infos.every(i=>i.ci.kind==='half');
+    const k=infos.map(i=>`${i.ci.key}@${i.room}@${i.teacher}`).join('&')+'|'+(half?'':s.id==='REG'?'r':s.id==='PREP'?'p':'');
+    if(cur && cur.k===k && (cur.b===s.a || (s.id==='PREP' && sb && cur.b===sb.a))){ cur.b=s.b; cur.slots.push(s.id); continue; }
+    cur={k,infos,a:s.a,b:s.b,slots:[s.id],day:d,kind:half?'half':s.id==='REG'?'reg':s.id==='PREP'?'prep':infos[0].ci.kind==='other'?'other':'lesson'}; blocks.push(cur); }
+  blocks=blocks.map(b=>{ const C=b.infos.map(i=>cls.get(i.ci.key)||{...i.ci,col:defaultCol(i.ci,view)});
+    const ed=p.tedit[d+'|'+b.slots[0]]||{};
+    const full=ed.label||C.map(c=>c.full).join(' / '), short=ed.label||C.map(c=>c.short).join(' / ');
+    const tch=p.kind==='r'?[...new Set(b.infos.map(i=>i.teacher).filter(Boolean))].join(' / '):'';
+    const rooms=ed.room!=null&&ed.room!==''?[ed.room]:p.kind==='r'?[]:[...new Set(b.infos.map(i=>i.room).filter(Boolean))];
+    const sbj=C[0].subj||'', bare=subj(sbj).bare;
+    return {kind:b.kind,a:b.a,b:b.b,day:d,slots:b.slots,subj:sbj,names:[full],keys:[subj(sbj).key],col:ed.col||C[0].col,tl:{full,short,tch},rooms:bare?[]:rooms,
+      wrap:b.kind==='other'||b.kind==='half',hidden:!!ed.hide,edited:!!(ed.label||ed.room||ed.hide),clsKey:C.length===1?b.infos[0].ci.key:null}; })
+    .filter(b=>!b.hidden);
+  // P0 events (and evening prep events) from the tutor's section, when switched on
+  const tf=tutorFormOf(p);
+  if(p.p0on && tf){ const sec=S.sections[secOfForm(tf)], tp=sec&&sec.p0[d], regB=blocks.find(b=>b.kind==='reg');
+    if(tp && tp.label && view.p0!==false){ const a=BELL.P0.a, z=BELL[tp.end||'P0'].b, busy=blocks.some(b=>b.a<z&&b.b>a);
+      if(tp.force || !busy){ const ev=!!subj(tp.label).event, lab=ev?tp.label:`${tf} ${tp.label}`, r=(tp.who||'none')==='reg'&&regB?regB.rooms:[];
+        blocks=cutAround(blocks,a,z).out; blocks.push({kind:'tpl',a,b:z,day:d,slots:['P0'],subj:tp.label,names:[lab],keys:[subj(tp.label).key],col:colour(subj(tp.label).key),tl:{full:lab,short:subj(tp.label).short||lab,tch:''},rooms:ev?[]:r}); } }
+    const po=sec&&sec.prepOv&&sec.prepOv[d], pb=blocks.find(b=>b.kind==='prep');
+    if(po && po.label && pb){ const ev=!!subj(po.label).event; Object.assign(pb,{subj:po.label,evt:ev,names:[ev?po.label:`${tf} ${po.label}`],keys:[subj(po.label).key],col:colour(subj(po.label).key),tl:{full:ev?po.label:`${tf} ${po.label}`,short:subj(po.label).short||po.label,tch:''}}); if(ev) pb.rooms=[]; } }
+  // Duties and anything else the teacher has added
+  for(const x of p.extra.filter(x=>x.day===d)){ const r=cutAround(blocks,x.a,x.b); blocks=r.out;
+    const lab=x.label||(x.kind==='duty'?'Duty':'Event');
+    blocks.push({kind:x.kind==='duty'?'duty':'other',a:x.a,b:x.b,day:d,slots:['+'],subj:'',names:[lab],keys:[],col:x.col||(x.kind==='duty'?colour('Duty'):colour('Neutral')),tl:{full:lab,short:lab,tch:''},rooms:[],wrap:true,extra:x.id,flag:r.hit}); }
+  // Fill every empty stretch with clickable gaps, one per period/break
+  blocks.sort((x,y)=>x.a-y.a);
+  const gaps=[];
+  for(const s of slots){ let a=s.a; for(const b of blocks){ if(b.b<=a||b.a>=s.b) continue; if(b.a>a) gaps.push({kind:'gap',a,b:b.a,day:d,slots:['+'],unit:s.id}); a=Math.max(a,b.b); }
+    if(a<s.b) gaps.push({kind:'gap',a,b:s.b,day:d,slots:['+'],unit:s.id}); }
+  return [...blocks,...gaps].sort((x,y)=>x.a-y.a||x.b-y.b);
+}
+
+/* ---- teacher side panel, summary and editors ---- */
+function renderTList(){
+  const lab=P.length?`Teachers (${P.length})`:'Teachers';
+  $('#plabel').innerHTML=`<button class="plh${PLOPEN?' open':''}" id="pltoggle" aria-expanded="${PLOPEN}"><span class="car">›</span>${lab}${!PLOPEN&&curP()?` <span class="mini">· ${esc(curP().name)}</span>`:''}</button>`;
+  $('#plist').hidden=!PLOPEN; const cb=$('#clearbtn'); if(cb) cb.hidden=!P.length;
+  $('#plist').innerHTML=P.length?P.map(p=>`<div class="pi${p.id===cur?' on':''}" data-id="${p.id}" role="button" tabindex="0"><span class="nm">${esc(p.name)}</span>${p.kind==='r'?'<span class="tag v" title="Room timetable">Room</span>':''}<button class="x" data-del="${p.id}" aria-label="Remove ${esc(p.name)}">×</button></div>`).join(''):'<p class="hint">No teacher timetables yet. Drop iSAMS teacher or room exports above.</p>';
+}
+function renderTPreview(p){
+  const view=S.tview, pg=layoutPage(p,view,true), paper=$('#paper');
+  paper.className='paper '+(pg.port?'port':'land'); paper.innerHTML=toSVG(pg);
+  const tf=tutorFormOf(p), cls=[...tClasses(p,view).values()].sort((a,b)=>(a.kind!=='lesson')-(b.kind!=='lesson')||(a.year||9)-(b.year||9)||a.full.localeCompare(b.full,undefined,{numeric:true}));
+  const per=m=>{ const n=Math.round(m/20); return `${n} period${n===1?'':'s'}`; };
+  $('#phead').innerHTML=`
+    <label class="f"><span>${p.kind==='r'?'Room':'Teacher'}</span><input class="in" id="tname" value="${esc(p.name)}"></label>
+    ${tf?`<label class="tg" style="align-self:center">Assembly etc. in P0 <span class="mini">(${esc(tf)} · ${secOfForm(tf)})</span><input type="checkbox" id="tp0" ${p.p0on?'checked':''}></label>`:''}
+    ${Object.keys(p.tedit).length||Object.keys(p.cls).length?'<button class="btn sm" id="tundoall" style="margin-left:auto">Undo all my edits</button>':''}
+    <div class="clsum"><p class="lbl">Classes <span class="mini">click to rename or recolour</span></p><div class="chips">${cls.map(c=>`<button class="chip" data-cls="${esc(c.key)}"><i style="background:${c.col}"></i>${esc(c.full)}${c.kind==='lesson'?`<span class="mini">${per(c.mins)}</span>`:''}</button>`).join('')||'<span class="mini">None found</span>'}</div></div>`;
+  const notes=[];
+  if(pg.flags.length) notes.push(`<div class="note w"><b>${pg.flags.length} overlap${pg.flags.length>1?'s':''}</b> – something you added sits on top of a lesson. ${pg.flags.map(b=>`<button data-tref="${b.day}|${b.extra}">${b.day} ${fmt(b.a)} ${esc(b.tl.full)}</button>`).join(' ')}</div>`);
+  notes.push('<div class="note"><span class="mini">Click a block to edit it, or a grey space to add a duty or anything else.</span></div>');
+  $('#notes').innerHTML=notes.join('');
+}
+const unitName = u => u==='REG'?'Reg':u==='PREP'?'Prep':/^P\d+$/.test(u)?u:'';
+function timeOptions(b){ // presets for adding something in this grey space
+  const o=[], add=(a,z,lab)=>{ if(z>a && !o.some(x=>x.a===a&&x.b===z)) o.push({a,b:z,lab}); };
+  const u=b.unit, nm=unitName(u);
+  for(const [x,y] of (S.dutyTimes||[])){ const a=T(x), z=T(y); if(a<b.b && z>b.a) add(a,z,`${x}–${y}`); }
+  add(b.a,b.b,`${nm?nm+' · ':''}${fmt(b.a)}–${fmt(b.b)}`);
+  return o; }
+function openTEditor(b){
+  const p=curP(); if(!p) return; const ed=$('#editor'); ED={t:true,b,day:b.day};
+  const when=`${DAYNAME[b.day]} · ${fmt(b.a)}–${fmt(b.b)}`;
+  const timeSel=(a,z,opts)=>`<label class="f">Time<select class="in" id="tetime">${opts.map((x,i)=>`<option value="${x.a}-${x.b}"${x.a===a&&x.b===z?' selected':''}>${esc(x.lab)}</option>`).join('')}<option value="custom"${opts.some(x=>x.a===a&&x.b===z)?'':' selected'}>Other times…</option></select></label>
+    <div class="row" id="tecustom" ${opts.some(x=>x.a===a&&x.b===z)?'hidden':''}><label class="f">From${timeIn(fmt(a),'id="tefrom"')}</label><label class="f">To${timeIn(fmt(z),'id="teto"')}</label></div>`;
+  if(b.kind==='gap' || b.extra){
+    const x=b.extra?p.extra.find(e=>e.id===b.extra):null, opts=timeOptions(x?{...b,...(tAt(p,b.day,x.a)||b)}:b);
+    const inDuty=(S.dutyTimes||[]).some(([s,e])=>T(s)<b.b&&T(e)>b.a), isBreak=b.unit&&b.unit[0]==='G';
+    const kind=x?x.kind:(inDuty||isBreak?'duty':'other'), a=x?x.a:opts[0].a, z=x?x.b:opts[0].b;
+    ed.innerHTML=`<h3><span>${x?esc(x.label||'Duty'):`Add to ${DAYNAME[b.day]}`}<small>${x?when:`${fmt(b.a)}–${fmt(b.b)} is free`}</small></span><button class="close" data-x aria-label="Close">×</button></h3>
+      <div class="seg" id="tekind"><button data-tk="duty" class="${kind==='duty'?'on':''}">Duty</button><button data-tk="other" class="${kind==='other'?'on':''}">Lesson or other</button></div>
+      ${timeSel(a,z,opts)}
+      <label class="f">Name<input class="in" id="telabel" value="${esc(x?x.label:'')}" placeholder="${kind==='duty'?'e.g. Lunch duty · Dining hall':'e.g. Department meeting'}"></label>
+      <div class="row"><button class="btn pri" id="tesave">${x?'Save':'Add'}</button>${x?'<button class="btn" id="tedel">Remove</button>':''}</div>`;
+    ed.hidden=false; setTimeout(()=>$('#telabel')?.focus(),20); return; }
+  const k=b.day+'|'+b.slots[0], e=p.tedit[k]||{};
+  ed.innerHTML=`<h3><span>${esc(b.tl.full)}<small>${when}</small></span><button class="close" data-x aria-label="Close">×</button></h3>
+    <label class="f">Label for this lesson only<input class="in" id="telabel" value="${esc(e.label||'')}" placeholder="${esc(b.tl.full)}"></label>
+    ${b.kind!=='half'&&b.kind!=='tpl'?`<label class="f">${p.kind==='r'?'Room':'Room'}<input class="in" id="teroom" value="${esc(e.room||'')}" placeholder="${esc((b.rooms||[]).join(' / ')||'none')}"></label>`:''}
+    <div class="row"><button class="btn pri" id="tesave">Save</button><button class="btn" id="tehide">Remove from timetable</button></div>
+    ${b.clsKey?`<button class="btn" data-cls="${esc(b.clsKey)}">Rename or recolour the whole class</button>`:''}
+    ${p.tedit[k]?'<button class="btn" id="teundo">Undo my changes here</button>':''}`;
+  ed.hidden=false; }
+function tAt(p,d,m){ return tDay(p,d,S.tview,tClasses(p)).find(b=>b.kind==='gap'&&b.a<=m&&b.b>m); }
+function openClassEditor(key){
+  const p=curP(); if(!p) return; const c=tClasses(p).get(key); if(!c) return; const ed=$('#editor'); ED={t:true,cls:key};
+  ed.innerHTML=`<h3><span>${esc(c.full)}<small>${Math.round(c.mins/20)} periods a week</small></span><button class="close" data-x aria-label="Close">×</button></h3>
+    <label class="f">Name<input class="in" id="clname" value="${esc(p.cls[key]?.label||'')}" placeholder="${esc(c.defFull)}"></label>
+    <label class="f">Short name <span class="mini" style="font-weight:500">used when a block is narrow</span><input class="in" id="clshort" value="${esc(p.cls[key]?.short||'')}" placeholder="${esc(c.defShort)}"></label>
+    <div><p class="lbl">Colour</p><button class="sw big" data-pick="cls:${esc(key)}" style="background:${c.col};color:${inkOn(c.col)}">Aa</button> ${c.custom?'<button class="lnk" id="clcolreset">Back to the usual colour</button>':''}</div>
+    <div class="row"><button class="btn pri" id="clsave">Save</button>${p.cls[key]?'<button class="btn" id="clreset">Reset</button>':''}</div>`;
+  ed.hidden=false; }
+async function tClick(t,ds,e){ // returns true if handled
+  const p=curP();
+  if(ds.msw){ switchMode(ds.msw); return true; }
+  if(ds.cls && p){ openClassEditor(ds.cls); return true; }
+  if(ds.tref && p){ const [d,id]=ds.tref.split('|'); const b=Object.values(RENDER.blocks).find(b=>b.day===d&&String(b.extra)===id); if(b) openTEditor(b); return true; }
+  if(!ED || !ED.t || !p) return false;
+  if(ds.tk){ document.querySelectorAll('#tekind button').forEach(x=>x.classList.toggle('on',x===t)); $('#telabel').placeholder=ds.tk==='duty'?'e.g. Lunch duty · Dining hall':'e.g. Department meeting'; return true; }
+  if(t.id==='tesave' && ED.b){ const b=ED.b;
+    if(b.kind==='gap'||b.extra){ let a,z; const v=$('#tetime').value; if(v==='custom'){ a=T($('#tefrom').value); z=T($('#teto').value); } else [a,z]=v.split('-').map(Number);
+      if(!(z>a)){ toast('The end has to be after the start'); return true; }
+      const kind=document.querySelector('#tekind .on')?.dataset.tk||'duty', label=$('#telabel').value.trim();
+      if(b.extra){ Object.assign(p.extra.find(x=>x.id===b.extra),{a,b:z,kind,label}); } else p.extra.push({id:Date.now()%1e9+Math.floor(Math.random()*1000),day:b.day,a,b:z,kind,label});
+      closeEditor(); renderPreview(); return true; }
+    const k=b.day+'|'+b.slots[0], label=$('#telabel').value.trim(), room=$('#teroom')?$('#teroom').value.trim():'';
+    if(label||room) p.tedit[k]={...(p.tedit[k]||{}),label,room}; else delete p.tedit[k];
+    closeEditor(); renderPreview(); return true; }
+  if(t.id==='tedel' && ED.b?.extra){ p.extra=p.extra.filter(x=>x.id!==ED.b.extra); closeEditor(); renderPreview(); return true; }
+  if(t.id==='tehide' && ED.b){ p.tedit[ED.b.day+'|'+ED.b.slots[0]]={...(p.tedit[ED.b.day+'|'+ED.b.slots[0]]||{}),hide:true}; closeEditor(); renderPreview(); toast('Removed – Undo brings it back'); return true; }
+  if(t.id==='teundo' && ED.b){ delete p.tedit[ED.b.day+'|'+ED.b.slots[0]]; closeEditor(); renderPreview(); return true; }
+  if(t.id==='clsave' && ED.cls){ const o={...(p.cls[ED.cls]||{})}; o.label=$('#clname').value.trim(); o.short=$('#clshort').value.trim();
+    for(const k of ['label','short']) if(!o[k]) delete o[k]; if(Object.keys(o).length) p.cls[ED.cls]=o; else delete p.cls[ED.cls]; closeEditor(); renderPreview(); return true; }
+  if(t.id==='clreset' && ED.cls){ delete p.cls[ED.cls]; closeEditor(); renderPreview(); return true; }
+  if(t.id==='clcolreset' && ED.cls){ if(p.cls[ED.cls]){ delete p.cls[ED.cls].col; if(!Object.keys(p.cls[ED.cls]).length) delete p.cls[ED.cls]; } openClassEditor(ED.cls); renderPreview(); return true; }
+  return false; }
+function tChange(t){ const p=curP(); if(!p||!isT(p)) return false;
+  if(t.id==='tname'){ p.name=t.value.trim()||p.name; renderList(); renderPreview(); return true; }
+  if(t.id==='tp0'){ p.p0on=t.checked; renderPreview(); return true; }
+  if(t.id==='tetime'){ $('#tecustom').hidden=t.value!=='custom'; return true; }
+  return false; }
+function setClsColour(key,c){ const p=curP(); if(!p) return; (p.cls[key]??={}).col=c.toUpperCase();
+  document.querySelectorAll(`[data-pick="cls:${CSS.escape(key)}"]`).forEach(b=>{b.style.background=c;b.style.color=inkOn(c);});
+  clearTimeout(setClsColour.t); setClsColour.t=setTimeout(renderPreview,120); }
+
+/* ---- two lists: pupils and teachers ---- */
+let MODE='p'; try{ MODE=localStorage.getItem('tt-maker-mode')==='t'?'t':'p'; }catch(e){}
+let LISTS={p:[],t:[]}, CURS={p:null,t:null}, EXS={p:false,t:false};
+const TKEY='tt-maker-teachers';
+function syncL(){ LISTS[MODE]=P; CURS[MODE]=cur; EXS[MODE]=examples; }
+function switchMode(m){ if(m===MODE) return; syncL(); MODE=m; P=LISTS[m]; cur=CURS[m]; examples=EXS[m]; closeEditor(); $('#exportdlg').hidden=true;
+  document.querySelectorAll('[data-msw]').forEach(b=>b.classList.toggle('on',b.dataset.msw===m)); document.body.classList.toggle('tmode',m==='t');
+  persistP(); renderAll(); }
+
 /* ========================== rendering: timetable tab ========================== */
 const COLL=new Set(); let PLOPEN=false;
 function renderList(){
+  if(MODE==='t'){ renderTList(); renderBadge(); return; }
   computeGroups();
   $('#plabel').innerHTML = `<button class="plh${PLOPEN?' open':''}" id="pltoggle" aria-expanded="${PLOPEN}"><span class="car">›</span>${P.length ? (examples?'Examples':`Pupils (${P.length})`) : 'Pupils'}${!PLOPEN&&curP()?` <span class="mini">· ${esc(curP().name)}</span>`:''}</button>`;
   $('#plist').hidden=!PLOPEN; const cb=$('#clearbtn'); if(cb) cb.hidden=!(P.length&&!examples);
@@ -1264,17 +1529,19 @@ function flagsOf(p){ const sec=S.sections[p.section]; return sec.days.filter(d=>
 const MODES={top:{periods:'both',lt:'none'},blocks:{periods:'none',lt:'all'}};
 const modeOf = v => Object.keys(MODES).find(k=>MODES[k].periods===v.periods&&MODES[k].lt===v.lt)||'';
 function renderOpts(){
-  document.querySelectorAll('.seg[data-opt]').forEach(s=>s.querySelectorAll('button').forEach(b=>b.classList.toggle('on',S.view[s.dataset.opt]===b.dataset.v)));
-  const m=modeOf(S.view); document.querySelectorAll('.seg[data-mode] button').forEach(b=>b.classList.toggle('on',b.dataset.v===m));
+  const VV=V(); document.querySelectorAll('.seg[data-opt]').forEach(s=>s.querySelectorAll('button').forEach(b=>b.classList.toggle('on',VV[s.dataset.opt]===b.dataset.v)));
+  const m=modeOf(VV); document.querySelectorAll('.seg[data-mode] button').forEach(b=>b.classList.toggle('on',b.dataset.v===m));
   $('#modecustom').hidden=!!m; if(!m) $('#moreopts').open=true;
-  $('#btimesrow').hidden=S.view.periods!=='both';
-  document.querySelectorAll('[data-tog]').forEach(i=>i.checked=!!S.view[i.dataset.tog]);
+  $('#btimesrow').hidden=VV.periods!=='both';
+  document.querySelectorAll('[data-tog]').forEach(i=>i.checked=!!VV[i.dataset.tog]);
+  $('#roomslab').firstChild.textContent=MODE==='t'&&curP()?.kind==='r'?'Show teachers':'Show rooms';
   $('#dlall').textContent = 'Download timetables…';
-  $('#dl1').disabled=!curP(); $('#dlall').disabled=!P.length;
+  $('#dl1').textContent=MODE==='t'?(curP()?.kind==='r'?'Just this room':'Just this teacher'):'Just this pupil'; $('#dl1').disabled=!curP(); $('#dlall').disabled=!P.length;
 }
 function renderPreview(){
   const p=curP(), paper=$('#paper');
-  if(!p){ $('#phead').innerHTML=''; $('#notes').innerHTML=''; paper.className='paper land'; paper.innerHTML='<div class="empty">Drop one or more iSAMS timetable exports on the left to begin.</div>'; return; }
+  if(p && isT(p)){ renderTPreview(p); return; }
+  if(!p){ $('#phead').innerHTML=''; $('#notes').innerHTML=''; paper.className='paper land'; paper.innerHTML=`<div class="empty">${MODE==='t'?'Drop iSAMS teacher (or room) timetable exports on the left to begin.':'Drop one or more iSAMS timetable exports on the left to begin.'}</div>`; return; }
   const pg=layoutPage(p,S.view,true);
   paper.className='paper '+(pg.port?'port':'land'); paper.innerHTML=toSVG(pg);
   $('#phead').innerHTML=`
@@ -1355,6 +1622,7 @@ function confirmDlg(msg,ok){ return new Promise(res=>{ const d=$('#confirmdlg');
 let EXSEL=new Set();
 function openExport(){ if(!EXSEL.size || [...EXSEL].some(id=>!P.find(q=>q.id===id))) EXSEL=new Set(P.map(q=>q.id)); renderExport(); $('#exportdlg').hidden=false; }
 function renderExport(){
+  if(MODE==='t') return renderTExport();
   computeGroups(); const v=S.view, years=new Map();
   for(const f of GROUPS.forms){ const y=f.year||0; if(!years.has(y)) years.set(y,[]); years.get(y).push(f); }
   const ck=(ids)=>{ const n=ids.filter(id=>EXSEL.has(id)).length; return n===ids.length?'checked':n?'data-mixed':''; };
@@ -1379,6 +1647,7 @@ function renderExport(){
 }
 async function runExport(btn){
   const sel=P.filter(q=>EXSEL.has(q.id)); if(!sel.length) return;
+  if(MODE==='t') return runTExport(btn,sel);
   const order=[...sel].sort((a,b)=>(!a.form)-(!b.form)||formKey(a).localeCompare(formKey(b),undefined,{numeric:true})||(a.sort||a.name).localeCompare(b.sort||b.name));
   btn.disabled=true; const old=btn.textContent; btn.textContent='Making PDFs…'; await new Promise(r=>setTimeout(r,30));
   try{ const pack=S.view.pack||'one', forms=[...new Set(order.map(formKey))];
@@ -1391,6 +1660,19 @@ async function runExport(btn){
   } finally{ btn.disabled=false; btn.textContent=old; }
 }
 
+function renderTExport(){ const v=S.view, hasPlanner=S.planner && S.planner.w>0 && S.planner.h>0; if(v.size==='planner'&&!hasPlanner) v.size='a4';
+  const sel=P.filter(q=>EXSEL.has(q.id)), pack=v.pack==='one'?'one':'pupil';
+  $('#exportdlg').innerHTML=`<div class="exbox" role="dialog" aria-label="Download timetables"><h3><span>Download timetables</span><button class="close" data-exx aria-label="Close">×</button></h3>
+    <div><p class="lbl">Who <button class="lnk" data-exall>${EXSEL.size===P.length?'Select none':'Select all'}</button></p><div class="extree"><div class="who">${P.map(q=>`<label><input type="checkbox" data-exsel="${q.id}" ${EXSEL.has(q.id)?'checked':''}> ${esc(q.name)}${q.kind==='r'?' <span class="mini">room</span>':''}</label>`).join('')}</div></div></div>
+    <div><p class="lbl">Size</p><div class="seg"><button data-exsize="a4" class="${v.size==='a4'||!v.size?'on':''}">A4</button>${hasPlanner?`<button data-exsize="planner" class="${v.size==='planner'?'on':''}">Planner</button>`:''}<button data-exsize="custom" class="${v.size==='custom'?'on':''}">Custom</button></div>
+      ${v.size==='custom'?`<div class="inl" style="margin-top:8px"><input class="in sm" type="number" min="50" max="600" id="cuw" value="${v.custom?.w||148}" style="width:84px" aria-label="Width in mm"> × <input class="in sm" type="number" min="50" max="600" id="cuh" value="${v.custom?.h||210}" style="width:84px" aria-label="Height in mm"><span class="mini">mm</span></div>`:''}</div>
+    <div><p class="lbl">Files</p><div class="seg"><button data-expack="one" class="${pack==='one'?'on':''}">One combined PDF</button><button data-expack="pupil" class="${pack==='pupil'?'on':''}">One PDF each</button></div></div>
+    <button class="btn pri" id="exgo" ${sel.length?'':'disabled'}>Download ${sel.length} timetable${sel.length===1?'':'s'}</button></div>`; }
+async function runTExport(btn,sel){ const order=sortList([...sel]);
+  btn.disabled=true; const old=btn.textContent; btn.textContent='Making PDFs…'; await new Promise(r=>setTimeout(r,30));
+  try{ if(S.view.pack!=='pupil') await saveFile(pdfFor(order),safe(order.length===1?`${order[0].name}.pdf`:'Teacher timetables.pdf'));
+    else { const files=[]; for(const q of order) files.push({name:safe(`${q.name}.pdf`),data:new Uint8Array(await pdfFor([q]).arrayBuffer())}); await saveFile(makeZip(files),'Teacher timetables.zip'); }
+    $('#exportdlg').hidden=true; } finally{ btn.disabled=false; btn.textContent=old; } }
 /* ========================== checks ========================== */
 const IGKEY='tt-maker-ignored';
 let IGN=new Set(); try{ IGN=new Set(JSON.parse(localStorage.getItem(IGKEY)||'[]')); }catch(e){}
@@ -1418,8 +1700,9 @@ function computeIssues(){
   if(miss.length) out.set(`init|${miss.join(',')}`,{key:`init|${miss.join(',')}`,sev:4,type:'init',title:`${miss.length} teacher${miss.length>1?'s have':' has'} no initials yet`,detail:miss.slice(0,8).join(', ')+(miss.length>8?` and ${miss.length-8} more`:''),pupils:[]});
   return [...out.values()].sort((a,b)=>a.sev-b.sev||a.title.localeCompare(b.title));
 }
-function renderBadge(){ const b=$('#chkbadge'); if(!b) return; const n=P.length&&!examples?computeIssues().filter(i=>!IGN.has(i.key)).length:0; b.textContent=n||''; b.hidden=!n; }
+function renderBadge(){ const b=$('#chkbadge'); if(!b) return; if(MODE==='t'){ b.hidden=true; return; } const n=P.length&&!examples?computeIssues().filter(i=>!IGN.has(i.key)).length:0; b.textContent=n||''; b.hidden=!n; }
 function renderChecks(){
+  if(MODE==='t'){ $('#chkwrap').innerHTML='<h2>Checks</h2><div class="note">Checks look at pupil timetables. Switch to <button data-msw="p">Pupils</button> to see them.</div>'; return; }
   computeGroups(); const all=computeIssues(), open=all.filter(i=>!IGN.has(i.key)), ign=all.filter(i=>IGN.has(i.key));
   const list=SHOWIGN?ign:open;
   const formsOf=ids=>{ const m=new Map(); for(const id of ids){ const q=P.find(x=>x.id===id); if(q){ const k=formKey(q); m.set(k,(m.get(k)||0)+1); } } return [...m].map(([k,n])=>`<span class="tag">${esc(k)} · ${n}</span>`).join(' '); };
@@ -1482,7 +1765,7 @@ function renderColours(){
 }
 const roNote = () => canEdit() ? (CLOUD_ON?'<div class="note">Changes here are saved for all staff.</div>':'') : '<div class="note">These are set for the whole school, so only the admin can change them.</div>';
 function openPicker(key,anchor){
-  PICK=key; const pk=$('#picker'), c=colour(key);
+  PICK=key; const pk=$('#picker'), c=key.startsWith('cls:')?(tClasses(curP()).get(key.slice(4))?.col||'#CFD6E0'):colour(key);
   pk.innerHTML=`<div class="g">${PAL.swatches.flat().map(s=>`<button data-sw="${s}" style="background:${s}" class="${s.toUpperCase()===c.toUpperCase()?'on':''}" aria-label="${s}"></button>`).join('')}</div>
     <div class="cu"><input type="color" id="pkc" value="${c.toLowerCase()}" aria-label="Custom colour"><input class="in sm" id="pkh" value="${c}" style="width:96px" aria-label="Hex"><span class="mini">Custom</span><button class="btn sm" data-pkx style="margin-left:auto">Done</button></div>`;
   pk.hidden=false; const r=anchor.getBoundingClientRect();
@@ -1508,7 +1791,7 @@ function upsertForm(tutor,year,letters){
   else S.forms.push({form,tutor,section});
   return true;
 }
-function redetect(){ for(const q of P){ const d=detect(q.grid); q.tutor=d.tutor; if(d.form){ q.form=d.form; if(!q.year) q.section=d.section; } } }
+function redetect(){ for(const q of (MODE==='p'?P:LISTS.p)){ const d=detect(q.grid); q.tutor=d.tutor; if(d.form){ q.form=d.form; if(!q.year) q.section=d.section; } } }
 function staffNames(){ const s=new Set(Object.keys(S.staff)); for(const p of P) for(const d in p.grid) for(const id in p.grid[d]) for(const e of p.grid[d][id]) if(e.teacher) s.add(e.teacher); return [...s].sort((a,b)=>a.replace(/^\S+\s/,'').localeCompare(b.replace(/^\S+\s/,''))); }
 const TIMES=[]; for(let m=T('7:00');m<=T('19:00');m+=5) TIMES.push(fmt(m));
 const norm = v => v ? fmt(T(v)) : '';
@@ -1566,6 +1849,9 @@ function renderSettings(){
     ${(()=>{ const ids=BELL_IDS, half=Math.ceil(ids.length/2), cell=id=>{ const B=BELL[id]; return `<td><b>${id==='REG'?'Reg':id}</b></td><td>${timeIn(fmt(B.a),`data-bell="${id}|0"`)}</td><td>${timeIn(fmt(B.b),`data-bell="${id}|1"`)}</td>`; };
       return ids.slice(0,half).map((id,i)=>`<tr>${cell(id)}${ids[half+i]?cell(ids[half+i]):'<td></td><td></td><td></td>'}</tr>`).join(''); })()}
     </tbody></table></div></div>
+  <div class="card" id="sec-duty"><h3>Duty times</h3><p>Offered when a teacher clicks a free space to add a duty. Breaks and the slot before prep are offered anyway; add any times that don’t line up with the periods, like lunch duties.</p>
+    <div class="dutyl">${(S.dutyTimes||[]).map(([a,b],i)=>`<div class="inl">${timeIn(a,`data-duty="${i}|0" ${dis}`)}<span>to</span>${timeIn(b,`data-duty="${i}|1" ${dis}`)}${canEdit()?`<button class="x" data-deldty="${i}" aria-label="Remove">×</button>`:''}</div>`).join('')||'<p class="mini">None yet.</p>'}</div>
+    ${canEdit()?'<button class="btn sm" id="adddty">Add a duty time</button>':''}</div>
   <div class="card"><h3>Streams and sets</h3><p>Used to group pupils who share a timetable. Streams split Years 7–8 into groups; set subjects can differ between pupils without making a new version or stream, and are summarised instead.</p>
     <div class="inl"><label class="f" style="flex:1;min-width:240px"><span class="mini">Streamed subjects (Years 7–8)</span><input class="in sm" id="strsub" value="${esc((S.streamSubjects||[]).join(', '))}"></label>
     <label class="f" style="flex:1;min-width:240px"><span class="mini">Set subjects</span><input class="in sm" id="setsub" value="${esc((S.setSubjects||[]).join(', '))}"></label></div></div>
@@ -1588,19 +1874,20 @@ function quickAdd(){
 const rerender = () => { renderList(); renderPreview(); };
 document.addEventListener('click',async e=>{
   const t=e.target.closest('button,[data-id],[data-ref],[data-fold]');
-  if(e.target.closest('#picker')){ const sw=e.target.closest('[data-sw]'); if(sw){ setColour(PICK,sw.dataset.sw); $('#pkh').value=sw.dataset.sw; $('#pkc').value=sw.dataset.sw.toLowerCase(); document.querySelectorAll('#picker .g button').forEach(b=>b.classList.toggle('on',b===sw)); }
+  if(e.target.closest('#picker')){ const sw=e.target.closest('[data-sw]'); if(sw){ (PICK.startsWith('cls:')?setClsColour(PICK.slice(4),sw.dataset.sw):setColour(PICK,sw.dataset.sw)); $('#pkh').value=sw.dataset.sw; $('#pkc').value=sw.dataset.sw.toLowerCase(); document.querySelectorAll('#picker .g button').forEach(b=>b.classList.toggle('on',b===sw)); }
     if(e.target.closest('[data-pkx]')) $('#picker').hidden=true; return; }
   if(!$('#picker').hidden && !e.target.closest('[data-pick]')) $('#picker').hidden=true;
   if(!t) return;
   const ds=t.dataset;
+  if(await tClick(t,ds,e)) return;
   if(ds.tab){ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b===t)); document.querySelectorAll('.tab').forEach(s=>s.classList.toggle('on',s.id==='tab-'+ds.tab));
     closeEditor(); if(ds.tab==='col') renderColours(); if(ds.tab==='set') renderSettings(); if(ds.tab==='chk') renderChecks(); if(ds.tab==='tt') renderAll(); return; }
   if(ds.tabGo){ $('#exportdlg').hidden=true; document.querySelector(`[data-tab="${ds.tabGo}"]`).click(); return; }
-  if(t.closest('.seg[data-mode]') && ds.v){ Object.assign(S.view,MODES[ds.v]); save(); closeEditor(); renderOpts(); renderPreview(); return; }
-  if(t.closest('.seg[data-opt]') && ds.v){ S.view[t.closest('.seg').dataset.opt]=ds.v; save(); closeEditor(); renderOpts(); renderPreview(); return; }
+  if(t.closest('.seg[data-mode]') && ds.v){ Object.assign(V(),MODES[ds.v]); save(); closeEditor(); renderOpts(); renderPreview(); return; }
+  if(t.closest('.seg[data-opt]') && ds.v){ V()[t.closest('.seg').dataset.opt]=ds.v; save(); closeEditor(); renderOpts(); renderPreview(); return; }
   if(ds.del){ e.stopPropagation(); P=P.filter(p=>p.id!=ds.del); if(cur==ds.del) cur=P[0]?.id??null; if(!P.length) examples=false; closeEditor(); renderAll(); return; }
   if(ds.id && t.classList.contains('pi')){ cur=+ds.id; closeEditor(); renderList(); renderPreview(); return; }
-  if(ds.ref){ const b=RENDER.blocks[ds.ref]; if(b) openEditor(b); return; }
+  if(ds.ref){ const b=RENDER.blocks[ds.ref]; if(b) (isT(curP())?openTEditor(b):openEditor(b)); return; }
   if(ds.open){ const [d,id]=ds.open.split('|'); const b=Object.values(RENDER.blocks).find(b=>b.day===d&&b.slots.includes(id)); if(b) openEditor(b); return; }
   if(ds.goto){ closeEditor(); document.querySelector('[data-tab="set"]').click(); setTimeout(()=>{ const el=$('#sec-'+ds.goto); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); },30); return; }
   if(ds.x!==undefined){ closeEditor(); return; }
@@ -1619,7 +1906,8 @@ document.addEventListener('click',async e=>{
   if(t.id==='edundo' && ED && p){ for(const id of ED.slots) delete p.patches[ED.day+'|'+id]; closeEditor(); rerender(); return; }
   if(t.id==='undoall' && p){ p.patches={}; closeEditor(); rerender(); toast('Edits undone'); return; }
   if(t.id==='savework'){ await saveSession(); return; }
-  if(t.id==='dl1' && p){ t.disabled=true; try{ await saveFile(pdfFor([p]),safe(`${p.form?p.form+' - ':''}${p.name}.pdf`)); } finally{ t.disabled=false; } return; }
+  if(t.id==='tundoall' && p){ p.tedit={}; p.cls={}; closeEditor(); renderPreview(); toast('Edits undone'); return; }
+  if(t.id==='dl1' && p){ t.disabled=true; try{ await saveFile(pdfFor([p]),safe(`${!isT(p)&&p.form?p.form+' - ':''}${p.name}.pdf`)); } finally{ t.disabled=false; } return; }
   if(t.id==='dlall' && P.length){ openExport(); return; }
   if(t.id==='exgo'){ await runExport(t); return; }
   if(ds.exx!==undefined){ $('#exportdlg').hidden=true; return; }
@@ -1634,8 +1922,8 @@ document.addEventListener('click',async e=>{
   if(t.id==='undo'){ undo(); return; }
   if(t.id==='redo'){ redo(); return; }
   if(t.id==='pltoggle'){ PLOPEN=!PLOPEN; renderList(); return; }
-  if(t.id==='clearbtn'){ if(await confirmDlg(`Remove all ${P.length} timetable${P.length>1?'s':''} from this device?`,'Clear all')){ P=[]; cur=null; examples=false; closeEditor(); renderAll(); snap(0); toast('All timetables cleared'); } return; }
-  if(t.id==='lockbtn'){ try{localStorage.removeItem(PWKEY); localStorage.removeItem(PKEY);}catch(e){} PW=null; ADMIN=false; P=[]; cur=null; setSync(''); closeEditor(); renderAll(); lockScreen(); return; }
+  if(t.id==='clearbtn'){ if(await confirmDlg(`Remove all ${P.length} ${MODE==='t'?'teacher ':''}timetable${P.length>1?'s':''} from this device?`,'Clear all')){ P=[]; cur=null; examples=false; closeEditor(); renderAll(); snap(0); toast('All timetables cleared'); } return; }
+  if(t.id==='lockbtn'){ try{localStorage.removeItem(PWKEY); localStorage.removeItem(PKEY); localStorage.removeItem(TKEY);}catch(e){} PW=null; ADMIN=false; LISTS={p:[],t:[]}; CURS={p:null,t:null}; EXS={p:false,t:false}; P=LISTS[MODE]; cur=null; examples=false; setSync(''); closeEditor(); renderAll(); lockScreen(); return; }
   if(t.id==='setpw'){ const v=$('#newpw').value; if(v.length<6){ toast('Use at least 6 characters'); return; }
     try{ await rpc('tt_set_staff_password',{pw:PW,new_pw:v}); $('#newpw').value=''; toast('Staff password changed'); }catch(e){ toast('Couldn’t change it: '+e.message); } return; }
   if(t.id==='qaadd'){ quickAdd(); return; }
@@ -1645,6 +1933,8 @@ document.addEventListener('click',async e=>{
     toast(n?`Added ${n} form${n>1?'s':''}${bad?` (${bad} line${bad>1?'s':''} not recognised)`:''}`:'Nothing recognised – use “Name, Year, Letters” per line'); return; }
   if(ds.unnot!==undefined){ S.notTutors=(S.notTutors||[]).filter(x=>x!==ds.unnot); save(); redetect(); renderSettings(); return; }
   if(ds.delstaff!==undefined){ delete S.staff[ds.delstaff]; save(); renderSettings(); toast(`Removed ${ds.delstaff}`); return; }
+  if(t.id==='adddty'){ const L=S.dutyTimes||[], last=L[L.length-1]; S.dutyTimes=[...L,last?[last[1],fmt(T(last[1])+20)]:['12:50','13:10']]; save(); renderSettings(); return; }
+  if(ds.deldty!==undefined){ S.dutyTimes=(S.dutyTimes||[]).filter((_,i)=>i!==+ds.deldty); save(); renderSettings(); return; }
   if(t.id==='addform'){ S.forms.push({form:'',tutor:'',section:'MS'}); save(); renderSettings(); return; }
   if(ds.delform!==undefined){ S.forms.splice(+ds.delform,1); save(); renderSettings(); return; }
   if(t.id==='staffimport'){ let n=0; for(const line of $('#staffpaste').value.split(/\n/)){ const m=/^\s*(.+?)\s*[,\t]\s*([A-Za-z]{1,6})\s*$/.exec(line); if(m){ S.staff[m[1]]=m[2].toUpperCase(); n++; } }
@@ -1661,9 +1951,12 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeEditor(); $(
   if((e.key==='Enter'||e.key===' ') && (e.target.classList?.contains('pi')||e.target.classList?.contains('fh'))){ e.preventDefault(); e.target.click(); } });
 document.addEventListener('change',e=>{
   const t=e.target, ds=t.dataset, p=curP();
-  if(ds.tog){ S.view[ds.tog]=t.checked; save(); renderPreview(); return; }
+  if(tChange(t)) return;
+  if(ds.tog){ V()[ds.tog]=t.checked; save(); renderPreview(); return; }
   if(ds.exsel){ const ids=ds.exsel.split(',').map(Number); for(const id of ids) t.checked?EXSEL.add(id):EXSEL.delete(id); renderExport(); return; }
   if(t.id==='cuw'||t.id==='cuh'){ S.view.custom={w:+$('#cuw').value||148,h:+$('#cuh').value||210}; save(); return; }
+  if(ds.duty){ const [i,k]=ds.duty.split('|').map(Number); const L=(S.dutyTimes||[]).map(x=>[...x]); L[i][k]=t.value;
+    if(T(L[i][1])<=T(L[i][0])){ toast('A duty has to end after it starts'); renderSettings(); return; } S.dutyTimes=L.sort((a,b)=>T(a[0])-T(b[0])); save(); renderSettings(); renderPreview(); return; }
   if(ds.bell){ const [id,i]=ds.bell.split('|'); const cur=(S.bells&&S.bells[id])||[fmt(BELL[id].a),fmt(BELL[id].b)]; const nb=[...cur]; nb[+i]=t.value;
     if(T(nb[1])<=T(nb[0])){ toast('A period has to end after it starts'); renderSettings(); return; }
     S.bells={...(S.bells||{}),[id]:nb}; save(); rerender(); return; }
@@ -1710,8 +2003,9 @@ document.addEventListener('input',e=>{ const t=e.target;
     $('#qaprev').textContent = y>=3&&y<=8&&l ? `→ ${y}${l} · ${secForYear(y)}` : '';
     if(t.id==='qayear' && /^[3-8]$/.test(t.value)) $('#qaletters').focus(); }
   if(t.dataset.p0){ S.sections[SECTAB].p0[t.dataset.p0].label=t.value; if(t.value.trim()) ensureSubject(t.value.trim()); save(); clearTimeout(t._h); t._h=setTimeout(renderPreview,250); }
-  if(t.id==='pkc'){ setColour(PICK,t.value); $('#pkh').value=t.value.toUpperCase(); }
-  if(t.id==='pkh' && /^#[0-9a-f]{6}$/i.test(t.value)){ setColour(PICK,t.value); $('#pkc').value=t.value.toLowerCase(); }
+  const setC=(c)=>PICK.startsWith('cls:')?setClsColour(PICK.slice(4),c):setColour(PICK,c);
+  if(t.id==='pkc'){ setC(t.value); $('#pkh').value=t.value.toUpperCase(); }
+  if(t.id==='pkh' && /^#[0-9a-f]{6}$/i.test(t.value)){ setC(t.value); $('#pkc').value=t.value.toLowerCase(); }
 });
 document.addEventListener('click',()=>snap(250));
 document.addEventListener('change',()=>snap(250));
@@ -1741,11 +2035,12 @@ function lockScreen(msg){ return new Promise(res=>{
     if(!ok) await lockScreen();
     $('#lockbtn').hidden=false;
   }
-  if(loadSavedP()){ renderAll(); snap(0); return; }
-  try{
-    for(const [file,b64] of EXAMPLES){ const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)); P.push(makePupil(parseTimetable(await readXlsx(bin.buffer),file))); }
-    examples=true; cur=P[0]?.id??null;
-  }catch(e){ console.error(e); }
+  document.querySelectorAll('[data-msw]').forEach(b=>b.classList.toggle('on',b.dataset.msw===MODE)); document.body.classList.toggle('tmode',MODE==='t');
+  if(!loadSavedP()){ try{ const ex=[];
+      for(const [file,b64] of EXAMPLES){ const bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)); ex.push(makePupil(parseTimetable(await readXlsx(bin.buffer),file))); }
+      if(ex.length){ LISTS.p=ex; CURS.p=ex[0].id; EXS.p=true; }
+    }catch(e){ console.error(e); }
+    P=LISTS[MODE]; cur=CURS[MODE]; examples=EXS[MODE]; }
   renderAll(); snap(0);
 })();
 }
