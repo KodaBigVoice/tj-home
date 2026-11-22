@@ -670,7 +670,7 @@ function generic(){
   const sec = () => ({days:[...DAYS],lunch:{},prep:L('16:30','17:00'),matches:blank(),games:blank(),
     p0:Object.fromEntries(DAYS.map(d=>[d,{label:'',end:'P0',force:false,who:'none'}])),prepOv:Object.fromEntries(DAYS.map(d=>[d,{label:'',who:'none'}]))});
   return {
-    v:9,
+    v:10,
     bells:genericBells(),
     streamSubjects:[], setSubjects:[], notTutors:[],
     view:{periods:'both',lt:'none',btimes:true,orient:'land',names:'full',rooms:true,reg:true,p0:true,prep:true,size:'a4',custom:{w:148,h:210},pack:'one',colors:{},preset:'',evt:'wide'},
@@ -685,11 +685,14 @@ const LEG = () => merge(generic(), LEGACY||{});
 const KEY='tt-maker-v1';
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
-function migrate(){ if((S.v||1)>=9) return false;
-  if((S.v||1)>=8){ S.bells = {...genericBells(),...(LEGACY?.bells||{}),...(S.bells||{})};
+function migrate(){ if((S.v||1)>=10) return false;
+  if((S.v||1)>=9){ // repair: format 9 briefly saved the plain fallback day instead of the school's bell times
+    if(LEGACY?.bells && JSON.stringify(S.bells)===JSON.stringify(genericBells())) S.bells={...LEGACY.bells};
+    S.v=10; return true; }
+  if((S.v||1)>=8){ S.bells = {...genericBells(),...(LEGACY?.bells||{})};
     const ren=o=>{ if(o&&o['Saturday Series']!==undefined&&o.Extra===undefined){ o.Extra=o['Saturday Series']; delete o['Saturday Series']; } };
     ren(S.colors); ren(S.view?.colors); for(const sb of Object.values(S.subjects||{})) if(sb.key==='Saturday Series') sb.key='Extra';
-    S.v=9; return true; }
+    S.v=9; migrate(); return true; }
   if((S.v||1)>=7){ const old='House Meeting', nw='House Meetings';
     if(S.subjects[old]){ S.subjects[nw]={...S.subjects[old]}; delete S.subjects[old]; } S.subjects[nw] ??= {short:'House',key:'Neutral',bare:false}; S.subjects[nw].event=true;
     S.aliases[old]=nw; for(const k of Object.keys(S.sections)) for(const d of DAYS){ const t=S.sections[k].p0?.[d]; if(t&&t.label===old) t.label=nw; const po=S.sections[k].prepOv?.[d]; if(po&&po.label===old) po.label=nw; }
@@ -715,9 +718,9 @@ const MIGRATED=migrate(); rebuildBells(S.bells);
 { const v=S.view; if('ptimes' in v){ v.periods=v.ptimes?'both':'labels'; delete v.ptimes; } if('ltimes' in v){ v.lt=v.ltimes?'all':'none'; delete v.ltimes; } }
 const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
 const CLOUD_ON = /^https:/.test(CLOUD.url) && CLOUD.key.length>20;
-const SHARED = ['v','bells','sections','forms','staff','subjects','aliases','colors','preset','planner','notTutors','streamSubjects','setSubjects'];
+const SHARED = ['v','rev','bells','sections','forms','staff','subjects','aliases','colors','preset','planner','notTutors','streamSubjects','setSubjects'];
 const PWKEY='tt-maker-pw';
-let ADMIN=!CLOUD_ON, PW=null, SYNC='';
+let ADMIN=!CLOUD_ON, PW=null, SYNC='', DB=null; // DB = format and change number as last reported by the database
 try{ PW=localStorage.getItem(PWKEY); }catch(e){}
 let saveT, pushT; const save=()=>{ rebuildBells(S.bells); clearTimeout(saveT); saveT=setTimeout(()=>{ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} },150);
   if(CLOUD_ON && ADMIN && PW){ clearTimeout(pushT); setSync('Saving…'); pushT=setTimeout(push,1200); } };
@@ -730,12 +733,13 @@ async function rpc(fn,body){
   return j; }
 const sharedOf = () => Object.fromEntries(SHARED.map(k=>[k,S[k]]));
 function applyShared(d){ if(!d||!Object.keys(d).length) return; const base=defaults(); for(const k of SHARED) S[k]= k==='v' ? (d.v||1) : d[k]!==undefined ? merge(base[k],d[k]) : base[k]; const m=migrate(); rebuildBells(S.bells); return m; }
-async function push(){ try{ await rpc('tt_save',{pw:PW,new_data:sharedOf()}); setSync('Saved for all staff'); }catch(e){ setSync(e.wrong?'Admin password no longer works':'Not saved – will retry',true); if(!e.wrong){ clearTimeout(pushT); pushT=setTimeout(push,8000); } } }
-function setSync(t,bad){ SYNC=t; const el=document.getElementById('sync'); if(el){ el.textContent=t; el.classList.toggle('bad',!!bad); el.hidden=!t; } }
-async function unlock(pw){ const j=await rpc('tt_get',{pw}); PW=pw; ADMIN=!!j.admin; try{localStorage.setItem(PWKEY,pw);}catch(e){}
+async function push(){ try{ const d=sharedOf(); d.rev=(Math.max(S.rev||0,DB?.rev||0))+1; await rpc('tt_save',{pw:PW,new_data:d}); S.rev=d.rev; DB={v:d.v,rev:d.rev}; try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} setSync('Saved for all staff'); }catch(e){ setSync(e.wrong?'Admin password no longer works':'Not saved – will retry',true); if(!e.wrong){ clearTimeout(pushT); pushT=setTimeout(push,8000); } } }
+function setSync(t,bad){ SYNC=t; const el=document.getElementById('sync'); if(el){ el.textContent=t+(DB&&!bad?` · #${DB.rev}`:''); el.title=DB?`Database: change #${DB.rev}, settings format ${DB.v}`:''; const st=document.getElementById('dbinfo'); if(st) st.innerHTML=dbInfo(); el.classList.toggle('bad',!!bad); el.hidden=!t; } }
+async function unlock(pw){ const j=await rpc('tt_get',{pw}); PW=pw; DB={v:j.data?.v||0,rev:j.data?.rev||0}; ADMIN=!!j.admin; try{localStorage.setItem(PWKEY,pw);}catch(e){}
   const empty=!j.data||!Object.keys(j.data).length; const migrated=applyShared(j.data); try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   if(ADMIN && (empty||migrated)) push(); setSync(ADMIN?'Saved for all staff':'Settings from school'); return j; }
 const canEdit = () => ADMIN;
+const dbInfo = () => !CLOUD_ON ? '' : DB ? `Database: <b>change #${DB.rev}</b> · settings format ${DB.v}. The change number goes up by 1 each time settings are saved for everyone.` : 'Database: not checked yet';
 
 /* ========================== helpers ========================== */
 const $ = s => document.querySelector(s);
@@ -1542,7 +1546,7 @@ function renderSettings(){
   const rawSeen=new Set(Object.keys(S.aliases)); for(const p of P) for(const d in p.grid) for(const id in p.grid[d]) for(const e of p.grid[d][id]) rawSeen.add(String(e.raw).replace(/^(mon|tues|wednes|thurs|fri|satur|sun)day\s+(?=games$)/i,''));
   const names=staffNames();
   const dis=canEdit()?'':'disabled';
-  $('#setwrap').innerHTML=`<h2>Settings</h2>${roNote()}
+  $('#setwrap').innerHTML=`<h2>Settings</h2>${CLOUD_ON?`<p class="hint" id="dbinfo">${dbInfo()}</p>`:''}${roNote()}
   <div class="card" id="sec-sections"><h3>School day by section</h3><p>Lunch, before-school (P0) slots, matches and games lessons. Breaks and the 16:20 sandwich break appear automatically as blank gaps.</p>
     <div class="seg" style="max-width:420px;margin-bottom:12px">${Object.keys(SECNAME).map(k=>`<button data-sectab="${k}" class="${k===SECTAB?'on':''}">${k}</button>`).join('')}</div>
     <fieldset class="ro" ${dis}><p class="mini" style="margin:0 0 8px">${SECNAME[SECTAB]} · evening prep ${timeIn(sec.prep[0],`data-prep="0"`)} to ${timeIn(sec.prep[1],`data-prep="1"`)}</p>
