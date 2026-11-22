@@ -256,6 +256,7 @@ body.hide-mode .hidebar{display:flex}
     <button class="hbtn icon" data-act="redo" id="redoBtn" aria-label="Redo" title="Redo (Ctrl+Y)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
     <span class="vsep" aria-hidden="true"></span>
     <button class="hbtn icon" data-act="settings" aria-label="Settings" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+    <button class="hbtn" data-act="msacct" id="msAcct" title="Sign in with your Morning Slide account to publish"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span id="msAcctText">Sign in</span></button>
     <button class="hbtn" data-act="filemenu" id="fileBtn" aria-haspopup="menu">File<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <button class="hbtn export" data-act="exportmenu" id="exportBtn" aria-haspopup="menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>Export<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
   </nav>
@@ -918,6 +919,7 @@ document.addEventListener('click',ev=>{
     case 'png':downloadPNG();break;
     case 'publish':publishDay();break;
     case 'signout':signOutMS();break;
+    case 'msacct':if(msSignedIn())signOutMS();else openSignin('only');break;
     case 'day':S.cur=b.dataset.day;ui.hideMode=false;closeFloating();render();break;
     case 'auto':commit(()=>autoArrange(day()));toast('Auto-arranged '+day().title);break;
     case 'add':ui.hideMode=false;render();openEdit(null,document.querySelector('[data-act="add"]'));break;
@@ -981,7 +983,17 @@ async function doPublish(sb,d){
   try{const p=JSON.parse(localStorage.getItem('matchdayQueues.published')||'{}');p[d.dateISO]=Date.now();localStorage.setItem('matchdayQueues.published',JSON.stringify(p));}catch(e){}
   toast('Published '+d.title+'. Slides update within a few minutes.',4000);pubNote();
 }
-function openSignin(){$('#signinErr').hidden=true;$('#signinBack').hidden=false;setTimeout(()=>$('#siEmail').focus(),0);}
+let siMode='publish';   // 'publish': publish straight after signing in; 'only': just sign in (toolbar button)
+function openSignin(mode){siMode=mode||'publish';$('#signinErr').hidden=true;
+  $('#signinForm h2').textContent=siMode==='only'?'Sign in to Morning Slide':'Sign in to publish';
+  $('#siGo').textContent=siMode==='only'?'Sign in':'Sign in and publish';
+  $('#signinBack').hidden=false;setTimeout(()=>$('#siEmail').focus(),0);}
+function msSession(){try{return JSON.parse(localStorage.getItem(MS.store)||'null');}catch(e){return null;}}
+function msSignedIn(){return !!msSession();}
+function msAcctPaint(){const s=msSession(),b=$('#msAcct');if(!b)return;
+  const email=s&&(s.user&&s.user.email||s.currentSession&&s.currentSession.user&&s.currentSession.user.email)||'';
+  $('#msAcctText').textContent=s?'Sign out':'Sign in';
+  b.title=s?'Signed in to Morning Slide'+(email?' as '+email:'')+'. Click to sign out.':'Sign in with your Morning Slide account to publish';}
 function closeSignin(){$('#signinBack').hidden=true;}
 $('#siCancel').addEventListener('click',closeSignin);
 $('#signinBack').addEventListener('click',ev=>{if(ev.target===$('#signinBack'))closeSignin();});
@@ -989,10 +1001,13 @@ $('#signinBack').addEventListener('keydown',ev=>{if(ev.key==='Escape')closeSigni
 $('#signinForm').addEventListener('submit',async ev=>{ev.preventDefault();const go=$('#siGo');go.disabled=true;
   try{const sb=await msSb();const {error}=await sb.auth.signInWithPassword({email:$('#siEmail').value.trim().toLowerCase(),password:$('#siPw').value});
     if(error)throw new Error(/invalid login/i.test(error.message)?'That email and password don’t match. You can reset your password in Morning Slide.':/not confirmed/i.test(error.message)?'Confirm your email first: click the link Morning Slide sent you.':error.message);
-    closeSignin();$('#siPw').value='';await doPublish(sb,day());}
+    closeSignin();$('#siPw').value='';msAcctPaint();pubNote();
+    if(siMode==='only'){toast('Signed in to Morning Slide. You can now publish from the Export menu.');}
+    else{const d=day();if(!d){toast('Signed in. Upload the fixtures to publish.');}else await doPublish(sb,d);}}
   catch(err){$('#signinErr').textContent=err.message||String(err);$('#signinErr').hidden=false;}
   finally{go.disabled=false;}});
-async function signOutMS(){closeFloating();try{const sb=await msSb();await sb.auth.signOut();}catch(e){}toast('Signed out of Morning Slide');pubNote();}
+async function signOutMS(){closeFloating();try{const sb=await msSb();await sb.auth.signOut();}catch(e){}try{localStorage.removeItem(MS.store);}catch(e){}toast('Signed out of Morning Slide');pubNote();msAcctPaint();}
+msAcctPaint();
 
 async function downloadPNG(){await fontsReady();const c=drawSheet(sheetModel(day()));c.toBlob(bl=>saveFile('matchday-queues-'+day().dateISO+'.png',bl),'image/png');}
 
