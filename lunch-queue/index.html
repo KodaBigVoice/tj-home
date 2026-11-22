@@ -959,7 +959,7 @@ function publishData(d){
       if(!e||!visible(e)||e.yearKey==='LS')continue;
       teams.push({years:e.yearKey==='78'?[7,8]:[+e.yearKey],gender:e.gender||'',sport:e.sportKey||'',
         named:!e.gender||e.gender==='Mixed'||offSport(e),label:(e.suffix||'').trim(),away:isTravel(e),
-        door:doorName(door),time:S.settings.times[slot],meet:e.meet!=null?fmt(e.meet):null});}}
+        door:doorName(door),time:S.settings.times[slot],meet:e.meet!=null?fmt(e.meet):null,start:e.start!=null?fmt(e.start):null});}}
   return {v:1,date:d.dateISO,title:d.title,term:S.settings.term,teams};
 }
 function pubNote(){const el=$('#pubNote');if(!el)return;const d=day();let t='';
