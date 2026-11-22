@@ -654,11 +654,10 @@ const GAP='#F0F2F5', MM=25.4/72;
 
 function merge(base,over){ if(Array.isArray(base)||typeof base!=='object'||base===null) return over===undefined?base:over;
   const o={...base}; if(over&&typeof over==='object') for(const k of Object.keys(over)) o[k]= k in base ? merge(base[k],over[k]) : over[k]; return o; }
+const SHARED_KEYS = ['v','rev','bells','sections','forms','staff','subjects','aliases','colors','preset','planner','notTutors','streamSubjects','setSubjects'];
 /* ========================== defaults ========================== */
 // The public app knows no school. School settings come from the shared database (or SEED in a private build).
 const SEED = null;
-// TEMPORARY: rule values that older saved settings need when they update. Remove once the school's settings are on version 9.
-const LEGACY = {"sections": {"LS": {"p0": {"Mon": {"label": "Assembly", "end": "P0", "force": true, "who": "none"}, "Tue": {"label": "Wellbeing", "end": "P0", "force": false, "who": "reg"}, "Wed": {"label": "Chapel", "end": "P0", "force": true, "who": "none"}, "Thu": {"label": "House Meetings", "end": "P0", "force": true, "who": "none"}, "Fri": {"label": "Assembly", "end": "P0", "force": true, "who": "none"}, "Sat": {"label": "", "end": "P0", "force": false, "who": "none"}}, "prepOv": {"Mon": {"label": "", "who": "none"}, "Tue": {"label": "", "who": "none"}, "Wed": {"label": "", "who": "none"}, "Thu": {"label": "Singing Practice", "who": "none"}, "Fri": {"label": "Form Time", "who": "reg"}, "Sat": {"label": "", "who": "none"}}, "prep": ["16:20", "17:00"]}, "MS": {"p0": {"Mon": {"label": "Assembly", "end": "P0", "force": true, "who": "none"}, "Tue": {"label": "Wellbeing", "end": "P0", "force": true, "who": "reg"}, "Wed": {"label": "Form Time", "end": "P0", "force": false, "who": "reg"}, "Thu": {"label": "House Meetings", "end": "P0", "force": true, "who": "none"}, "Fri": {"label": "Chapel", "end": "P0", "force": true, "who": "none"}, "Sat": {"label": "Assembly", "end": "P0", "force": true, "who": "none"}}, "prepOv": {"Mon": {"label": "", "who": "none"}, "Tue": {"label": "", "who": "none"}, "Wed": {"label": "", "who": "none"}, "Thu": {"label": "", "who": "none"}, "Fri": {"label": "", "who": "none"}, "Sat": {"label": "", "who": "none"}}}, "US": {"p0": {"Mon": {"label": "Assembly", "end": "P0", "force": true, "who": "none"}, "Tue": {"label": "Prep", "end": "P0", "force": true, "who": "reg"}, "Wed": {"label": "", "end": "P0", "force": false, "who": "none"}, "Thu": {"label": "House Meetings", "end": "P0", "force": true, "who": "none"}, "Fri": {"label": "Prep", "end": "P0", "force": false, "who": "reg"}, "Sat": {"label": "Chapel", "end": "P1", "force": true, "who": "none"}}, "prepOv": {"Mon": {"label": "", "who": "none"}, "Tue": {"label": "Assembly", "who": "none"}, "Wed": {"label": "", "who": "none"}, "Thu": {"label": "", "who": "none"}, "Fri": {"label": "", "who": "none"}, "Sat": {"label": "", "who": "none"}}}}, "subjects": {"Singing Practice": {"short": "Singing", "key": "Neutral", "bare": false, "event": true}}, "streamSubjects": ["English", "Geography", "History", "TPR"], "setSubjects": ["Maths", "Latin", "French", "Science", "Spanish"], "bells": {"REG": ["8:20", "8:30"], "P0": ["8:30", "9:00"], "P1": ["9:00", "9:20"], "P2": ["9:20", "9:40"], "P3": ["9:40", "10:00"], "P4": ["10:00", "10:20"], "P5": ["10:20", "10:40"], "P6": ["10:40", "11:00"], "P7": ["11:30", "11:50"], "P8": ["11:50", "12:10"], "P9": ["12:10", "12:30"], "P10": ["12:30", "12:50"], "P11": ["12:50", "13:10"], "P12": ["13:10", "13:30"], "P13": ["13:40", "14:00"], "P14": ["14:00", "14:20"], "P15": ["14:20", "14:40"], "P16": ["14:40", "15:00"], "P17": ["15:00", "15:20"], "P18": ["15:20", "15:40"], "P19": ["15:40", "16:00"], "P20": ["16:00", "16:20"]}};
 const L = (a,b)=>[a,b];
 function generic(){
   const subj = {Maths:['Mat','Maths'],English:['Eng','English'],Science:['Sci','Science'],French:['Fr','French'],Spanish:['Span','Spanish'],Latin:['Lat','Latin'],
@@ -681,44 +680,18 @@ function generic(){
   };
 }
 function defaults(){ const g=generic(); return SEED ? merge(g,{...SEED,v:g.v,view:g.view}) : g; }
-const LEG = () => merge(generic(), LEGACY||{});
 const KEY='tt-maker-v1';
 let S = defaults();
 try{ const raw=localStorage.getItem(KEY); if(raw) S=merge(defaults(),JSON.parse(raw)); }catch(e){}
 function migrate(){ if((S.v||1)>=10) return false;
-  if((S.v||1)>=9){ // repair: format 9 briefly saved the plain fallback day instead of the school's bell times
-    if(LEGACY?.bells && JSON.stringify(S.bells)===JSON.stringify(genericBells())) S.bells={...LEGACY.bells};
-    S.v=10; return true; }
-  if((S.v||1)>=8){ S.bells = {...genericBells(),...(LEGACY?.bells||{})};
-    const ren=o=>{ if(o&&o['Saturday Series']!==undefined&&o.Extra===undefined){ o.Extra=o['Saturday Series']; delete o['Saturday Series']; } };
-    ren(S.colors); ren(S.view?.colors); for(const sb of Object.values(S.subjects||{})) if(sb.key==='Saturday Series') sb.key='Extra';
-    S.v=9; migrate(); return true; }
-  if((S.v||1)>=7){ const old='House Meeting', nw='House Meetings';
-    if(S.subjects[old]){ S.subjects[nw]={...S.subjects[old]}; delete S.subjects[old]; } S.subjects[nw] ??= {short:'House',key:'Neutral',bare:false}; S.subjects[nw].event=true;
-    S.aliases[old]=nw; for(const k of Object.keys(S.sections)) for(const d of DAYS){ const t=S.sections[k].p0?.[d]; if(t&&t.label===old) t.label=nw; const po=S.sections[k].prepOv?.[d]; if(po&&po.label===old) po.label=nw; }
-    S.v=8; migrate(); return true; }
-  if((S.v||1)>=6){ const D=LEG(); const ls=S.sections.LS, dl=D.sections.LS;
-    ls.prep=[...dl.prep]; ls.p0={...dl.p0}; ls.prepOv={...(ls.prepOv||{}),Thu:{...dl.prepOv.Thu},Fri:{...dl.prepOv.Fri}};
-    S.subjects['Singing Practice']={...D.subjects['Singing Practice']}; S.v=7; migrate(); return true; }
-  if((S.v||1)>=5){ if(S.subjects['Form Time']?.key==='Neutral') S.subjects['Form Time'].key='Pastoral';
-    S.streamSubjects ??= [...(LEGACY?.streamSubjects||[])]; S.setSubjects ??= [...(LEGACY?.setSubjects||[])]; S.v=6; migrate(); return true; }
-  if((S.v||1)>=4){ const D=LEG().sections; for(const k of Object.keys(D)){ S.sections[k].prepOv = {...D[k].prepOv, ...(S.sections[k].prepOv||{})}; }
-    const t=S.sections.US.p0.Tue; if(t.label==='Assembly'){ S.sections.US.p0.Tue={label:'Prep',end:'P0',force:true,who:'reg'}; } S.sections.US.prepOv.Tue={label:'Assembly',who:'none'};
-    S.notTutors ??= []; S.v=5; migrate(); return true; }
-  if((S.v||1)>=3){ const D=LEG().sections;
-    for(const k of Object.keys(D)) for(const d of DAYS){ const def=D[k].p0[d], old=S.sections[k]?.p0?.[d]||{};
-      S.sections[k].p0[d] = (!def.label && old.label) ? {label:old.label,end:old.end||'P0',force:false,who:S.subjects?.[old.label]?.event?'none':'reg'} : {...def}; }
-    S.v=4; migrate(); return true; }
-  if((S.v||1)>=2){ S.subjects.Spanish={...(S.subjects.Spanish||{}),short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets[S.preset||'Refined']?.Spanish||PAL.presets.Refined.Spanish; S.v=3; migrate(); return true; }
-  const t=S.sections?.US?.p0?.Tue; if(t && (!t.label || t.label==='Prep')) t.label='Assembly';
-  for(const n of ['Assembly','Chapel','House Meetings']) if(S.subjects[n]) S.subjects[n].event=true;
-  if(S.view.style==='times') S.view.lt='all'; delete S.view.style;
-  S.subjects.Spanish={short:'Span',key:'Spanish',bare:false}; S.colors.Spanish=PAL.presets.Refined.Spanish; S.v=3; migrate(); return true; }
+  // Settings older than format 10 (only an old copy saved on one computer): keep what's there, fill gaps from the defaults.
+  const D=defaults(); for(const k of SHARED_KEYS) if(S[k]===undefined) S[k]=D[k];
+  if(!S.bells||!Object.keys(S.bells).length) S.bells=D.bells; S.v=10; return true; }
 const MIGRATED=migrate(); rebuildBells(S.bells);
 { const v=S.view; if('ptimes' in v){ v.periods=v.ptimes?'both':'labels'; delete v.ptimes; } if('ltimes' in v){ v.lt=v.ltimes?'all':'none'; delete v.ltimes; } }
 const CLOUD = {url:'https://jbvemxhfndjkofcbubmn.supabase.co', key:'sb_publishable_oPEAFTgMAq94UaWYsLgD-Q_LR5u-cNP'};
 const CLOUD_ON = /^https:/.test(CLOUD.url) && CLOUD.key.length>20;
-const SHARED = ['v','rev','bells','sections','forms','staff','subjects','aliases','colors','preset','planner','notTutors','streamSubjects','setSubjects'];
+const SHARED = SHARED_KEYS;
 const PWKEY='tt-maker-pw';
 let ADMIN=!CLOUD_ON, PW=null, SYNC='', DB=null; // DB = format and change number as last reported by the database
 try{ PW=localStorage.getItem(PWKEY); }catch(e){}
@@ -739,7 +712,7 @@ async function unlock(pw){ const j=await rpc('tt_get',{pw}); PW=pw; DB={v:j.data
   const empty=!j.data||!Object.keys(j.data).length; const migrated=applyShared(j.data); try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
   if(ADMIN && (empty||migrated)) push(); setSync(ADMIN?'Saved for all staff':'Settings from school'); return j; }
 const canEdit = () => ADMIN;
-const dbInfo = () => !CLOUD_ON ? '' : DB ? `Database: <b>change #${DB.rev}</b> · settings format ${DB.v}. The change number goes up by 1 each time settings are saved for everyone.` : 'Database: not checked yet';
+const dbInfo = () => !CLOUD_ON ? '' : DB ? `Database: <b>change #${DB.rev}</b> · settings format ${DB.v}.` : 'Database: not checked yet';
 
 /* ========================== helpers ========================== */
 const $ = s => document.querySelector(s);
