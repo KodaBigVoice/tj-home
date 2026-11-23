@@ -20,6 +20,6 @@ Small pages without their own site live here in their own folders:
 
 Apps with their own site (PMU, Morning Slide, Crooket, MusicLAMDA, Simple Track Builder, Vobiscum Configurator) are only linked.
 
-**Adding a tile:** add one line to `APPS` in `index.html` (and optionally a picture to `PICS`).
+**Adding a tile:** add one line to `APPS` in `index.html` (and optionally a picture to `PICS`). Tiles can be dragged into any order within their section; the order is saved per browser (`tjhome-order-v1`), and new tiles appear first in their section.
 
 All pages on `kodabigvoice.github.io` share browser storage, so each app uses its own storage key names.
