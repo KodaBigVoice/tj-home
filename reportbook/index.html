@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reportbook prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: calm, exact school office tool: a well-kept mark book, not a flashy dashboard
+IDEA: the teacher's mark book and the pupil's report card, side by side
+PICTURE: the live roster grid + comment card is the picture; pupil page leads with a big cycle switcher
+COLOUR and TYPE: off-white, #000237 ink, #00bdff solid pop boxes, crimson only for problems; DM Sans, Fraunces wordmark
+LAYOUT: ink header band; content max 1240px; two columns for writing above 980px, stacked below
+*/
+:root{color-scheme:light dark;--bg:light-dark(#fafaf7,#05081f);--panel:light-dark(#ffffff,#0c1033);--ink:light-dark(#000237,#eef1ff);--mut:light-dark(#575b7c,#a4a9cf);--line:light-dark(#e2e3eb,#242a5c);--pop:#00bdff;--popink:#000237;--soft:light-dark(#e2f6ff,#0a2747);--crim:light-dark(#dc143c,#ff6b86);--crims:light-dark(#fdeaee,#3b0d1b);--ok:light-dark(#08794f,#4fd6a0);--oks:light-dark(#e0f4ea,#0b3324);--amb:light-dark(#8a5800,#f2b84b);--ambs:light-dark(#fdf2dc,#3a2a08)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "DM Sans",system-ui,sans-serif;overflow-x:clip}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(20px,3vw,40px) max(4vw,16px)}
+h1{font-size:clamp(26px,3.2vw,36px);line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-size:22px;line-height:1.15;margin:0}
+h3{font-size:16px;margin:0 0 6px}
+.sub{color:var(--mut);margin:4px 0 0;font-size:15px}
+/* header */
+.top{background:#000237;color:#fff}
+.top .in{max-width:1240px;margin:0 auto;padding:12px max(4vw,16px);display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.mark{font-family:Fraunces,Georgia,serif;font-size:24px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
+.mark i{width:26px;height:26px;border-radius:6px;background:var(--pop);display:inline-grid;place-items:center;font-style:normal;color:#000237;font:700 15px "DM Sans"}
+.nav{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+.nav button{background:none;border:0;color:#c9ccf0;padding:10px 12px;border-radius:8px;cursor:pointer;min-height:44px}
+.nav button:hover{color:#fff;background:#ffffff14}
+.nav button.on{color:#fff;box-shadow:inset 0 -3px 0 var(--pop)}
+.role{display:flex;background:#ffffff14;border-radius:999px;padding:3px}
+.role button{border:0;background:none;color:#c9ccf0;border-radius:999px;padding:8px 14px;cursor:pointer;min-height:38px}
+.role button.on{background:var(--pop);color:#000237;font-weight:600}
+.proto{background:var(--soft);font-size:13px;color:var(--ink)}
+.proto .in{max-width:1240px;margin:0 auto;padding:6px max(4vw,16px);display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.proto button{background:none;border:0;text-decoration:underline;cursor:pointer;font-size:13px;padding:0}
+/* bits */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-weight:500;white-space:nowrap;text-decoration:none}
+.btn:hover{border-color:var(--ink)}
+.btn.pop{background:var(--pop);color:var(--popink);border-color:var(--pop);font-weight:600}
+.btn.ink{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600}
+.btn.ghost{background:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--pop);outline-offset:2px}
+.back{display:inline-block;margin-bottom:14px;color:var(--mut);cursor:pointer;background:none;border:0;padding:6px 0;min-height:36px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.chip{display:inline-block;font-size:13px;padding:3px 10px;border-radius:999px;background:var(--soft);white-space:nowrap}
+.chip.ok{background:var(--oks);color:var(--ok)}.chip.amb{background:var(--ambs);color:var(--amb)}.chip.crim{background:var(--crims);color:var(--crim)}
+.bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden}.bar>i{display:block;height:100%;background:var(--pop);border-radius:99px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.spread{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-end}
+.muted{color:var(--mut)}
+.small{font-size:13px}
+/* teacher home */
+.sets{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,270px),1fr));gap:16px;margin-top:22px}
+.set{padding:18px;display:flex;flex-direction:column;gap:12px;cursor:pointer;text-align:left}
+.set:hover{border-color:var(--ink)}
+.set .big{font-size:30px;font-weight:700;line-height:1}
+.set .done{background:var(--pop);color:var(--popink);border-color:var(--pop)}
+.deadline{display:inline-flex;gap:10px;align-items:center;background:var(--pop);color:var(--popink);padding:8px 14px;border-radius:10px;font-weight:600;margin-top:14px}
+.past{margin-top:34px}
+.past li{padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.past ul{list-style:none;margin:0;padding:0}
+/* writing view */
+.whead{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:flex-end;margin-bottom:18px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.saved{font-size:13px;color:var(--ok);margin-right:6px}
+.saved.busy{color:var(--mut)}
+.wgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media(min-width:980px){.wgrid{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);align-items:start}.editor{position:sticky;top:12px}}
+.tablecard{padding:6px 0 0;overflow:hidden}
+table{border-collapse:collapse;width:100%}
+.roster th{font-size:13px;color:var(--mut);font-weight:500;text-align:left;padding:8px 12px;border-bottom:1px solid var(--line)}
+.roster td{padding:4px 12px;border-bottom:1px solid var(--line)}
+.roster tr.on td{background:var(--soft)}
+.roster .g{width:74px;text-align:center}
+.roster .st{width:60px;text-align:center}
+.pname{background:none;border:0;padding:8px 0;cursor:pointer;text-align:left;font-weight:500;min-height:40px}
+.pname:hover{text-decoration:underline}
+.form{font-size:12px;color:var(--mut);margin-left:8px;white-space:nowrap}
+.gin{width:52px;height:38px;text-align:center;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-weight:600;font-size:16px;text-transform:uppercase}
+.gin:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offset:0}
+.gin.bad{border-color:var(--crim);background:var(--crims);color:var(--crim)}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--line)}
+.dot.part{border-color:var(--pop);background:linear-gradient(90deg,var(--pop) 50%,transparent 50%)}
+.dot.done{border-color:var(--pop);background:var(--pop)}
+.hint{font-size:13px;color:var(--mut);padding:10px 14px;margin:0}
+.editor{padding:20px;display:flex;flex-direction:column;gap:12px}
+.ehead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.lbl{font-weight:600;font-size:14px}
+textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg);resize:vertical;line-height:1.55;font-size:16px;min-height:200px}
+textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offset:0}
+.wc{font-size:13px;color:var(--mut);display:flex;justify-content:space-between;gap:10px}
+.wc .over{color:var(--crim);font-weight:600}
+.checks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.checks li{font-size:14px;padding:8px 12px;border-radius:8px;background:var(--crims);color:var(--crim)}
+.checks li.warn{background:var(--ambs);color:var(--amb)}
+.checks li.good{background:var(--oks);color:var(--ok)}
+.last{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:14px}
+.last p{margin:6px 0 0;font-size:14px}
+.minigrades{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.mg{font-size:13px;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:var(--panel)}
+.enav{display:flex;justify-content:space-between;align-items:center;gap:10px}
+/* pupil page */
+.ptop{display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between;align-items:center}
+.avatar{width:64px;height:64px;border-radius:16px;background:var(--pop);color:#000237;display:grid;place-items:center;font-weight:700;font-size:24px;flex:none}
+.switch{display:flex;align-items:stretch;gap:0;margin:24px 0 10px;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden}
+.switch button{border:0;background:none;width:64px;font-size:28px;cursor:pointer;min-height:72px}
+.switch button:hover:not(:disabled){background:var(--soft)}
+.switch button:disabled{opacity:.25;cursor:default}
+.cname{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:10px;border-inline:1px solid var(--line)}
+.cname b{font-size:clamp(20px,2.6vw,28px);line-height:1.1}
+.cname span{font-size:14px;color:var(--mut)}
+.cchips{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 8px}
+.cchips button{flex:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:14px;min-height:36px}
+.cchips button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.subjects{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:14px;margin-top:16px}
+.subj{padding:16px;display:flex;flex-direction:column;gap:8px}
+.subj header{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.grades{display:flex;gap:6px;flex:none}
+.gbox{min-width:44px;text-align:center;border-radius:8px;padding:4px 6px;background:var(--soft);line-height:1.1}
+.gbox b{display:block;font-size:20px}.gbox small{font-size:11px;color:var(--mut)}
+.gbox.a{background:var(--pop);color:#000237}.gbox.a small{color:#000237}
+.subj p{margin:0;font-size:15px}
+.linkish{background:none;border:0;padding:0;cursor:pointer;font-weight:700;font-size:17px;text-align:left}
+.linkish:hover{text-decoration:underline}
+.overtime{margin-top:30px;padding:16px 0 4px}
+.overtime h3{padding:0 16px}
+.ot{font-size:14px}
+.ot th,.ot td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+.ot th:first-child,.ot td:first-child{text-align:left;position:sticky;left:0;background:var(--panel)}
+.ot thead th{font-weight:500;color:var(--mut);font-size:13px}
+.ot .cur{background:var(--soft)}
+.lt{display:inline-block;width:30px;height:28px;line-height:28px;border-radius:6px;font-weight:700}
+.lt.A{background:var(--pop);color:#000237}.lt.B{background:color-mix(in srgb,var(--pop) 55%,transparent)}.lt.C{background:color-mix(in srgb,var(--pop) 25%,transparent)}.lt.D{background:var(--ambs);color:var(--amb)}.lt.E{background:var(--crims);color:var(--crim)}
+.scroll{overflow-x:auto}
+.timeline{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.tl{padding:16px;display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:16px}
+@media(max-width:640px){.tl{grid-template-columns:minmax(0,1fr)}}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:10px;margin-top:18px}
+.pitem{padding:12px 14px;text-align:left;cursor:pointer;display:flex;gap:12px;align-items:center}
+.pitem:hover{border-color:var(--ink)}
+.pitem .av{width:38px;height:38px;border-radius:10px;background:var(--soft);display:grid;place-items:center;font-weight:700;flex:none}
+.search{width:100%;max-width:420px;min-height:48px;border:1px solid var(--line);border-radius:12px;padding:0 14px;background:var(--panel);font-size:16px;margin-top:16px}
+/* admin */
+.tbl th,.tbl td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);font-size:15px;vertical-align:middle}
+.tbl th{font-size:13px;color:var(--mut);font-weight:500}
+.hero{padding:22px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;margin:22px 0}
+@media(min-width:800px){.hero{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:center}}
+.bignum{font-size:clamp(40px,6vw,64px);font-weight:700;line-height:1}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 22px}
+.steps span{padding:8px 14px;border-radius:999px;border:1px solid var(--line);font-size:14px;color:var(--mut)}
+.steps span.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.steps span.done{border-color:var(--pop);color:var(--ink)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr));gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600}
+.field select,.field input{min-height:46px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:var(--panel);font-weight:400;font-size:16px}
+.namebox{font-size:clamp(22px,3vw,30px);font-weight:700;margin:20px 0 6px}
+.copylist{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.copylist label{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);cursor:pointer}
+.copylist label.on{border-color:var(--pop);box-shadow:0 0 0 2px var(--pop)}
+.copylist input{width:20px;height:20px;accent-color:#00bdff}
+.matrix th,.matrix td{padding:6px;border-bottom:1px solid var(--line);text-align:center;font-size:14px}
+.matrix th:first-child,.matrix td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);z-index:1;min-width:170px}
+.matrix select{min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:13px;padding:0 6px;width:100%;min-width:118px}
+.matrix select.off{color:var(--mut)}
+.matrix select.full,.matrix select.fullExam{background:var(--soft);border-color:var(--pop)}
+.mini{font-size:12px;background:none;border:1px solid var(--line);border-radius:6px;padding:3px 7px;cursor:pointer;margin-top:4px;color:var(--mut)}
+.mini:hover{color:var(--ink);border-color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.legend div{font-size:13px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel)}
+.legend b{display:block;font-size:13px}
+.pf{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));gap:12px;margin:16px 0}
+.pf .card{padding:16px}
+.pf b{font-size:30px;display:block;line-height:1.1}
+.issues{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.issues li{padding:10px 14px;border-radius:10px;font-size:15px}
+.issues .err{background:var(--crims);color:var(--crim)}.issues .warn{background:var(--ambs);color:var(--amb)}.issues .fine{background:var(--oks);color:var(--ok)}
+.wfoot{display:flex;justify-content:space-between;gap:10px;margin-top:24px;flex-wrap:wrap}
+.depts{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0}
+.depts button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;cursor:pointer;min-height:36px;font-size:14px}
+.depts button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.files{font-family:ui-monospace,Consolas,monospace;font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:12px 0;overflow-x:auto;white-space:pre}
+.checkrow{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.checkrow label{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--panel);cursor:pointer;min-height:44px}
+.checkrow input{width:18px;height:18px;accent-color:#00bdff}
+/* modal + toast */
+.modal{position:fixed;inset:0;background:#00023766;display:none;align-items:flex-start;justify-content:center;padding:4vh 12px;z-index:20;overflow-y:auto}
+.modal.open{display:flex}
+.mbox{background:var(--panel);border-radius:16px;max-width:760px;width:100%;padding:22px;box-shadow:0 20px 60px #0004}
+.mbox h2{margin-bottom:6px}
+.sumrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:16px 0}
+.sumrow div{border-radius:12px;padding:12px;background:var(--bg);border:1px solid var(--line)}
+.sumrow b{font-size:26px;display:block;line-height:1.1}
+.sumrow .pop{background:var(--pop);border-color:var(--pop);color:#000237}
+.dlist{list-style:none;margin:0 0 10px;padding:0;max-height:46vh;overflow-y:auto;border:1px solid var(--line);border-radius:12px}
+.dlist li{padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.dlist li:last-child{border-bottom:0}
+.dlist .who{font-weight:600}
+.dlist .was{color:var(--mut);text-decoration:line-through}
+.dlist details{margin-top:4px}
+.dlist summary{cursor:pointer;color:var(--mut)}
+.conf{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.conf label{border:1px solid var(--line);border-radius:10px;padding:8px 10px;flex:1 1 220px;cursor:pointer;font-size:13px}
+.conf input{accent-color:#00bdff;margin-right:6px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#000237;color:#fff;padding:12px 18px;border-radius:12px;opacity:0;transition:.25s;z-index:30;max-width:min(92vw,560px);font-size:15px;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.report{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.report .rh{background:#000237;color:#fff;padding:16px 18px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.report .rh b{font-family:Fraunces,Georgia,serif;font-size:22px}
+.report .rs{padding:12px 18px;border-bottom:1px solid var(--line)}
+.report .rs h4{margin:0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--pop);color:#000237;padding:6px 10px;border-radius:6px;font-size:15px}
+.report .rs p{margin:8px 0 0;font-size:14px}
+@media(max-width:600px){.roster .g{width:58px;padding:4px}.gin{width:44px}.roster td,.roster th{padding-inline:8px}.tbl .hide-s{display:none}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <div class="mark"><i>R</i>Reportbook</div>
+  <nav class="nav" id="nav"></nav>
+  <div class="role" role="group" aria-label="View as">
+    <button id="r-teacher" data-act="role" data-v="teacher">Teacher</button>
+    <button id="r-admin" data-act="role" data-v="admin">Admin</button>
+  </div>
+</div></header>
+<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 23 Nov 2026, 00:20</span><button data-act="reset">Reset sample data</button></span></div></div>
+<main id="main"></main>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="mbox" id="mbox"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(20261122);
+const pick=a=>a[Math.floor(R()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const words=s=>(String(s||'').trim().match(/\S+/g)||[]).length;
+
+/* ---------- reference data ---------- */
+const FIELD={att:{label:'Attainment',short:'Att',scale:['A','B','C','D','E']},eff:{label:'Effort',short:'Eff',scale:['1','2','3','4']},exam:{label:'Exam %',short:'Exam'},comment:{label:'Comment',short:'Comment'}};
+const FIELDSETS={
+  none:{label:'—',fields:[]},
+  grades:{label:'Grades only',fields:['att','eff']},
+  full:{label:'Grades + comment',fields:['att','eff','comment'],limit:120},
+  fullExam:{label:'Grades + exam + comment',fields:['att','eff','exam','comment'],limit:120},
+  comment:{label:'Comment only',fields:['comment'],limit:100},
+  tutor:{label:'Tutor comment',fields:['comment'],limit:150}
+};
+const CYCLES=[
+  {id:'l26h',name:'Lent Half Term 2026',short:'Lent HT 26',term:'Lent',type:'HT',yr:2026,fs:'grades',status:'Published',pub:'16 Feb 2026'},
+  {id:'l26e',name:'Lent End of Term 2026',short:'Lent End 26',term:'Lent',type:'END',yr:2026,fs:'full',status:'Published',pub:'27 Mar 2026'},
+  {id:'s26h',name:'Summer Half Term 2026',short:'Sum HT 26',term:'Summer',type:'HT',yr:2026,fs:'grades',status:'Published',pub:'22 May 2026'},
+  {id:'s26e',name:'Summer End of Term 2026',short:'Sum End 26',term:'Summer',type:'END',yr:2026,fs:'fullExam',status:'Published',pub:'3 Jul 2026'},
+  {id:'m26h',name:'Michaelmas Half Term 2026',short:'Mich HT 26',term:'Michaelmas',type:'HT',yr:2026,fs:'grades',status:'Published',pub:'16 Oct 2026'},
+  {id:'m26e',name:'Michaelmas End of Term 2026',short:'Mich End 26',term:'Michaelmas',type:'END',yr:2026,fs:'full',status:'Open',due:'Fri 4 Dec 2026',opens:'2026-11-16',deadline:'2026-12-04',proof:'2026-12-09',publish:'2026-12-12'}
+];
+const PAST=CYCLES.filter(c=>c.status==='Published');
+const CUR=CYCLES.find(c=>c.id==='m26e');
+const SUBJECTS=['English','Maths','Science','French','History','Geography','Latin','RS'];
+const SUBJ_TEXT={English:'English',Maths:'maths',Science:'science',French:'French',History:'history',Geography:'geography',Latin:'Latin',RS:'RS'};
+const TEACH={English:'Mrs Hart',Maths:'Mrs Patel',Science:'Dr Okafor',French:'Mme Laurent',History:'Mr Bell',Geography:'Miss Reid',Latin:'Mr Ashworth',RS:'Revd Clarke'};
+const TOPICS={Maths:['fractions','algebraic expressions','ratio','angles in polygons','solving equations','probability'],English:['persuasive writing','poetry analysis','the class novel','descriptive writing','comprehension'],Science:['forces','separating mixtures','the solar system','electric circuits','habitats'],French:['describing family','the past tense','listening tasks','vocabulary tests','role plays'],History:['the Norman Conquest','source analysis','the Tudors','Victorian Britain'],Geography:['rivers','map skills','weather and climate','volcanoes'],Latin:['the first declension','translation','verb endings','Roman myths'],RS:['world religions','ethical questions','the parables','festivals of light']};
+const F_NAMES=['Amelia','Isla','Freya','Sophia','Ava','Grace','Lily','Evie','Ruby','Matilda','Aanya','Zara','Hannah','Imogen','Martha','Chloe','Esme','Priya','Olivia','Florence','Harriet','Maya','Niamh','Rosie','Beatrice','Clara','Daisy','Eliza','Iris','Jemima','Kitty','Lara','Mia','Nina','Orla','Phoebe'];
+const M_NAMES=['Oliver','George','Arthur','Henry','Theo','Leo','Freddie','Alfie','Jack','Harry','Arjun','Rohan','Kai','Max','Felix','Hugo','Sebastian','Archie','Charlie','Edward','Finn','Jasper','Louis','Noah','Oscar','Rafe','Toby','William','Zain','Barnaby','Caspar','Dev','Ethan','Gabriel','Isaac','Kit'];
+const SURN=['Ashby','Bennett','Carter','Davies','Ellison','Fletcher','Gupta','Hughes','Iqbal','Jenkins','Khan','Lawson','Mehta','Nolan','Okoro','Palmer','Quinn','Reeves','Shah','Thornton','Underwood','Vaughan','Walsh','Young','Adeyemi','Blake','Chandra','Dalton','Evans','Forbes','Grant','Hale','Ingram','Jameson','Kerr','Lister','Morgan','Novak','Osei','Pearce','Rahman','Sinclair','Tran','Wells','Barker','Cole','Dunn','Foster','Hart','Lee'];
+const FORMS={5:['5TJ'],6:['6RH','6KP','6LM'],7:['7AB','7SW','7CF'],8:['8MD','8JR']};
+const SETS=[
+  {id:'6Ma1',name:'6 Maths Set 1',year:6,subject:'Maths',n:14,fs:'full',base:1.6,done:9,part:2},
+  {id:'6Ma3',name:'6 Maths Set 3',year:6,subject:'Maths',n:13,fs:'full',base:3,done:13,part:0},
+  {id:'7Ma1',name:'7 Maths Set 1',year:7,subject:'Maths',n:14,fs:'full',base:1.5,done:3,part:5},
+  {id:'8Ma4',name:'8 Maths Set 4',year:8,subject:'Maths',n:10,fs:'full',base:3.8,done:0,part:0},
+  {id:'5TJ',name:'5TJ tutor comments',year:5,subject:'Tutor',n:14,fs:'tutor',base:2.4,done:5,part:1}
+];
+const SET=Object.fromEntries(SETS.map(s=>[s.id,s]));
+
+/* ---------- pupils ---------- */
+const names=shuffle([...F_NAMES.map(n=>[n,'F']),...M_NAMES.map(n=>[n,'M'])]);
+const PUPILS=[];let k=0;
+for(const s of SETS){s.ids=[];for(let i=0;i<s.n;i++){const [first,sex]=names[k++];const p={id:'LB'+(10213+k*37),first,last:pick(SURN),sex,year:s.year,form:s.year===5?'5TJ':pick(FORMS[s.year]),ability:clamp(s.base+(R()-.5)*1.5,1,5),off:{}};SUBJECTS.forEach(x=>p.off[x]=(R()-.5)*1.6);PUPILS.push(p);s.ids.push(p.id)}
+  s.ids.sort((a,b)=>{const A=PUPILS.find(p=>p.id===a),B=PUPILS.find(p=>p.id===b);return (A.last+A.first).localeCompare(B.last+B.first)})}
+const PUP=Object.fromEntries(PUPILS.map(p=>[p.id,p]));
+const roster=set=>set.ids.map(id=>PUP[id]);
+const subjectsFor=p=>SUBJECTS.filter(s=>s!=='Latin'||p.year>=6);
+const pron=p=>p.sex==='F'?{he:'she',He:'She',his:'her',His:'Her',him:'her'}:{he:'he',He:'He',his:'his',His:'His',him:'him'};
+const fillT=(t,p,o)=>t.replace(/\{(\w+)\}/g,(m,key)=>key==='N'?p.first:(o&&o[key]!==undefined)?o[key]:(pron(p)[key]??m));
+
+/* ---------- comment generator ---------- */
+const ADJ=['superb','very positive','solid','mixed','challenging'];
+const ADV=['with real flair','conscientiously','steadily','patchily at times','hard, despite finding the work tricky'];
+const OPEN=['{N} has had a {adj} term in {S}.','{N} has worked {adv} in {S} this term.','It has been a pleasure to teach {N} in {S} this term.'];
+const MID=[['{He} has shown real confidence with {T}, and {his} written work is consistently accurate.','{His} work on {T} was a particular highlight, and {he} relishes a challenge.','{He} grasps new ideas quickly, particularly in {T}, and explains {his} reasoning clearly.'],['{He} has made steady progress with {T}, though {he} sometimes rushes {his} written work.','{He} is secure with {T} and is starting to tackle harder problems more independently.'],['{He} has found {T} challenging but has persevered, and {his} confidence is growing.','With support, {he} has made progress in {T}; {he} should keep practising the basics regularly.']];
+const MORE=['excellent','encouraging','improving'];
+const EFFS=[['{His} contributions in class are thoughtful and frequent.','{He} is a focused and cooperative member of the class.'],['{He} would benefit from contributing more often in lessons.','{He} needs to settle to tasks more quickly at the start of lessons.']];
+const TARGET=['Next term, {he} should focus on showing {his} working clearly.','{His} target is to check {his} answers carefully before moving on.','Next term, {he} should aim to read each question twice before starting.','{His} next step is to use subject vocabulary more precisely in written answers.'];
+function genComment(p,s,ai,eff){const band=ai<=1?0:ai===2?1:2;const tp=shuffle(TOPICS[s]);const o={S:SUBJ_TEXT[s],T:tp[0],adj:ADJ[ai],adv:ADV[ai]};
+  return [fillT(pick(OPEN),p,o),fillT(pick(MID[band]),p,o),fillT('More recently, {his} work on {T} has been {q}.',p,{T:tp[1],q:MORE[band]}),fillT(pick(EFFS[eff<=2?0:1]),p,o),fillT(pick(TARGET),p,o)].join(' ')}
+const TUT=['{N} has settled into Year 5 {how}.','{He} is a kind and loyal friend to many in 5TJ.','{He} has taken on the role of {role} with real enthusiasm.','{His} organisation has improved, though {he} should keep checking {his} planner each evening.','{He} has thrown {him}self into matches and activities this term.','It has been a pleasure to be {his} tutor this term, and I look forward to seeing {him} grow in confidence after Christmas.'];
+function genTutor(p,short){const o={how:pick(['quickly and happily','well after a slightly nervous start','with great confidence']),role:pick(['form captain','eco rep','library monitor','house rep'])};const lines=shuffle(TUT.slice(0,5)).slice(0,short?2:4).map(t=>fillT(t,p,o));if(!short)lines.push(fillT(TUT[5],p,o));return lines.join(' ')}
+
+/* ---------- history ---------- */
+const HIST={};
+for(const p of PUPILS){HIST[p.id]={};PAST.forEach((c,ci)=>{HIST[p.id][c.id]={};const fs=FIELDSETS[c.fs];for(const s of subjectsFor(p)){const a=clamp(p.ability+p.off[s]+(R()-.5)*.8-(ci*.06),1,5);const ai=Math.round(a)-1;const eff=clamp(Math.round(1+R()*2+(a-2.5)*.35),1,4);const r={att:FIELD.att.scale[ai],eff:String(eff),teacher:(s==='Maths'&&c.id==='m26h'&&p.year>5)?'Mr Joshi':TEACH[s]};if(fs.fields.includes('exam'))r.exam=String(Math.round(clamp(96-(a-1)*13+(R()-.5)*10,22,99)));if(fs.fields.includes('comment'))r.comment=genComment(p,s,ai,eff);HIST[p.id][c.id][s]=r}})}
+function lastComment(p,s){for(let i=PAST.length-1;i>=0;i--){const r=HIST[p.id][PAST[i].id][s];if(r&&r.comment)return{c:PAST[i],r}}return null}
+
+/* ---------- current cycle entries ---------- */
+function freshEntries(){const E={};const now=Date.now()-86400000*3;
+  for(const s of SETS){E[s.id]={};roster(s).forEach((p,i)=>{const e={att:'',eff:'',comment:'',t:{}};const a=clamp(p.ability+(p.off.Maths||0)*.6,1,5),ai=Math.round(a)-1,eff=clamp(Math.round(1+(i*7%3)+(a-2.5)*.3),1,4);
+    if(i<s.done){if(s.fs!=='tutor'){e.att=FIELD.att.scale[ai];e.eff=String(eff);e.comment=genComment(p,'Maths',ai,eff)}else e.comment=genTutor(p,false)}
+    else if(i<s.done+s.part){if(s.fs!=='tutor'){e.att=FIELD.att.scale[ai];e.eff=String(eff)}else e.comment=genTutor(p,true)}
+    Object.keys(e).forEach(f=>{if(f!=='t'&&e[f])e.t[f]=now});E[s.id][p.id]=e})}
+  // a deliberate copy-paste slip to show the checker
+  const s1=SET['6Ma1'];const ros=roster(s1).slice(0,s1.done);const girl=ros.find(p=>p.sex==='F')||ros[0];const other=roster(s1).find(p=>p.id!==girl.id&&p.sex!==girl.sex)||roster(s1).find(p=>p.id!==girl.id);
+  const e=E['6Ma1'][girl.id];e.comment=`${other.first} has had a very positive term in maths. He has shown real confidence with ratio, and his written work is consistently accurate. More recently, his work on solving equations has been excellent. His target is to check his answers carefully before moving on.`;
+  return E}
+const LS_KEY='reportbook-proto-v1';
+let ENT,EXTRA=[];
+function load(){try{const j=JSON.parse(localStorage.getItem(LS_KEY)||'null');if(j&&j.ent&&j.seed===PUPILS[0].id){ENT=j.ent;EXTRA=j.extra||[];return}}catch(e){}ENT=freshEntries();EXTRA=[]}
+load();
+let saveTimer;
+function save(){const el=$('#saved');if(el){el.textContent='Saving…';el.classList.add('busy')}clearTimeout(saveTimer);saveTimer=setTimeout(()=>{try{localStorage.setItem(LS_KEY,JSON.stringify({seed:PUPILS[0].id,ent:ENT,extra:EXTRA}))}catch(e){}const s=$('#saved');if(s){s.textContent='All changes saved';s.classList.remove('busy')}},350)}
+
+/* ---------- status + checks ---------- */
+const fsOf=set=>FIELDSETS[set.fs];
+function valid(f,v,fs){v=String(v).trim();if(f==='att')return FIELD.att.scale.includes(v);if(f==='eff')return FIELD.eff.scale.includes(v);if(f==='exam'){const n=Number(v);return v!==''&&Number.isFinite(n)&&n>=0&&n<=100}if(f==='comment')return words(v)<=fs.limit;return true}
+function status(set,pid){const e=ENT[set.id][pid],fs=fsOf(set);let filled=0,ok=true;for(const f of fs.fields){const v=String(e[f]||'').trim();if(v){filled++;if(!valid(f,v,fs))ok=false}}if(!filled)return 'none';return filled===fs.fields.length&&ok?'done':'part'}
+const STLABEL={none:'Not started',part:'In progress',done:'Complete'};
+function progress(set){const ids=set.ids;return{done:ids.filter(id=>status(set,id)==='done').length,total:ids.length}}
+function checks(set,p,text){const out=[];if(!text.trim())return out;const fs=fsOf(set);const w=words(text);if(w>fs.limit)out.push(['bad',`${w-fs.limit} word${w-fs.limit>1?'s':''} over the ${fs.limit}-word limit`]);
+  const named=new Set();for(const q of roster(set)){if(q.id===p.id||q.first===p.first||named.has(q.first))continue;if(new RegExp('\\b'+q.first+'\\b').test(text)){named.add(q.first);out.push(['bad',`Mentions ${q.first}, another pupil in this set. Copy-paste slip?`])}}
+  if(!new RegExp('\\b'+p.first+'\\b').test(text))out.push(['warn',`Doesn't mention ${p.first} by name`]);
+  const wrong=p.sex==='F'?/\b(he|him|his|himself)\b/i:/\b(she|her|hers|herself)\b/i;const m=text.match(wrong);if(m)out.push(['bad',`Uses “${m[0]}”, but ${p.first}'s pronouns are ${p.sex==='F'?'she/her':'he/him'}`]);
+  if(/\[|\]|\bXX+\b|\?\?/.test(text))out.push(['bad','Looks like a placeholder is still in the text']);
+  if(/ {2,}/.test(text))out.push(['warn','Contains a double space']);
+  return out}
+
+/* ---------- app state ---------- */
+const state={role:'teacher',view:'home',set:null,sel:null,pupil:null,cyc:null,subj:null,q:'',dept:'All',nudged:{},backTo:'home'};
+const W={step:1,term:'Lent',type:'HT',opens:'2027-02-01',deadline:'2027-02-10',proof:'2027-02-12',publish:'2027-02-15',copy:null,matrix:null};
+const TEACHER_NAV=[['home','My reports'],['pupils','Pupils']];
+const ADMIN_NAV=[['cycles','Cycles'],['progress','Progress'],['publish','Publish to MSP'],['pupils','Pupils']];
+
+function renderNav(){const items=state.role==='teacher'?TEACHER_NAV:ADMIN_NAV;const active={write:'home',pupil:'pupils',wizard:'cycles'}[state.view]||state.view;
+  $('#nav').innerHTML=items.map(([v,l])=>`<button data-act="go" data-v="${v}" class="${active===v?'on':''}">${l}</button>`).join('');
+  $('#r-teacher').classList.toggle('on',state.role==='teacher');$('#r-admin').classList.toggle('on',state.role==='admin')}
+function render(){renderNav();const V={home:viewHome,write:viewWrite,pupils:viewPupils,pupil:viewPupil,cycles:viewCycles,wizard:viewWizard,progress:viewProgress,publish:viewPublish}[state.view]||viewHome;$('#main').innerHTML=V();if(state.view==='write')updateChecks()}
+function go(v){if(v==='pupil')state.backTo=state.view;state.view=v;render();window.scrollTo(0,0)}
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3200)}
+function openModal(html){$('#mbox').innerHTML=html;$('#modal').classList.add('open');const b=$('#mbox button');if(b)b.focus()}
+function closeModal(){$('#modal').classList.remove('open')}
+
+/* ---------- teacher: home ---------- */
+function viewHome(){const tot=SETS.reduce((a,s)=>{const g=progress(s);return[a[0]+g.done,a[1]+g.total]},[0,0]);
+  return `<section class="wrap">
+  <div class="spread"><div><p class="sub" style="margin:0 0 6px">Open now</p><h1>${CUR.name}</h1><p class="sub">${tot[0]} of ${tot[1]} reports complete across your ${SETS.length} groups</p></div>
+  <div class="deadline">Teacher deadline · ${CUR.due}</div></div>
+  <div class="sets">${SETS.map(s=>{const g=progress(s),fs=fsOf(s),full=g.done===g.total;return `<button class="card set" data-act="open" data-v="${s.id}">
+    <div class="spread" style="align-items:flex-start;width:100%"><div><h2>${s.name}</h2><p class="sub">${fs.label}${fs.limit?` · ${fs.limit} words`:''}</p></div>${full?'<span class="chip ok">Complete</span>':g.done?'<span class="chip">In progress</span>':'<span class="chip amb">Not started</span>'}</div>
+    <div class="row" style="width:100%;align-items:baseline"><span class="big">${g.done}</span><span class="muted">of ${g.total} complete</span></div>
+    <div class="bar" style="width:100%"><i style="width:${g.done/g.total*100}%"></i></div></button>`}).join('')}</div>
+  <div class="past"><h3>Earlier cycles</h3><ul>${PAST.slice().reverse().map(c=>`<li><span><b>${c.name}</b> <span class="muted">· ${FIELDSETS[c.fs].label}</span></span><span class="chip ok">Published ${c.pub}</span></li>`).join('')}</ul><p class="sub small">Open any pupil to flick back through these.</p></div>
+  </section>`}
+
+/* ---------- teacher: writing ---------- */
+function gradeCols(set){return fsOf(set).fields.filter(f=>f!=='comment')}
+function rowHTML(set,p,i){const e=ENT[set.id][p.id],fs=fsOf(set),st=status(set,p.id);
+  return `<tr data-pid="${p.id}" class="${state.sel===p.id?'on':''}"><td><button class="pname" data-act="sel" data-v="${p.id}">${esc(p.last)}, ${esc(p.first)}</button><span class="form">${p.form}</span></td>${gradeCols(set).map(f=>`<td class="g"><input class="gin${e[f]&&!valid(f,e[f],fs)?' bad':''}" data-f="${f}" data-pid="${p.id}" data-row="${i}" value="${esc(e[f]||'')}" maxlength="3" autocomplete="off" aria-label="${FIELD[f].label} for ${esc(p.first)} ${esc(p.last)}"></td>`).join('')}<td class="st"><span class="dot ${st}" title="${STLABEL[st]}" role="img" aria-label="${STLABEL[st]}"></span></td></tr>`}
+function viewWrite(){const set=SET[state.set],fs=fsOf(set),ros=roster(set);if(!state.sel||!set.ids.includes(state.sel))state.sel=ros[0].id;const cols=gradeCols(set);
+  return `<section class="wrap"><button class="back" data-act="go" data-v="home">← My reports</button>
+  <div class="whead"><div><h1>${set.name}</h1><p class="sub">${CUR.name} · ${fs.label}${fs.limit?` (${fs.limit} words)`:''} · deadline ${CUR.due}</p></div>
+  <div class="tools"><span class="saved" id="saved">All changes saved</span><button class="btn" data-act="export">Export to Excel</button><label class="btn pop" tabindex="0">Import from Excel<input type="file" accept=".xlsx,.xls" id="imp" hidden></label></div></div>
+  <div class="wgrid"><div class="card tablecard"><table class="roster"><thead><tr><th>Pupil</th>${cols.map(f=>`<th class="g">${FIELD[f].short}</th>`).join('')}<th class="st">Status</th></tr></thead><tbody id="rows">${ros.map((p,i)=>rowHTML(set,p,i)).join('')}</tbody></table>
+  <p class="hint">${cols.length?'Paste a column of grades straight from your markbook and it fills downwards. Arrow keys and Enter move between cells. ':''}Everything saves as you type.</p></div>
+  <div class="card editor" id="editor">${editorHTML(set)}</div></div></section>`}
+function editorHTML(set){const p=PUP[state.sel],fs=fsOf(set),e=ENT[set.id][p.id],ros=roster(set),idx=set.ids.indexOf(p.id);const tutor=set.subject==='Tutor';
+  let last='';
+  if(tutor){const ht=HIST[p.id].m26h;last=`<h3>Michaelmas half-term grades</h3><div class="minigrades">${subjectsFor(p).filter(s=>ht[s]).map(s=>`<span class="mg">${s} <b>${ht[s].att}</b> · ${ht[s].eff}</span>`).join('')}</div>`}
+  else{const lc=lastComment(p,set.subject),ht=HIST[p.id].m26h[set.subject];last=`<h3>Last time in ${SUBJ_TEXT[set.subject]}</h3>${ht?`<div class="minigrades"><span class="mg">Mich HT 26: Att <b>${ht.att}</b> · Eff <b>${ht.eff}</b></span></div>`:''}${lc?`<p><b>${lc.c.name}</b> <span class="muted">(${lc.r.teacher}, Att ${lc.r.att}, Eff ${lc.r.eff})</span></p><p>${esc(lc.r.comment)}</p>`:'<p class="muted">No earlier comment in this subject.</p>'}`}
+  return `<div class="ehead"><div><h2>${esc(p.first)} ${esc(p.last)}</h2><p class="sub">${p.form} · ${p.id}</p></div><button class="btn ghost" data-act="pupil" data-v="${p.id}">Full history →</button></div>
+  ${fs.fields.includes('comment')?`<label class="lbl" for="cmt">${tutor?'Tutor comment':'Comment'}</label><textarea id="cmt" data-pid="${p.id}" spellcheck="true" lang="en-GB" placeholder="Start writing ${esc(p.first)}'s comment…">${esc(e.comment||'')}</textarea><div class="wc" id="wc"></div><ul class="checks" id="checks"></ul>`:''}
+  <div class="last">${last}</div>
+  <div class="enav"><button class="btn" data-act="step" data-v="-1" ${idx===0?'disabled':''}>← Previous</button><span class="muted small">${idx+1} of ${ros.length}</span><button class="btn" data-act="step" data-v="1" ${idx===ros.length-1?'disabled':''}>Next →</button></div>`}
+function updateChecks(){const ta=$('#cmt');if(!ta)return;const set=SET[state.set],p=PUP[ta.dataset.pid],fs=fsOf(set),w=words(ta.value);
+  $('#wc').innerHTML=`<span class="${w>fs.limit?'over':''}">${w} / ${fs.limit} words</span><span>${STLABEL[status(set,p.id)]}</span>`;
+  const c=checks(set,p,ta.value);$('#checks').innerHTML=c.length?c.map(([k,m])=>`<li class="${k==='warn'?'warn':''}">${esc(m)}</li>`).join(''):(ta.value.trim()?'<li class="good">No problems spotted</li>':'')}
+function updateRow(pid){const set=SET[state.set],tr=document.querySelector(`#rows tr[data-pid="${pid}"]`);if(!tr)return;const st=status(set,pid),d=tr.querySelector('.dot');d.className='dot '+st;d.title=STLABEL[st];d.setAttribute('aria-label',STLABEL[st]);
+  tr.querySelectorAll('.gin').forEach(inp=>inp.classList.toggle('bad',!!inp.value&&!valid(inp.dataset.f,inp.value,fsOf(set))))}
+function selectPupil(pid,keepFocus){state.sel=pid;document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('on',tr.dataset.pid===pid));$('#editor').innerHTML=editorHTML(SET[state.set]);updateChecks();if(!keepFocus){const ta=$('#cmt');if(ta)ta.focus()}}
+function setVal(set,pid,f,v){const e=ENT[set.id][pid];if((e[f]||'')===v)return;e[f]=v;e.t[f]=Date.now()}
+
+/* ---------- Excel export / import ---------- */
+let DL=null;
+(async()=>{try{if(window.claude&&window.claude.use)DL=await window.claude.use('downloads')}catch(e){}})();
+async function offerFile(name,blob,what){
+  if(DL){try{await DL.save({filename:name,data:blob});toast(`${what} saved: ${name}`)}catch(e){toast(e&&e.code==='declined'?'Download cancelled':'Downloads are not available in this view')}return}
+  try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();toast(`${what} downloaded: ${name}`)}catch(e){toast('Downloads are not available in this view')}}
+function headLabel(f,fs){return FIELD[f].label+(f==='att'?' (A–E)':f==='eff'?' (1–4)':f==='comment'?` (max ${fs.limit} words)`:'')}
+function buildWorkbook(set){const fs=fsOf(set),cols=fs.fields,ros=roster(set);
+  const head=['Pupil ID','Surname','First name','Form',...cols.map(f=>headLabel(f,fs))];
+  const ws=XLSX.utils.aoa_to_sheet([head,...ros.map(p=>{const e=ENT[set.id][p.id];return[p.id,p.last,p.first,p.form,...cols.map(f=>e[f]||'')]})]);
+  ws['!cols']=[{wch:10},{wch:14},{wch:12},{wch:7},...cols.map(f=>({wch:f==='comment'?100:16}))];
+  const ms=XLSX.utils.aoa_to_sheet([['reportbook-export',1],['cycle',CUR.id],['set',set.id],['exported',Date.now()],['fields',cols.join(',')],[],['Pupil ID',...cols],...ros.map(p=>[p.id,...cols.map(f=>ENT[set.id][p.id][f]||'')])]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Reports');XLSX.utils.book_append_sheet(wb,ms,'_meta');wb.Workbook={Sheets:[{Hidden:0},{Hidden:1}]};return wb}
+async function exportXlsx(){if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');const set=SET[state.set];
+  const buf=XLSX.write(buildWorkbook(set),{bookType:'xlsx',type:'array'});
+  await offerFile(`${set.id} ${CUR.name}.xlsx`,new Blob([buf]),'Excel file')}
+const norm=(f,v)=>{v=String(v??'').replace(/\r\n?/g,'\n').trim();return f==='comment'?v:v.toUpperCase()};
+function diffWorkbook(wb,set){const fs=fsOf(set),cols=fs.fields;const res={changes:[],conflicts:[],kept:[],warns:[],error:null};
+  const ws=wb.Sheets.Reports||wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+  if(!rows.length){res.error='The file looks empty.';return res}
+  const head=rows[0].map(h=>String(h).toLowerCase().trim());const ci={id:head.findIndex(h=>h.startsWith('pupil id'))};
+  cols.forEach(f=>ci[f]=head.findIndex(h=>h.startsWith(FIELD[f].label.toLowerCase())));
+  if(ci.id<0){res.error='No “Pupil ID” column found, so rows can’t be matched safely. Export a fresh file and write in that.';return res}
+  cols.forEach(f=>{if(ci[f]<0)res.warns.push(`No “${FIELD[f].label}” column in the file, so that field is left as it is`)});
+  let base=null;const meta=wb.Sheets._meta;
+  if(meta){const m=XLSX.utils.sheet_to_json(meta,{header:1,defval:''});if(m[0]&&m[0][0]==='reportbook-export'){
+    if(String(m[2][1])!==set.id){res.error=`This file is for ${m[2][1]}, not ${set.id}. Nothing was imported.`;return res}
+    if(String(m[1][1])!==CUR.id)res.warns.push('This file was exported from a different cycle');
+    const mc=m[6].slice(1);base={};m.slice(7).forEach(r=>{if(!r[0])return;base[r[0]]={};mc.forEach((f,i)=>base[r[0]][f]=norm(f,r[i+1]))});res.exported=Number(m[3][1])}}
+  else res.warns.push('This file wasn’t exported from Reportbook, so newer edits on the system can’t be protected. Check the changes carefully.');
+  const seen=new Set();
+  for(const r of rows.slice(1)){const id=String(r[ci.id]||'').trim();if(!id)continue;const p=PUP[id];
+    if(!p||!set.ids.includes(id)){res.warns.push(`Pupil ID ${id} isn’t in ${set.name}, so that row was skipped`);continue}seen.add(id);
+    for(const f of cols){if(ci[f]<0)continue;const v=norm(f,r[ci[f]]),cur=norm(f,ENT[set.id][id][f]);if(v===cur)continue;
+      if(f!=='comment'&&v&&!valid(f,v,fs)){res.warns.push(`${p.first} ${p.last}: “${v}” isn’t a valid ${FIELD[f].label.toLowerCase()}, so it was skipped`);continue}
+      const b=base&&base[id]?base[id][f]:undefined;
+      if(b!==undefined&&v===b){res.kept.push({p,f,cur,v});continue}
+      if(b!==undefined&&cur!==b){res.conflicts.push({p,f,cur,v,use:'excel'});continue}
+      res.changes.push({p,f,cur,v});
+      if(f==='comment'&&words(v)>fs.limit)res.warns.push(`${p.first} ${p.last}: comment is ${words(v)} words (limit ${fs.limit}). It's imported but flagged`)}}
+  const missing=set.ids.filter(id=>!seen.has(id)).length;if(missing)res.warns.push(`${missing} pupil${missing>1?'s are':' is'} not in the file and ${missing>1?'were':'was'} left unchanged`);
+  return res}
+let PENDING=null;
+function fmtVal(f,v){if(!v)return'<i class="muted">blank</i>';if(f==='comment')return`${words(v)} words`;return`<b>${esc(v)}</b>`}
+function changeLine(c){const lab=FIELD[c.f].label;if(c.f==='comment')return`<li><span class="who">${esc(c.p.first)} ${esc(c.p.last)}</span>: comment ${c.cur?`updated (${words(c.cur)} → ${words(c.v)} words)`:`added (${words(c.v)} words)`}<details><summary>Show new comment</summary><p>${esc(c.v)}</p></details></li>`;
+  return`<li><span class="who">${esc(c.p.first)} ${esc(c.p.last)}</span>: ${lab} <span class="was">${c.cur?esc(c.cur):'blank'}</span> → <b>${esc(c.v)}</b></li>`}
+function showDiff(res,set,fname){PENDING={res,set};
+  if(res.error)return openModal(`<h2>Couldn’t import that file</h2><p>${esc(res.error)}</p><div class="mfoot"><button class="btn ink" data-act="close">OK</button></div>`);
+  const n=res.changes.length+res.conflicts.length;
+  openModal(`<h2>Check before importing</h2><p class="sub">${esc(fname)} → ${set.name}. Nothing changes until you press Apply.</p>
+  <div class="sumrow"><div class="${res.changes.length?'pop':''}"><b>${res.changes.length}</b>changes</div><div><b>${res.conflicts.length}</b>conflicts</div><div><b>${res.kept.length}</b>newer on system, kept</div><div><b>${res.warns.length}</b>notes</div></div>
+  ${!n?`<p class="checks"><span class="chip ok">Everything in the file already matches. You can re-import as often as you like.</span></p>`:''}
+  ${res.changes.length?`<h3>Changes</h3><ul class="dlist">${res.changes.map(changeLine).join('')}</ul>`:''}
+  ${res.conflicts.length?`<h3>Conflicts: changed on the system and in Excel since you exported</h3><ul class="dlist">${res.conflicts.map((c,i)=>`<li><span class="who">${esc(c.p.first)} ${esc(c.p.last)}</span>: ${FIELD[c.f].label}<div class="conf"><label><input type="radio" name="cf${i}" value="system" data-cf="${i}">Keep system: ${c.f==='comment'?esc(c.cur.slice(0,90))+'…':fmtVal(c.f,c.cur)}</label><label><input type="radio" name="cf${i}" value="excel" data-cf="${i}" checked>Use Excel: ${c.f==='comment'?esc(c.v.slice(0,90))+'…':fmtVal(c.f,c.v)}</label></div></li>`).join('')}</ul>`:''}
+  ${res.kept.length?`<details><summary class="small muted">${res.kept.length} field${res.kept.length>1?'s were':' was'} edited on the system after you exported and not touched in Excel, so the newer system version stays</summary><ul class="dlist">${res.kept.map(c=>`<li><span class="who">${esc(c.p.first)} ${esc(c.p.last)}</span>: ${FIELD[c.f].label}</li>`).join('')}</ul></details>`:''}
+  ${res.warns.length?`<h3 style="margin-top:12px">Notes</h3><ul class="checks">${res.warns.map(w=>`<li class="warn">${esc(w)}</li>`).join('')}</ul>`:''}
+  <div class="mfoot"><button class="btn" data-act="close">${n?'Cancel':'Close'}</button>${n?`<button class="btn pop" data-act="apply">Apply ${n} change${n>1?'s':''}</button>`:''}</div>`)}
+function applyPending(){if(!PENDING)return;const{res,set}=PENDING;let n=0;
+  res.changes.forEach(c=>{setVal(set,c.p.id,c.f,c.v);n++});res.conflicts.forEach(c=>{if(c.use==='excel'){setVal(set,c.p.id,c.f,c.v);n++}});
+  PENDING=null;closeModal();save();render();toast(`Imported ${n} change${n===1?'':'s'}. Re-import whenever you like.`)}
+
+/* ---------- pupils ---------- */
+function viewPupils(){return `<section class="wrap"><h1>Pupils</h1><p class="sub">Every pupil's grades and reports, every cycle, one click away.</p>
+  <input class="search" id="q" placeholder="Search by name, form or ID" value="${esc(state.q)}" aria-label="Search pupils"><div class="plist" id="plist">${pupilList()}</div></section>`}
+function pupilList(){const q=state.q.toLowerCase().trim();const list=PUPILS.filter(p=>!q||`${p.first} ${p.last} ${p.form} ${p.id}`.toLowerCase().includes(q)).sort((a,b)=>a.form.localeCompare(b.form)||a.last.localeCompare(b.last));
+  return list.length?list.map(p=>`<button class="card pitem" data-act="pupil" data-v="${p.id}"><span class="av">${p.first[0]}${p.last[0]}</span><span><b>${esc(p.first)} ${esc(p.last)}</b><br><span class="muted small">${p.form} · Year ${p.year}</span></span></button>`).join(''):'<p class="muted">No pupils match.</p>'}
+function gbox(lbl,v,hi){return v?`<div class="gbox${hi?' a':''}"><b>${esc(v)}</b><small>${lbl}</small></div>`:''}
+function viewPupil(){const p=PUP[state.pupil];if(state.cyc==null)state.cyc=PAST.length-1;const ci=state.cyc,c=PAST[ci],subs=subjectsFor(p);
+  const backLabel={write:'← Back to writing',pupils:'← All pupils',home:'← My reports'}[state.backTo]||'← Back';
+  const top=`<button class="back" data-act="go" data-v="${state.backTo==='pupil'?'pupils':state.backTo}">${backLabel}</button>
+  <div class="ptop"><div class="row" style="gap:16px"><div class="avatar">${p.first[0]}${p.last[0]}</div><div><h1>${esc(p.first)} ${esc(p.last)}</h1><p class="sub">${p.form} · Year ${p.year} · iSAMS ID ${p.id}</p></div></div>
+  <button class="btn" data-act="preview" data-v="${p.id}">View as parent sees it</button></div>`;
+  const sw=`<div class="switch"><button data-act="cyc" data-v="${ci-1}" ${ci===0?'disabled':''} aria-label="Previous cycle">‹</button><div class="cname"><b>${c.name}</b><span>${FIELDSETS[c.fs].label} · published ${c.pub}</span></div><button data-act="cyc" data-v="${ci+1}" ${ci===PAST.length-1?'disabled':''} aria-label="Next cycle">›</button></div>
+  <div class="cchips">${PAST.map((x,i)=>`<button class="${i===ci?'on':''}" data-act="cyc" data-v="${i}">${x.short}</button>`).join('')}</div>
+  <p class="small muted" style="margin:0">Tip: use the ← → keys to flick between cycles. ${CUR.name} appears here once it's published.</p>`;
+  let body;
+  if(state.subj){const s=state.subj;body=`<div class="spread" style="margin-top:24px"><h2>${s} across every cycle</h2><button class="btn" data-act="subj" data-v="">Show all subjects</button></div>
+    <div class="timeline">${PAST.slice().reverse().map(x=>{const r=HIST[p.id][x.id][s];if(!r)return'';return`<div class="card tl"><div><b>${x.name}</b><p class="sub small">${r.teacher}</p><div class="grades" style="margin-top:8px">${gbox('Att',r.att,true)}${gbox('Eff',r.eff)}${gbox('Exam',r.exam&&r.exam+'%')}</div></div><div>${r.comment?`<p style="margin:0">${esc(r.comment)}</p>`:'<p class="muted" style="margin:0">Grades only this cycle.</p>'}</div></div>`}).join('')}</div>`}
+  else body=`<div class="subjects">${subs.map(s=>{const r=HIST[p.id][c.id][s];if(!r)return'';return`<article class="card subj"><header><div><button class="linkish" data-act="subj" data-v="${s}">${s}</button><div class="muted small">${r.teacher}</div></div><div class="grades">${gbox('Att',r.att,true)}${gbox('Eff',r.eff)}${gbox('Exam',r.exam&&r.exam+'%')}</div></header>${r.comment?`<p>${esc(r.comment)}</p>`:'<p class="muted small">Grades only this cycle.</p>'}</article>`}).join('')}</div>`;
+  const ot=`<div class="card overtime"><h3>Attainment over time</h3><p class="sub small" style="padding:0 16px 8px">Click a subject to read all its comments in order.</p><div class="scroll"><table class="ot"><thead><tr><th>Subject</th>${PAST.map((x,i)=>`<th class="${i===ci?'cur':''}">${x.short}</th>`).join('')}</tr></thead><tbody>${subs.map(s=>`<tr><td><button class="linkish" style="font-size:14px" data-act="subj" data-v="${s}">${s}</button></td>${PAST.map((x,i)=>{const r=HIST[p.id][x.id][s];return`<td class="${i===ci?'cur':''}">${r?`<span class="lt ${r.att}">${r.att}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  return `<section class="wrap">${top}${sw}${body}${ot}</section>`}
+function reportHTML(p,c){return`<div class="report"><div class="rh"><b>Reportbook</b><span>${esc(p.first)} ${esc(p.last)} · ${p.form}<br>${c.name}</span></div>${subjectsFor(p).map(s=>{const r=HIST[p.id][c.id][s];if(!r)return'';return`<div class="rs"><h4><span>${s}</span><span>${r.teacher} · Attainment ${r.att} · Effort ${r.eff}${r.exam?` · Exam ${r.exam}%`:''}</span></h4>${r.comment?`<p>${esc(r.comment)}</p>`:''}</div>`}).join('')}</div>`}
+
+/* ---------- admin: cycles ---------- */
+function allCycles(){return[...CYCLES,...EXTRA]}
+function viewCycles(){const g=SETS.reduce((a,s)=>{const x=progress(s);return a+x.done},0);const pct=Math.round(staffRows().reduce((a,r)=>a+r.done,0)/staffRows().reduce((a,r)=>a+r.total,0)*100);
+  return `<section class="wrap"><div class="spread"><div><h1>Reporting cycles</h1><p class="sub">Set up, run and publish each round of reports and grades.</p></div><button class="btn pop" data-act="newcycle">+ Set up a new cycle</button></div>
+  <div class="card hero"><div><span class="chip">Open now</span><h2 style="margin-top:10px">${CUR.name}</h2><p class="sub">Teacher deadline ${CUR.due} · proofreading by 9 Dec · publish 12 Dec</p><div class="bar" style="margin-top:14px"><i style="width:${pct}%"></i></div></div>
+  <div class="row" style="justify-content:space-between"><div><div class="bignum">${pct}%</div><div class="muted">of reports complete</div></div><button class="btn ink" data-act="go" data-v="progress">View progress</button></div></div>
+  <div class="card scroll"><table class="tbl"><thead><tr><th>Cycle</th><th class="hide-s">What's collected</th><th>Status</th><th class="hide-s">Dates</th></tr></thead><tbody>
+  ${allCycles().slice().reverse().map(c=>`<tr><td><b>${esc(c.name)}</b></td><td class="hide-s">${c.summary||FIELDSETS[c.fs].label+' · Years 3–8'}</td><td>${c.status==='Published'?'<span class="chip ok">Published</span>':c.status==='Open'?'<span class="chip">Open</span>':'<span class="chip amb">Scheduled</span>'}</td><td class="hide-s muted small">${c.pub?'Published '+c.pub:`Opens ${fmtDate(c.opens)} · due ${fmtDate(c.deadline)}`}</td></tr>`).join('')}
+  </tbody></table></div></section>`}
+function fmtDate(s){if(!s)return'';const d=new Date(s+'T12:00');return isNaN(d)?s:d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
+
+/* ---------- admin: wizard ---------- */
+const MROWS=['English','Maths','Science','French','History','Geography','Latin','RS','Music (peri)','LAMDA','Tutor comment','Head of Year comment'];
+const MYEARS=[3,4,5,6,7,8];
+const MOPTS=['none','grades','full','fullExam','comment','tutor'];
+function matrixFor(c){const m={};for(const r of MROWS){m[r]={};for(const y of MYEARS){let v='none';const acad=SUBJECTS.includes(r);
+  if(acad&&!(r==='Latin'&&y<6)){v=c.type==='HT'?'grades':(c.term==='Summer'&&y>=6?'fullExam':'full')}
+  else if(c.type==='END'){if(r==='Music (peri)'||r==='LAMDA')v='comment';if(r==='Tutor comment')v='tutor';if(r==='Head of Year comment'&&y>=5)v='comment'}
+  m[r][y]=v}}return m}
+function wName(){const yr=W.term==='Michaelmas'?2026:2027;return`${W.term} ${W.type==='HT'?'Half Term':'End of Term'} ${yr}`}
+function suggestCopy(){const target=`${W.term} ${W.type==='HT'?'Half Term':'End of Term'} ${(W.term==='Michaelmas'?2026:2027)-1}`;const c=allCycles().find(x=>x.name===target);return c?c.id:PAST[PAST.length-1].id}
+function wStepper(){return`<div class="steps">${['Details','Copy from','Subjects & grades','Check & launch'].map((l,i)=>`<span class="${W.step===i+1?'on':W.step>i+1?'done':''}">${i+1}. ${l}</span>`).join('')}</div>`}
+function viewWizard(){let b='';
+  if(W.step===1)b=`<div class="fgrid"><label class="field">Term<select id="w-term">${['Michaelmas','Lent','Summer'].map(t=>`<option ${W.term===t?'selected':''}>${t}</option>`).join('')}</select></label>
+    <label class="field">Type<select id="w-type"><option value="HT" ${W.type==='HT'?'selected':''}>Half term</option><option value="END" ${W.type==='END'?'selected':''}>End of term</option></select></label>
+    <label class="field">Opens to teachers<input type="date" id="w-opens" value="${W.opens}"></label><label class="field">Teacher deadline<input type="date" id="w-deadline" value="${W.deadline}"></label>
+    <label class="field">Proofreading done by<input type="date" id="w-proof" value="${W.proof}"></label><label class="field">Publish to parents<input type="date" id="w-publish" value="${W.publish}"></label></div>
+    <div class="namebox" id="w-name">${wName()}</div><p class="sub">The name is built from the term and type, so every cycle is named the same way.</p>`;
+  if(W.step===2){if(W.copy===null)W.copy=suggestCopy();const sug=suggestCopy();
+    b=`<h2>Start from an earlier cycle?</h2><p class="sub">The same cycle last year is usually the closest match, so it's suggested first.</p><div class="copylist">${[...allCycles().slice().reverse().filter(c=>c.id!=='m26e').sort((a,c)=>(c.id===sug)-(a.id===sug)),{id:'blank',name:'Start blank'}].map(c=>`<label class="${W.copy===c.id?'on':''}"><input type="radio" name="copy" value="${c.id}" ${W.copy===c.id?'checked':''}><span><b>${esc(c.name)}</b>${c.id===sug?' <span class="chip">Suggested</span>':''}<br><span class="muted small">${c.id==='blank'?'Every cell starts as —':c.summary||FIELDSETS[c.fs].label}</span></span></label>`).join('')}</div>`}
+  if(W.step===3){if(!W.matrix){if(W.copy==='blank'){W.matrix={};MROWS.forEach(r=>{W.matrix[r]={};MYEARS.forEach(y=>W.matrix[r][y]='none')})}else{const src=allCycles().find(x=>x.id===W.copy);W.matrix=JSON.parse(JSON.stringify(src.matrix||matrixFor(src)))}}
+    b=`<h2>Which subjects report, and what do they collect?</h2><p class="sub">${W.copy==='blank'?'Started blank.':`Copied from ${esc(allCycles().find(x=>x.id===W.copy).name)}.`} Change any cell. Peri music and LAMDA use their own lesson lists rather than iSAMS sets.</p>
+    <div class="legend">${MOPTS.filter(o=>o!=='none').map(o=>`<div><b>${FIELDSETS[o].label}</b>${FIELDSETS[o].fields.map(f=>FIELD[f].label).join(' · ')}${FIELDSETS[o].limit?` (${FIELDSETS[o].limit} words)`:''}</div>`).join('')}</div>
+    <div class="card scroll"><table class="matrix"><thead><tr><th>Subject</th>${MYEARS.map(y=>`<th>Year ${y}${y>3?`<br><button class="mini" data-act="copycol" data-v="${y}">copy Year ${y-1}</button>`:''}</th>`).join('')}</tr></thead><tbody>
+    ${MROWS.map(r=>`<tr><td><b>${r}</b><br><button class="mini" data-act="fillrow" data-v="${r}">same for all years</button></td>${MYEARS.map(y=>`<td><select data-mr="${r}" data-my="${y}" class="${W.matrix[r][y]==='none'?'off':W.matrix[r][y]}" aria-label="${r}, Year ${y}">${MOPTS.map(o=>`<option value="${o}" ${W.matrix[r][y]===o?'selected':''}>${FIELDSETS[o].label}</option>`).join('')}</select></td>`).join('')}</tr>`).join('')}
+    </tbody></table></div>`}
+  if(W.step===4){const pf=preflight();
+    b=`<h2>${wName()}</h2><p class="sub">Opens ${fmtDate(W.opens)} · teacher deadline ${fmtDate(W.deadline)} · publish ${fmtDate(W.publish)}</p>
+    <div class="pf"><div class="card"><b>${pf.slots.toLocaleString('en-GB')}</b>report slots</div><div class="card"><b>${pf.staff}</b>staff involved</div><div class="card"><b>${pf.subjects}</b>subjects</div><div class="card"><b>${pf.years}</b>year groups</div></div>
+    <h3>Pre-flight check</h3><ul class="issues">${pf.issues.length?pf.issues.map(([k,m])=>`<li class="${k}">${esc(m)}</li>`).join(''):'<li class="fine">No problems found.</li>'}</ul>
+    <p class="sub small">Sample numbers: in the real thing these come from the iSAMS sync.</p>`}
+  const last=W.step===4,pf=last?preflight():null,errs=pf?pf.issues.filter(i=>i[0]==='err').length:0;
+  return`<section class="wrap"><button class="back" data-act="go" data-v="cycles">← Cycles</button><h1>Set up a new cycle</h1>${wStepper()}${b}
+  <div class="wfoot"><button class="btn" data-act="wstep" data-v="-1" ${W.step===1?'disabled':''}>← Back</button>${last?`<button class="btn pop" data-act="launch" ${errs?'disabled':''}>${errs?'Fix the errors to launch':'Launch cycle'}</button>`:`<button class="btn ink" data-act="wstep" data-v="1">Next →</button>`}</div></section>`}
+const PUPN={3:48,4:52,5:60,6:64,7:62,8:58};
+const STAFFN={English:5,Maths:6,Science:4,French:3,History:3,Geography:3,Latin:2,RS:2,'Music (peri)':14,LAMDA:2,'Tutor comment':24,'Head of Year comment':6};
+function preflight(){const m=W.matrix,iss=[];let slots=0,staff=0,subj=0;const yrs=new Set();
+  for(const r of MROWS){let any=false;for(const y of MYEARS){const v=m[r][y];if(v==='none')continue;any=true;yrs.add(y);const share=r==='Music (peri)'?.45:r==='LAMDA'?.2:1;slots+=Math.round(PUPN[y]*share)}if(any){subj++;staff+=STAFFN[r]}}
+  for(const y of MYEARS)if(!yrs.has(y))iss.push(['warn',`Year ${y} has no reports or grades at all. Intended?`]);
+  if(MYEARS.some(y=>m.Latin[y]!=='none'))iss.push(['warn','Set 8La2 (Latin) has no teacher in iSAMS, so its 14 reports would have no writer. Assign one in iSAMS, then re-sync.']);
+  if(MYEARS.some(y=>m['Music (peri)'][y]!=='none'))iss.push(['warn','3 pupils on the peri lesson list have left the school and will be skipped.']);
+  if(W.deadline<W.opens)iss.push(['err','The teacher deadline is before the cycle opens.']);
+  if(W.proof<W.deadline)iss.push(['err','Proofreading finishes before the teacher deadline.']);
+  if(W.publish<W.proof)iss.push(['err','The publish date is before proofreading finishes.']);
+  if(allCycles().some(c=>c.name===wName()))iss.push(['err',`A cycle called “${wName()}” already exists.`]);
+  return{slots,staff,subjects:subj,years:yrs.size,issues:iss}}
+function launch(){const today=new Date().toISOString().slice(0,10);const used=new Set();MROWS.forEach(r=>MYEARS.forEach(y=>{if(W.matrix[r][y]!=='none')used.add(W.matrix[r][y])}));
+  EXTRA.push({id:'x'+Date.now(),name:wName(),term:W.term,type:W.type,fs:W.type==='HT'?'grades':'full',status:W.opens>today?'Scheduled':'Open',opens:W.opens,deadline:W.deadline,matrix:W.matrix,summary:[...used].map(u=>FIELDSETS[u].label).join(', ')});
+  save();const pf=preflight();toast(`${wName()} launched. ${pf.staff} staff would be emailed (prototype: no emails sent).`);Object.assign(W,{step:1,copy:null,matrix:null});go('cycles')}
+
+/* ---------- admin: progress ---------- */
+const STAFF=[['Mrs Hart','English',61,72],['Mr Lowe','English',40,66],['Mrs Patel','Maths',70,70],['Mr Joshi','Maths',0,0],['Dr Okafor','Science',33,74],['Ms Byrne','Science',52,60],['Mme Laurent','French',20,68],['Mr Bell','History',64,64],['Miss Reid','Geography',45,62],['Mr Ashworth','Latin',12,48],['Revd Clarke','RS',30,58],['Mrs Doyle','Music (peri)',9,22],['Mr Szabo','Music (peri)',0,17],['Ms Grant','LAMDA',14,14]];
+function staffRows(){return STAFF.map(([name,dept,done,total])=>{if(name==='Mr Joshi'){const t=SETS.reduce((a,s)=>{const g=progress(s);return[a[0]+g.done,a[1]+g.total]},[0,0]);done=t[0];total=t[1]}return{name,dept,done,total}})}
+function viewProgress(){const rows=staffRows(),depts=['All',...new Set(rows.map(r=>r.dept))],shown=rows.filter(r=>state.dept==='All'||r.dept===state.dept);const d=rows.reduce((a,r)=>a+r.done,0),t=rows.reduce((a,r)=>a+r.total,0);
+  return`<section class="wrap"><h1>${CUR.name}: progress</h1><p class="sub">Teacher deadline ${CUR.due}. Sample staff, except your own row, which is live.</p>
+  <div class="card hero"><div><div class="bignum">${Math.round(d/t*100)}%</div><div class="muted">${d.toLocaleString('en-GB')} of ${t.toLocaleString('en-GB')} reports complete</div><div class="bar" style="margin-top:14px"><i style="width:${d/t*100}%"></i></div></div>
+  <div class="row"><button class="btn" data-act="nudgeall">Nudge everyone under 50%</button></div></div>
+  <div class="depts">${depts.map(x=>`<button class="${state.dept===x?'on':''}" data-act="dept" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
+  <div class="card scroll"><table class="tbl"><thead><tr><th>Teacher</th><th class="hide-s">Department</th><th style="width:40%">Progress</th><th></th></tr></thead><tbody>
+  ${shown.sort((a,b)=>a.done/a.total-b.done/b.total).map(r=>{const p=r.total?r.done/r.total:0;return`<tr><td><b>${r.name}</b></td><td class="hide-s muted">${r.dept}</td><td><div class="row" style="flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${p*100}%"></i></div><span class="small" style="white-space:nowrap">${r.done}/${r.total}</span></div></td><td style="text-align:right">${p>=1?'<span class="chip ok">Done</span>':state.nudged[r.name]?'<span class="chip">Nudged ✓</span>':`<button class="btn" style="min-height:38px" data-act="nudge" data-v="${r.name}">Nudge</button>`}</td></tr>`}).join('')}
+  </tbody></table></div></section>`}
+
+/* ---------- admin: publish ---------- */
+const PUB={cyc:'s26e',years:{5:true,6:true,7:false,8:false}};
+function pubPupils(){return PUPILS.filter(p=>PUB.years[p.year]).sort((a,b)=>a.id.localeCompare(b.id))}
+function viewPublish(){const c=PAST.find(x=>x.id===PUB.cyc),list=pubPupils(),files=list.map(p=>`${p.id} ${c.name}.pdf`);
+  return`<section class="wrap"><h1>Publish to My School Portal</h1><p class="sub">One PDF per pupil, each file name starting with the pupil's iSAMS School ID, zipped up for My School Portal's bulk document import.</p>
+  <div class="card" style="padding:20px;margin-top:20px"><div class="fgrid"><label class="field">Cycle<select id="pub-cyc">${PAST.slice().reverse().map(x=>`<option value="${x.id}" ${x.id===PUB.cyc?'selected':''}>${x.name}</option>`).join('')}</select></label></div>
+  <p class="lbl" style="margin:16px 0 0">Year groups</p><div class="checkrow">${[5,6,7,8].map(y=>`<label><input type="checkbox" data-pubyear="${y}" ${PUB.years[y]?'checked':''}>Year ${y}</label>`).join('')}</div>
+  <p class="sub">${list.length} pupils in the sample (the real school would have hundreds).</p>
+  <div class="files">${files.slice(0,6).map(esc).join('\n')}${files.length>6?`\n… and ${files.length-6} more`:''}</div>
+  <div class="row"><button class="btn pop" data-act="mspzip" ${list.length?'':'disabled'}>Build MSP pack (.zip)</button>${list.length?`<button class="btn" data-act="preview" data-v="${list[0].id}" data-c="${c.id}">Preview one report</button>`:''}</div></div>
+  <p class="sub small" style="margin-top:14px">If iSAMS lets us write reports back through its API, this step can disappear: My School Portal would pick reports up from iSAMS as it does now.</p></section>`}
+function pdfFor(p,c){const{jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',format:'a4'});
+  d.setFillColor(0,2,55);d.rect(0,0,210,30,'F');d.setTextColor(255,255,255);d.setFont('helvetica','bold');d.setFontSize(20);d.text('Reportbook',14,14);d.setFont('helvetica','normal');d.setFontSize(10);d.text(c.name,14,23);d.text(`${p.first} ${p.last}  ·  ${p.form}`,196,23,{align:'right'});
+  let y=42;for(const s of subjectsFor(p)){const r=HIST[p.id][c.id][s];if(!r)continue;d.setFontSize(10);const lines=r.comment?d.splitTextToSize(r.comment,182):[];if(y+12+lines.length*4.8>286){d.addPage();y=20}
+    d.setFillColor(0,189,255);d.rect(14,y-5.5,182,8,'F');d.setTextColor(0,2,55);d.setFont('helvetica','bold');d.setFontSize(11);d.text(s,16,y);d.setFont('helvetica','normal');d.setFontSize(9);d.text(`${r.teacher}   Attainment ${r.att}   Effort ${r.eff}${r.exam?`   Exam ${r.exam}%`:''}`,194,y,{align:'right'});y+=8;
+    d.setFontSize(10);if(lines.length){d.text(lines,14,y);y+=lines.length*4.8}y+=7}
+  return d.output('arraybuffer')}
+async function mspZip(){if(!window.JSZip||!window.jspdf)return toast('Still loading the PDF tools. Try again in a moment.');const c=PAST.find(x=>x.id===PUB.cyc),list=pubPupils();toast(`Building ${list.length} PDFs…`);
+  await new Promise(r=>setTimeout(r,30));const z=new JSZip();list.forEach(p=>z.file(`${p.id} ${c.name}.pdf`,pdfFor(p,c)));const blob=await z.generateAsync({type:'blob'});await offerFile(`MSP pack - ${c.name}.zip`,blob,'MSP pack')}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
+  if(a==='go'){go(v)}
+  else if(a==='role'){state.role=v;go(v==='teacher'?'home':'cycles')}
+  else if(a==='open'){state.set=v;state.sel=null;go('write')}
+  else if(a==='sel'){selectPupil(v)}
+  else if(a==='step'){const set=SET[state.set],i=set.ids.indexOf(state.sel)+Number(v);if(set.ids[i])selectPupil(set.ids[i])}
+  else if(a==='pupil'){state.pupil=v;state.cyc=null;state.subj=null;go('pupil')}
+  else if(a==='cyc'){state.cyc=Number(v);render()}
+  else if(a==='subj'){state.subj=v||null;render()}
+  else if(a==='export'){exportXlsx()}
+  else if(a==='apply'){applyPending()}
+  else if(a==='close'){closeModal()}
+  else if(a==='reset'){try{localStorage.removeItem(LS_KEY)}catch(x){}ENT=freshEntries();EXTRA=[];state.nudged={};render();toast('Sample data reset')}
+  else if(a==='newcycle'){Object.assign(W,{step:1,copy:null,matrix:null});go('wizard')}
+  else if(a==='wstep'){W.step=clamp(W.step+Number(v),1,4);render();window.scrollTo(0,0)}
+  else if(a==='copycol'){const y=Number(v);MROWS.forEach(r=>{let s=W.matrix[r][y-1];if(r==='Latin'&&y<6)s='none';W.matrix[r][y]=s});render()}
+  else if(a==='fillrow'){const row=W.matrix[v];const src=MYEARS.map(y=>row[y]).find(x=>x!=='none')||'none';MYEARS.forEach(y=>{if(!(v==='Latin'&&y<6))row[y]=src});render()}
+  else if(a==='launch'){launch()}
+  else if(a==='dept'){state.dept=v;render()}
+  else if(a==='nudge'){state.nudged[v]=true;render();toast(`Reminder sent to ${v} (prototype: nothing was sent)`)}
+  else if(a==='nudgeall'){let n=0;staffRows().forEach(r=>{if(r.total&&r.done/r.total<.5&&!state.nudged[r.name]){state.nudged[r.name]=true;n++}});render();toast(n?`Reminders sent to ${n} teachers (prototype: nothing was sent)`:'Everyone under 50% has already been nudged')}
+  else if(a==='mspzip'){mspZip()}
+  else if(a==='preview'){const p=PUP[v],c=PAST.find(x=>x.id===(t.dataset.c||(state.view==='pupil'?PAST[state.cyc].id:PUB.cyc)));openModal(`<div class="spread" style="margin-bottom:14px"><h2>As parents will see it</h2><button class="btn" data-act="close">Close</button></div>${reportHTML(p,c)}`)}
+});
+document.addEventListener('input',e=>{const t=e.target;
+  if(t.id==='cmt'){const set=SET[state.set];setVal(set,t.dataset.pid,'comment',t.value);save();updateChecks();updateRow(t.dataset.pid)}
+  else if(t.classList.contains('gin')){const set=SET[state.set];t.value=t.value.toUpperCase().trim();setVal(set,t.dataset.pid,t.dataset.f,t.value);save();updateRow(t.dataset.pid);const ta=$('#cmt');if(ta&&ta.dataset.pid===t.dataset.pid)updateChecks()}
+  else if(t.id==='q'){state.q=t.value;$('#plist').innerHTML=pupilList()}
+});
+document.addEventListener('change',async e=>{const t=e.target;
+  if(t.id==='imp'&&t.files[0]){const f=t.files[0];t.value='';if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');try{const wb=XLSX.read(await f.arrayBuffer());showDiff(diffWorkbook(wb,SET[state.set]),SET[state.set],f.name)}catch(x){openModal(`<h2>Couldn’t read that file</h2><p>It doesn't look like an Excel workbook.</p><div class="mfoot"><button class="btn ink" data-act="close">OK</button></div>`)}}
+  else if(t.dataset.cf!==undefined&&PENDING){PENDING.res.conflicts[Number(t.dataset.cf)].use=t.value}
+  else if(t.name==='copy'){W.copy=t.value;W.matrix=null;render()}
+  else if(t.dataset.mr){W.matrix[t.dataset.mr][t.dataset.my]=t.value;t.className=t.value==='none'?'off':t.value}
+  else if(t.id&&t.id.startsWith('w-')){W[t.id.slice(2)]=t.value;const n=$('#w-name');if(n)n.textContent=wName()}
+  else if(t.id==='pub-cyc'){PUB.cyc=t.value;render()}
+  else if(t.dataset.pubyear){PUB.years[t.dataset.pubyear]=t.checked;render()}
+});
+document.addEventListener('focusin',e=>{const t=e.target;if(t.classList&&t.classList.contains('gin')&&t.dataset.pid!==state.sel)selectPupil(t.dataset.pid,true)});
+document.addEventListener('keydown',e=>{const t=e.target;
+  if(e.key==='Escape'&&$('#modal').classList.contains('open')){closeModal();return}
+  if(t.classList&&t.classList.contains('gin')){const row=Number(t.dataset.row),f=t.dataset.f,cols=gradeCols(SET[state.set]);let r=row,ci=cols.indexOf(f);
+    if(e.key==='ArrowDown'||e.key==='Enter')r++;else if(e.key==='ArrowUp')r--;else if(e.key==='ArrowRight')ci++;else if(e.key==='ArrowLeft')ci--;else return;
+    const n=document.querySelector(`.gin[data-row="${r}"][data-f="${cols[ci]}"]`);if(n){e.preventDefault();n.focus();n.select()}return}
+  if(t.tagName==='LABEL'&&(e.key==='Enter'||e.key===' ')&&t.querySelector('input[type=file]')){e.preventDefault();t.querySelector('input').click();return}
+  if(state.view==='pupil'&&!/INPUT|TEXTAREA|SELECT/.test(t.tagName)&&!$('#modal').classList.contains('open')){if(e.key==='ArrowLeft'&&state.cyc>0){state.cyc--;render()}else if(e.key==='ArrowRight'&&state.cyc<PAST.length-1){state.cyc++;render()}}
+});
+document.addEventListener('paste',e=>{const t=e.target;if(!(t.classList&&t.classList.contains('gin')))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/[\t\n]/.test(txt.trim()))return;e.preventDefault();
+  const set=SET[state.set],cols=gradeCols(set),lines=txt.replace(/\r/g,'').replace(/\n$/,'').split('\n');const r0=Number(t.dataset.row),c0=cols.indexOf(t.dataset.f);let n=0;
+  lines.forEach((ln,i)=>{const pid=set.ids[r0+i];if(!pid)return;ln.split('\t').forEach((cell,j)=>{const f=cols[c0+j];if(!f)return;const v=cell.trim().toUpperCase();setVal(set,pid,f,v);const inp=document.querySelector(`.gin[data-pid="${pid}"][data-f="${f}"]`);if(inp)inp.value=v;n++});updateRow(pid)});
+  save();toast(`Pasted ${n} grade${n===1?'':'s'}`)});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+
+render();
+}
+</script>
+</body>
+</html>
