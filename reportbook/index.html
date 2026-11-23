@@ -226,6 +226,44 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
 .toggle input{width:20px;height:20px;accent-color:#00bdff;flex:none}
 .dlist li.grp{background:var(--soft);font-weight:700;font-size:13px;padding:6px 14px}
 .over{color:var(--crim);font-weight:600}
+.matrix2{border-collapse:collapse;width:100%}
+.matrix2 th,.matrix2 td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px;min-width:150px}
+.matrix2 thead th{text-align:center;font-weight:600}
+.matrix2 th:first-child,.matrix2 td:first-child{position:sticky;left:0;background:var(--panel);z-index:1;min-width:200px}
+.subjcell .rowchips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.gswitch{display:flex;gap:8px;align-items:center;font-size:13px;margin-top:6px;cursor:pointer}
+.gswitch input{width:18px;height:18px;accent-color:#00bdff}
+.chunk{display:inline-block;font:inherit;font-size:12.5px;border:1px solid var(--line);background:transparent;border-radius:999px;padding:5px 10px;margin:2px;cursor:pointer;color:var(--mut);min-height:30px}
+.chunk:hover:not(:disabled){border-color:var(--ink);color:var(--ink)}
+.chunk.on{background:var(--pop);border-color:var(--pop);color:#000237;font-weight:600}
+.chunk:disabled{cursor:default}
+.tutorrow td{background:var(--soft)}
+.tutorrow td:first-child{background:var(--soft)}
+.mini2{font:inherit;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;min-height:34px;white-space:nowrap}
+.mini2:hover{border-color:var(--ink)}
+.qflag{color:var(--crim);margin-left:6px;font-weight:700}
+.query{background:var(--crims);color:var(--crim);border-radius:10px;padding:12px 14px}
+.query p{margin:6px 0 8px;color:var(--ink)}
+.tedit{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.tedit textarea{min-height:80px;font-size:14px}
+.tinrow{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px}
+.tplcard{padding:18px;margin-top:18px;display:flex;flex-direction:column;gap:12px}
+.tplname{font:inherit;font-size:22px;font-weight:700;border:1px solid transparent;border-radius:8px;padding:4px 8px;background:transparent;color:var(--ink);margin-left:-8px}
+.tplname:hover,.tplname:focus{border-color:var(--line)}
+.chunkbox{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg)}
+.chlabel{font:inherit;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--panel);min-height:36px}
+.ftable{width:100%;margin-top:8px}
+.ftable th{font-size:12px;color:var(--mut);font-weight:500;text-align:left;padding:4px 6px}
+.ftable td{padding:4px 6px;vertical-align:middle}
+.ftable input{font:inherit;font-size:14px;width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--panel);min-height:36px}
+.addrow td{padding-top:10px}
+.sel{font:inherit;min-height:40px;border:1px solid var(--line);border-radius:8px;padding:0 8px;background:var(--panel);max-width:100%}
+.sel.small{font-size:13px;min-height:34px}
+.wchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.wchip{display:inline-flex;align-items:center;gap:4px;background:var(--soft);border-radius:999px;padding:3px 4px 3px 10px;font-size:13px}
+.wchip button{border:0;background:none;cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;border-radius:999px;color:var(--mut)}
+.wchip button:hover{color:var(--crim)}
+.issues .fine{background:var(--soft);color:var(--ink)}
 .banner{background:var(--soft);border-left:4px solid var(--pop);padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:15px}
 .gc{padding:16px 18px;margin-bottom:18px;display:flex;flex-direction:column;gap:8px}
 .gc textarea{min-height:84px}
@@ -268,7 +306,7 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
     <button id="r-admin" data-act="role" data-v="admin">Admin</button>
   </div>
 </div></header>
-<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 23 Nov 2026, 17:29</span><button data-act="reset">Reset sample data</button></span></div></div>
+<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 23 Nov 2026, 23:37</span><button data-act="reset">Reset sample data</button></span></div></div>
 <main id="main"></main>
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="mbox" id="mbox"></div></div>
 <div class="toast" id="toast" role="status"></div>
@@ -278,7 +316,7 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 {
-const BUILD='23 Nov 2026, 17:29';
+const BUILD='23 Nov 2026, 23:37';
 const SCORE_LABEL='School score';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -288,50 +326,57 @@ const pick=a=>a[Math.floor(R()*a.length)];
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const words=s=>(String(s||'').trim().match(/\S+/g)||[]).length;
+const chars=s=>String(s||'').length;
 const reName=n=>new RegExp('\\b'+n+'\\b');
+const clone=o=>JSON.parse(JSON.stringify(o));
 
-/* ================= reference data ================= */
+/* ================= fields, templates, subjects ================= */
 const DESC=[['E','Emerging'],['WT','Working towards'],['M','Meeting'],['EX','Exceeding'],['GD','Greater depth']];
 const descName=c=>(DESC.find(d=>d[0]===c)||[])[1]||c;
 function normDesc(v){v=String(v??'').trim();if(!v)return'';const u=v.toUpperCase().replace(/\s+/g,' ');const d=DESC.find(([c,n])=>c===u||n.toUpperCase()===u);return d?d[0]:v}
-const FIELD={
-  atl:{label:'Attitude to learning',short:'AtL',type:'num',hint:'1–5'},
-  org:{label:'Organisation',short:'Org',type:'num',hint:'1–5'},
-  achS:{label:'Achievement within the set',short:'Set',type:'desc',hint:'E / WT / M / EX / GD'},
-  achY:{label:'Achievement within the year',short:'Year',type:'desc',hint:'E / WT / M / EX / GD'},
-  exam:{label:'Exam percentage',short:'Exam %',type:'text',hint:'any text'},
-  score:{label:SCORE_LABEL,short:'Score',type:'text',hint:'any text'},
+const HINT={num:'1–5',desc:'E / WT / M / EX / GD',text:'',long:''};
+const TYPE_LABEL={num:'Grade 1–5 (1 is best)',desc:'Grade: Emerging → Greater depth',text:'Short text (any text)',long:'Comment (character limit)'};
+const DEF_FIELD={
+  atl:{label:'Attitude to learning',short:'AtL',type:'num'},
+  org:{label:'Organisation',short:'Org',type:'num'},
+  achS:{label:'Achievement within the set',short:'Set',type:'desc'},
+  achY:{label:'Achievement within the year',short:'Year',type:'desc'},
+  exam:{label:'Exam percentage',short:'Exam %',type:'text'},
+  score:{label:SCORE_LABEL,short:'Score',type:'text'},
   www:{label:'What went well',short:'WWW',type:'long'},
   ebi:{label:'Even better if',short:'EBI',type:'long'},
+  gEff:{label:'Effort and attitude',short:'Effort',type:'num'},
+  gInd:{label:'Independence',short:'Indep.',type:'num'},
+  gSkill:{label:'Skill / technical ability',short:'Skill',type:'num'},
+  gAware:{label:'Game awareness',short:'Awareness',type:'num'},
+  pcom:{label:'Comment',short:'Comment',type:'long'},
   tutor:{label:'Tutor comment',short:'Tutor',type:'long'}
 };
-const GRADEF=['atl','org','achS','achY'];
-const DEFAULT_LIMITS={www:800,ebi:800,tutor:1200,general:600};
-const LIMIT_LABEL={www:'What went well',ebi:'Even better if',tutor:'Tutor comment',general:'General comment'};
-const chars=s=>String(s||'').length;
-const lim=(c,f)=>((c&&c.limits)||DEFAULT_LIMITS)[f]??DEFAULT_LIMITS[f];
-const genOn=c=>c.general??(c.kind!=='Y8');
-const OPTS={
-  none:{label:'—',fields:[]},
-  grades:{label:'Grades',fields:[...GRADEF]},
-  gradesReport:{label:'Grades + report',fields:[...GRADEF,'www','ebi']},
-  gradesExamReport:{label:'Grades + exam + report',fields:[...GRADEF,'exam','score','www','ebi']},
-  gradesExam:{label:'Grades + exam',fields:[...GRADEF,'exam','score']},
-  examFeedback:{label:'Exam feedback',fields:['exam','score','www','ebi']},
-  report:{label:'Report only',fields:['www','ebi']},
-  tutor:{label:'Tutor comment',fields:['tutor']}
+const DEF_TEMPLATES={
+  academic:{name:'Academic',chunks:[{id:'atlorg',label:'AtL + Org',fields:['atl','org']},{id:'ach',label:'Achievement',fields:['achS','achY']},{id:'exam',label:'Exam',fields:['exam','score']},{id:'rep',label:'WWW + EBI',fields:['www','ebi']}]},
+  games:{name:'Games',chunks:[{id:'gg',label:'Games grades',fields:['gEff','gInd','gSkill','gAware']},{id:'gebi',label:'EBI',fields:['ebi']}]},
+  peri:{name:'Peri music / LAMDA',chunks:[{id:'pc',label:'Comment',fields:['pcom']}]}
 };
-function valid(f,v,c){v=String(v??'').trim();if(!v)return true;const t=FIELD[f].type;if(t==='num')return/^[1-5]$/.test(v);if(t==='desc')return DESC.some(d=>d[0]===v);if(t==='long')return chars(v)<=lim(c,f);return true}
-function normField(f,v){v=String(v??'').replace(/\r\n?/g,'\n').trim();const t=FIELD[f].type;if(t==='desc')return normDesc(v);if(t==='num')return v.replace(/\.0+$/,'');return v}
-
 const SUBJ=[{name:'English',code:'Eng',by:'set'},{name:'Maths',code:'Mat',by:'set'},{name:'Science',code:'Sci'},{name:'French',code:'Fre'},{name:'History',code:'His'},{name:'Geography',code:'Geo'},{name:'Latin',code:'Lat',from:6},{name:'Religious Studies',code:'TPR'}];
-const SUBJ_TEXT={English:'English',Maths:'maths',Science:'science',French:'French',History:'history',Geography:'geography',Latin:'Latin','Religious Studies':'RS'};
-const TOPICS={Maths:['fractions','algebraic expressions','ratio','angles in polygons','solving equations','probability','area and perimeter'],English:['persuasive writing','poetry analysis','the class novel','descriptive writing','comprehension'],Science:['forces','separating mixtures','the solar system','electric circuits','habitats'],French:['describing family','the past tense','listening tasks','vocabulary','role plays'],History:['the Norman Conquest','source analysis','the Tudors','Victorian Britain','the Romans'],Geography:['rivers','map skills','weather and climate','volcanoes','settlements'],Latin:['the first declension','translation','verb endings','Roman myths','the imperfect tense'],'Religious Studies':['world religions','ethical questions','the parables','festivals of light','sacred texts']};
-const STAFF={TAJ:'Mr Joshi',RPA:'Mrs Patel',HAR:'Mrs Hart',LOW:'Mr Lowe',DKO:'Dr Okafor',BYR:'Ms Byrne',MLA:'Mme Laurent',BEL:'Mr Bell',REI:'Miss Reid',ASH:'Mr Ashworth',CLA:'Revd Clarke',ABA:'Mr Abbott',RHU:'Mr Rhodes',KPA:'Mrs Parr',SWI:'Mrs Wilde',CFO:'Mr Ford',MDE:'Mrs Dean',JRO:'Mr Rowe',NGR:'Mrs Grey',LPO:'Mr Pole',HTA:'Ms Tate',EWE:'Mr West',BCO:'Mrs Cole',MFI:'Mr Finch',RDA:'Mrs Day',AKE:'Mr Kemp'};
+const ACAD=SUBJ.map(s=>s.name);
+const ROWS=[...ACAD,'Games','Music (peri)','LAMDA'];
+const DEF_SUBJ_CFG={English:{template:'academic',source:'sets',hod:'HAR'},Maths:{template:'academic',source:'sets',hod:'RPA'},Science:{template:'academic',source:'sets',hod:'DKO'},French:{template:'academic',source:'sets',hod:'MLA'},History:{template:'academic',source:'sets',hod:'BEL'},Geography:{template:'academic',source:'sets',hod:'REI'},Latin:{template:'academic',source:'sets',hod:'ASH'},'Religious Studies':{template:'academic',source:'sets',hod:'CLA'},Games:{template:'games',source:'chosen',hod:'CAR'},'Music (peri)':{template:'peri',source:'peri',hod:'DOY'},LAMDA:{template:'peri',source:'peri',hod:'GRA'}};
+let FIELD=clone(DEF_FIELD),TEMPLATES=clone(DEF_TEMPLATES),SUBJ_CFG=clone(DEF_SUBJ_CFG);
+const SUBJ_TEXT={English:'English',Maths:'maths',Science:'science',French:'French',History:'history',Geography:'geography',Latin:'Latin','Religious Studies':'RS',Games:'games'};
+const TOPICS={Maths:['fractions','algebraic expressions','ratio','angles in polygons','solving equations','probability','area and perimeter'],English:['persuasive writing','poetry analysis','the class novel','descriptive writing','comprehension'],Science:['forces','separating mixtures','the solar system','electric circuits','habitats'],French:['describing family','the past tense','listening tasks','vocabulary','role plays'],History:['the Norman Conquest','source analysis','the Tudors','Victorian Britain','the Romans'],Geography:['rivers','map skills','weather and climate','volcanoes','settlements'],Latin:['the first declension','translation','verb endings','Roman myths','the imperfect tense'],'Religious Studies':['world religions','ethical questions','the parables','festivals of light','sacred texts'],Games:['passing under pressure','tackling technique','positional play','calling for the ball','defending as a unit']};
+const STAFF={TAJ:'Mr Joshi',RPA:'Mrs Patel',HAR:'Mrs Hart',LOW:'Mr Lowe',DKO:'Dr Okafor',BYR:'Ms Byrne',MLA:'Mme Laurent',BEL:'Mr Bell',REI:'Miss Reid',ASH:'Mr Ashworth',CLA:'Revd Clarke',ABA:'Mr Abbott',RHU:'Mr Rhodes',KPA:'Mrs Parr',SWI:'Mrs Wilde',CFO:'Mr Ford',MDE:'Mrs Dean',JRO:'Mr Rowe',NGR:'Mrs Grey',LPO:'Mr Pole',HTA:'Ms Tate',EWE:'Mr West',BCO:'Mrs Cole',MFI:'Mr Finch',RDA:'Mrs Day',AKE:'Mr Kemp',CAR:'Mr Carver',FEN:'Mrs Fenwick',DOY:'Mrs Doyle',GRA:'Ms Grant',ADMIN:'an admin'};
+const ROLE_NOTE={CAR:'Head of Boys’ Games',FEN:'Head of Girls’ Games'};
 function teacherFor(code,y,idx){switch(code){case'Mat':return y<=5?'RPA':y===8?(idx===0?'RPA':'TAJ'):(idx===0?'TAJ':'RPA');case'Eng':return y<=5?'HAR':(idx===0?'HAR':'LOW');case'Sci':return y<=6?'DKO':'BYR';case'Fre':return'MLA';case'His':return'BEL';case'Geo':return'REI';case'Lat':return'ASH';case'TPR':return'CLA'}}
 const FORMS={2027:{5:['5TJ','5AB'],6:['6RH','6KP'],7:['7SW','7CF'],8:['8MD','8JR']},2026:{4:['4NG','4LP'],5:['5HT','5EW'],6:['6BC','6MF'],7:['7RD','7AK']}};
 const TUTOR={'5TJ':'TAJ','5AB':'ABA','6RH':'RHU','6KP':'KPA','7SW':'SWI','7CF':'CFO','8MD':'MDE','8JR':'JRO','4NG':'NGR','4LP':'LPO','5HT':'HTA','5EW':'EWE','6BC':'BCO','6MF':'MFI','7RD':'RDA','7AK':'AKE'};
 const ME='TAJ';
+const COACHES={B:['TAJ','BEL','RHU','CFO','JRO','LOW'],G:['REI','HAR','KPA','SWI','MDE','BYR']};
+const GAMES_OWNER={B:'CAR',G:'FEN'};
+const GAMES_DAYS=['Tue','Wed','Thu'];
+let GAMES={choice:{},writers:{}}; // choice[`${y}${g}`]: 0..2 or 'year'; writers[`${y}${g}`]: [ini]
+const gkey=(y,g)=>`${y}${g}`;
+const DEF_WRITERS={'5B':['RHU','CFO','JRO'],'6B':['TAJ','BEL','RHU'],'7B':['TAJ','LOW','CFO'],'8B':['BEL','JRO','LOW'],'5G':['KPA','SWI','MDE'],'6G':['REI','HAR','KPA'],'7G':['BYR','SWI','REI'],'8G':['MDE','HAR','BYR']};
+const gWriters=(y,g)=>GAMES.writers[gkey(y,g)]||DEF_WRITERS[gkey(y,g)]||COACHES[g].slice(0,3);
 
 /* ================= pupils ================= */
 const F_NAMES=['Amelia','Isla','Freya','Sophia','Ava','Grace','Lily','Evie','Ruby','Matilda','Aanya','Zara','Hannah','Imogen','Martha','Chloe','Esme','Priya','Olivia','Florence','Harriet','Maya','Niamh','Rosie','Beatrice','Clara','Daisy','Eliza','Iris','Jemima','Kitty','Lara','Mia','Nina','Orla','Phoebe','Elizabeth','Charlotte','Alexandra','Katherine','Margaret','Victoria','Arabella','Penelope'];
@@ -340,8 +385,7 @@ const PREF={Elizabeth:'Libby',Charlotte:'Lottie',Alexandra:'Sasha',Katherine:'Ka
 const SURN=['Ashby','Bennett','Carter','Davies','Ellison','Fletcher','Gupta','Hughes','Iqbal','Jenkins','Khan','Lawson','Mehta','Nolan','Okoro','Palmer','Quinn','Reeves','Shah','Thornton','Underwood','Vaughan','Walsh','Young','Adeyemi','Blake','Chandra','Dalton','Evans','Forbes','Grant','Hale','Ingram','Jameson','Kerr','Lister','Morgan','Novak','Osei','Pearce','Rahman','Sinclair','Tran','Wells','Barker','Cole','Dunn','Foster','Lee','Smith'];
 const pool=shuffle([...F_NAMES.map(n=>[n,'F']),...M_NAMES.map(n=>[n,'M'])]);
 const PUPILS=[];let k=0;
-for(const y of[5,6,7,8])for(let fi=0;fi<2;fi++)for(let i=0;i<10;i++){const[first,sex]=pool[k++];const p={id:String(210213+k*37),first,pref:PREF[first]||null,last:pick(SURN),sex,year:y,fi,ability:clamp(1+R()*4,1,5),off:{}};SUBJ.forEach(s=>p.off[s.name]=(R()-.5)*1.4);PUPILS.push(p)}
-// make sure there is a Jonathan (Jonny) Smith somewhere, as in the example
+for(const y of[5,6,7,8])for(let fi=0;fi<2;fi++)for(let i=0;i<10;i++){const[first,sex]=pool[k++];const p={id:String(210213+k*37),first,pref:PREF[first]||null,last:pick(SURN),sex,year:y,fi,ability:clamp(1+R()*4,1,5),off:{}};[...ACAD,'Games'].forEach(s=>p.off[s]=(R()-.5)*1.4);PUPILS.push(p)}
 {const j=PUPILS.find(p=>p.first==='Jonathan');if(j)j.last='Smith'}
 const PUP=Object.fromEntries(PUPILS.map(p=>[p.id,p]));
 const call=p=>p.pref||p.first;
@@ -352,104 +396,126 @@ const formAt=(p,ay)=>(FORMS[ay][yearAt(p,ay)]||[])[p.fi];
 const pron=p=>p.sex==='F'?{he:'she',He:'She',his:'her',His:'Her',him:'her'}:{he:'he',He:'He',his:'his',His:'His',him:'him'};
 const fillT=(t,p,o)=>t.replace(/\{(\w+)\}/g,(m,key)=>key==='N'?call(p):(o&&o[key]!==undefined)?o[key]:(pron(p)[key]??m));
 
-/* ================= sets (iSAMS-style names) ================= */
+/* ================= sets ================= */
 const SETS=[],SET={},PSETS={};let sn=0;
 function addSet(o){o.id='s'+(++sn);o.ids.sort((a,b)=>(PUP[a].last+PUP[a].first).localeCompare(PUP[b].last+PUP[b].first));SETS.push(o);SET[o.id]=o;o.ids.forEach(pid=>{(PSETS[o.ay+pid]=PSETS[o.ay+pid]||[]).push(o.id)});return o}
-for(const ay of[2026,2027]){const yy=String(ay%100);
+const ISAMS_GAMES={}; // per ay: list of games sets as they come from iSAMS
+function gamesSetName(ay,y,g,i){return`${ay%100} ${y}${g} Games ${GAMES_DAYS[i]} ${GAMES_OWNER[g]}`}
+for(const ay of[2026,2027]){const yy=String(ay%100);ISAMS_GAMES[ay]=[];
   for(const y of Object.keys(FORMS[ay]).map(Number)){const coh=PUPILS.filter(p=>yearAt(p,ay)===y);
     for(const s of SUBJ){if(s.from&&y<s.from)continue;
       if(y<=5){FORMS[ay][y].forEach((f,fi)=>{const t=teacherFor(s.code,y,fi);addSet({ay,year:y,subject:s.name,code:s.code,teacher:t,name:`${yy} ${f} ${s.code} ${t}`,ids:coh.filter(p=>p.fi===fi).map(p=>p.id)})})}
-      else{const ranked=coh.slice().sort((a,b)=>(a.ability+(s.by==='set'?a.off[s.name]:0))-(b.ability+(s.by==='set'?b.off[s.name]:0)));const halves=[ranked.slice(0,10),ranked.slice(10)];
-        halves.forEach((h,idx)=>{const t=teacherFor(s.code,y,idx);const name=s.by==='set'?`${yy} ${y}${s.code} ${t}`:`${yy} ${y}${'AB'[idx]} ${s.code} ${t}`;addSet({ay,year:y,subject:s.name,code:s.code,teacher:t,name,ids:h.map(p=>p.id)})})}}
+      else{const ranked=coh.slice().sort((a,b)=>(a.ability+(s.by==='set'?a.off[s.name]:0))-(b.ability+(s.by==='set'?b.off[s.name]:0)));
+        [ranked.slice(0,10),ranked.slice(10)].forEach((h,idx)=>{const t=teacherFor(s.code,y,idx);addSet({ay,year:y,subject:s.name,code:s.code,teacher:t,name:s.by==='set'?`${yy} ${y}${s.code} ${t}`:`${yy} ${y}${'AB'[idx]} ${s.code} ${t}`,ids:h.map(p=>p.id)})})}}
+    for(const g of['B','G']){const ids=coh.filter(p=>p.sex===(g==='B'?'M':'F')).map(p=>p.id);
+      GAMES_DAYS.forEach((d,i)=>ISAMS_GAMES[ay].push({name:gamesSetName(ay,y,g,i),year:y,g,owner:GAMES_OWNER[g],n:ids.length,head:true}));
+      COACHES[g].slice(0,3).forEach(cn=>ISAMS_GAMES[ay].push({name:`${yy} ${y}${g} Games ${cn}`,year:y,g,owner:cn,n:Math.round(ids.length/3),head:false}));
+      const set=addSet({ay,year:y,subject:'Games',code:'Gam',gender:g,teacher:GAMES_OWNER[g],ids});
+      Object.defineProperty(set,'name',{get(){const ch=GAMES.choice[gkey(y,g)];return ch==='year'?`${yy} Year ${y} ${g==='B'?'Boys':'Girls'} Games`:gamesSetName(ay,y,g,ch||0)},enumerable:true});
+      Object.defineProperty(set,'writers',{get(){return gWriters(y,g)},enumerable:true})}
     FORMS[ay][y].forEach((f,fi)=>addSet({ay,year:y,subject:'Tutor',code:'Tut',teacher:TUTOR[f],name:`${yy} ${f} Tutor group`,form:f,ids:coh.filter(p=>p.fi===fi).map(p=>p.id)}))}}
 const roster=set=>set.ids.map(id=>PUP[id]);
 const pupilSets=(p,ay)=>(PSETS[ay+p.id]||[]).map(id=>SET[id]);
 
 /* ================= cycles ================= */
-const MROWS=['English','Maths','Science','French','History','Geography','Latin','Religious Studies','Music (peri)','LAMDA','Tutor comment'];
 const MYEARS=[3,4,5,6,7,8];
-const ACAD=SUBJ.map(s=>s.name);
-function matrixFor(kind){const m={};for(const r of MROWS){m[r]={};for(const y of MYEARS){let v='none';const acad=ACAD.includes(r)&&!(r==='Latin'&&y<6);
-  if(kind==='Y8'){if(acad&&y===8)v='examFeedback'}
-  else if(kind==='BLANK'){}
-  else{if(acad)v=kind==='ME'?'gradesReport':kind==='SE'?'gradesExamReport':'grades';
-    if((r==='Music (peri)'||r==='LAMDA')&&(kind==='ME'||kind==='SE'))v='report';
-    if(r==='Tutor comment'&&['MH','ME','LE','SE'].includes(kind))v='tutor'}
-  m[r][y]=v}}return m}
-const KIND_LABEL={MH:'Grades + tutor comment',ME:'Grades + reports + tutor comment',LH:'Grades',LE:'Grades + tutor comment',SH:'Grades',SE:'Grades + exams + reports + tutor comment',Y8:'Year 8: exam results + WWW/EBI'};
+const avail=(r,y)=>!(r==='Latin'&&y<6);
+const KIND_LABEL={MH:'Grades + tutor comment',ME:'Grades + reports + tutor comment',LH:'Grades',LE:'Grades + tutor comment',SH:'Grades',SE:'Grades + exams + reports + tutor comment',Y8:'Year 8 exam feedback',BLANK:'Custom'};
+function cfgFor(kind){const cells={},gen={},tutor={};
+  for(const r of ROWS){cells[r]={};for(const y of MYEARS){let v=[];if(avail(r,y)){const t=SUBJ_CFG[r].template;
+    if(t==='academic'){if(kind==='Y8'){if(y===8)v=['exam','rep']}else if(kind==='ME')v=['atlorg','ach','rep'];else if(kind==='SE')v=['atlorg','ach','exam','rep'];else if(kind!=='BLANK')v=['atlorg','ach']}
+    else if(t==='games'){if(kind==='ME'||kind==='SE')v=['gg','gebi']}
+    else if(t==='peri'){if(kind==='ME'||kind==='SE')v=['pc']}}
+    cells[r][y]=v}gen[r]=ACAD.includes(r)&&['ME','SE','Y8'].includes(kind)}
+  MYEARS.forEach(y=>tutor[y]=['MH','ME','LE','SE'].includes(kind));return{cells,gen,tutor,limits:{}}}
 const CYCLES=[
-  ['m25h','Michaelmas Half Term 2025','Mich HT 25','MH',2026,'17 Oct 2025'],
-  ['y8m25','Year 8 Exam Feedback, Michaelmas 2025','Y8 exams Nov 25','Y8',2026,'21 Nov 2025'],
-  ['m25e','Michaelmas End of Term 2025','Mich End 25','ME',2026,'12 Dec 2025'],
-  ['l26h','Lent Half Term 2026','Lent HT 26','LH',2026,'13 Feb 2026'],
-  ['y8l26','Year 8 Exam Feedback, Lent 2026','Y8 exams Mar 26','Y8',2026,'6 Mar 2026'],
-  ['l26e','Lent End of Term 2026','Lent End 26','LE',2026,'27 Mar 2026'],
-  ['s26h','Summer Half Term 2026','Sum HT 26','SH',2026,'22 May 2026'],
-  ['s26e','Summer End of Term 2026','Sum End 26','SE',2026,'3 Jul 2026'],
-  ['m26h','Michaelmas Half Term 2026','Mich HT 26','MH',2027,'16 Oct 2026'],
-  ['y8m26','Year 8 Exam Feedback, Michaelmas 2026','Y8 exams Nov 26','Y8',2027,'20 Nov 2026'],
-  ['m26e','Michaelmas End of Term 2026','Mich End 26','ME',2027,null]
-].map(([id,name,short,kind,ay,pub])=>({id,name,short,kind,ay,pub,status:pub?'Published':'Open',matrix:matrixFor(kind)}));
+  ['m25h','Michaelmas Half Term 2025','Mich HT 25','MH',2026,'17 Oct 2025'],['y8m25','Year 8 Exam Feedback, Michaelmas 2025','Y8 exams Nov 25','Y8',2026,'21 Nov 2025'],['m25e','Michaelmas End of Term 2025','Mich End 25','ME',2026,'12 Dec 2025'],
+  ['l26h','Lent Half Term 2026','Lent HT 26','LH',2026,'13 Feb 2026'],['y8l26','Year 8 Exam Feedback, Lent 2026','Y8 exams Mar 26','Y8',2026,'6 Mar 2026'],['l26e','Lent End of Term 2026','Lent End 26','LE',2026,'27 Mar 2026'],
+  ['s26h','Summer Half Term 2026','Sum HT 26','SH',2026,'22 May 2026'],['s26e','Summer End of Term 2026','Sum End 26','SE',2026,'3 Jul 2026'],
+  ['m26h','Michaelmas Half Term 2026','Mich HT 26','MH',2027,'16 Oct 2026'],['y8m26','Year 8 Exam Feedback, Michaelmas 2026','Y8 exams Nov 26','Y8',2027,'20 Nov 2026'],['m26e','Michaelmas End of Term 2026','Mich End 26','ME',2027,null]
+].map(([id,name,short,kind,ay,pub])=>({id,name,short,kind,ay,pub,status:pub?'Published':'Open',cfg:cfgFor(kind)}));
+// published cycles keep a frozen copy of the templates, so history never changes
+CYCLES.filter(c=>c.pub).forEach(c=>{c.tpl=clone(DEF_TEMPLATES);c.smap=clone(DEF_SUBJ_CFG)});
 const CUR=CYCLES.find(c=>c.id==='m26e');Object.assign(CUR,{due:'Fri 4 Dec 2026',opens:'2026-11-16',deadline:'2026-12-04',proof:'2026-12-09',publish:'2026-12-12'});
 let EXTRA=[];
 const allCycles=()=>[...CYCLES,...EXTRA];
 const CYC=id=>allCycles().find(c=>c.id===id);
 const PAST=CYCLES.filter(c=>c.status==='Published');
-function fieldsFor(c,set){const row=set.subject==='Tutor'?'Tutor comment':set.subject;return OPTS[(c.matrix[row]||{})[set.year]||'none'].fields}
+const isOpen=c=>c.status!=='Published';
+const DEF_LIM={tutor:1200,general:600};
+const lim=(c,f)=>(c.cfg.limits||{})[f]??DEF_LIM[f]??800;
+function tplOf(c,subject,T,S){T=T||c.tpl||TEMPLATES;S=S||c.smap||SUBJ_CFG;const id=(S[subject]||{}).template;return T[id]}
+function fieldsFor(c,set,cfg,T,S){cfg=cfg||c.cfg;if(set.subject==='Tutor')return cfg.tutor[set.year]?['tutor']:[];const t=tplOf(c,set.subject,T,S);if(!t)return[];const on=(cfg.cells[set.subject]||{})[set.year]||[];return t.chunks.filter(ch=>on.includes(ch.id)).flatMap(ch=>ch.fields).filter(f=>FIELD[f])}
 const setsIn=(c,t)=>SETS.filter(s=>s.ay===c.ay&&fieldsFor(c,s).length&&(!t||s.teacher===t));
-const hasGeneral=(c,set)=>set.subject!=='Tutor'&&genOn(c)&&fieldsFor(c,set).some(f=>f!=='tutor');
-const optLabel=(c,set)=>{const row=set.subject==='Tutor'?'Tutor comment':set.subject;return OPTS[c.matrix[row][set.year]].label};
+const sharedIn=(c,t)=>SETS.filter(s=>s.ay===c.ay&&s.writers&&s.writers.includes(t)&&s.teacher!==t&&fieldsFor(c,s).length);
+const mySets=(c,t)=>[...setsIn(c,t),...sharedIn(c,t)];
+const hasGeneral=(c,set,cfg)=>{cfg=cfg||c.cfg;return set.subject!=='Tutor'&&!!cfg.gen[set.subject]&&fieldsFor(c,set,cfg).length>0};
+function cellLabel(c,set){if(set.subject==='Tutor')return'Tutor comments';const t=tplOf(c,set.subject);const on=(c.cfg.cells[set.subject]||{})[set.year]||[];return t.chunks.filter(ch=>on.includes(ch.id)).map(ch=>ch.label).join(' · ')}
+const SCALE_T=['num','desc'];
+function valid(f,v,c){v=String(v??'').trim();if(!v)return true;const t=FIELD[f].type;if(t==='num')return/^[1-5]$/.test(v);if(t==='desc')return DESC.some(d=>d[0]===v);if(t==='long')return chars(v)<=lim(c,f);return true}
+function normField(f,v){v=String(v??'').replace(/\r\n?/g,'\n').trim();const t=FIELD[f]?FIELD[f].type:'long';if(t==='desc')return normDesc(v);if(t==='num')return v.replace(/\.0+$/,'');return v}
 
 /* ================= text generators ================= */
 const WWW=[['{N} has shown real confidence with {T}, and {his} written work is consistently accurate.','{N} grasps new ideas quickly, particularly in {T}, and explains {his} reasoning clearly.','{N}’s work on {T} was a highlight this term; {he} relishes a challenge.'],['{N} has made steady progress with {T} and is becoming more independent.','{N} is secure with {T} and contributes sensibly in class discussions.'],['{N} has persevered with {T} and {his} confidence is growing.','{N} has worked hard on {T} and is starting to use the key methods on {his} own.']];
 const WWW2=['{His} contributions in class are thoughtful and frequent.','{He} is a focused and cooperative member of the class.','{He} settles quickly and always tries {his} best.'];
 const EBI=['{N} should show {his} working clearly so that method marks are not lost.','{N} should check {his} answers carefully before moving on.','{N} should read each question twice before starting.','{N} should use subject vocabulary more precisely in written answers.','{N} should ask for help sooner when {he} is unsure.','{N} should review {his} notes on {T2} regularly to keep them fresh.'];
 const TUT=['{N} has settled into the new school year {how}.','{He} is a kind and loyal friend to many in the form.','{He} has taken on the role of {role} with real enthusiasm.','{His} organisation has improved, though {he} should keep checking {his} planner each evening.','{He} has thrown {him}self into matches and activities this term.','It has been a pleasure to be {his} tutor this term, and I look forward to seeing {him} grow in confidence next term.'];
-function genReport(p,subj,band,exam){const tp=shuffle(TOPICS[subj]);const o={T:tp[0],T2:tp[1]};
-  if(exam)return{www:fillT(pick(['{N} answered the {T} questions particularly well.','{N} was well prepared for the {T} section of the paper.']),p,o)+' '+fillT(pick(WWW2),p,o),ebi:fillT('{N} should revise {T2} carefully before the next assessment.',p,o)};
-  return{www:fillT(pick(WWW[band]),p,o)+' '+fillT(pick(WWW2),p,o),ebi:fillT(pick(EBI),p,o)}}
 function genTutor(p,short){const o={how:pick(['quickly and happily','well after a slightly nervous start','with great confidence']),role:pick(['form captain','eco rep','library monitor','house rep'])};const lines=[TUT[0],...shuffle(TUT.slice(1,5))].slice(0,short?2:4).map(t=>fillT(t,p,o));if(!short)lines.push(fillT(TUT[5],p,o));return lines.join(' ')}
-function genGeneral(subj){const t=shuffle(TOPICS[subj]);return`This term the class has covered ${t[0]}, ${t[1]} and ${t[2]}. We finished with a short assessment on ${t[2]}, and next term we move on to ${t[3]}.`}
+function genGeneral(subj){const t=shuffle(TOPICS[subj]||TOPICS.Maths);return`This term the class has covered ${t[0]}, ${t[1]} and ${t[2]}. We finished with a short assessment on ${t[2]}, and next term we move on to ${t[3]}.`}
 function genExam(p,subj,a){const pc=()=>Math.round(clamp(96-(a-1)*14+(R()-.5)*12,22,99));const sc=()=>Math.round(clamp(130-(a-1)*11+(R()-.5)*10,70,141));
   if(subj==='Science')return{exam:`P1 ${pc()}% · P2 ${pc()}% · P3 ${pc()}%`,score:`Bio ${sc()} · Chem ${sc()} · Phys ${sc()}`};return{exam:pc()+'%',score:String(sc())}}
-function genRecord(p,set,c,ci,fields){const s=set.subject,r={t:{}};
-  if(s==='Tutor'){if(fields.includes('tutor'))r.tutor=genTutor(p,false);return r}
-  const a=clamp(p.ability+p.off[s]+(R()-.5)*.8-ci*.04,1,5),band=a<2.3?0:a<3.6?1:2;
-  if(fields.includes('atl')){r.atl=String(clamp(Math.round(a*.6+R()*1.8),1,5));r.org=String(clamp(Math.round(a*.5+R()*2.2),1,5));r.achY=DESC[clamp(4-Math.floor((a-1)/0.82),0,4)][0];r.achS=DESC[clamp(2+Math.round(-p.off[s]*1.6+(R()-.5)*1.4),0,4)][0]}
-  if(fields.includes('exam'))Object.assign(r,genExam(p,s,a));
-  if(fields.includes('www'))Object.assign(r,genReport(p,s,band,c.kind==='Y8'));
+function genText(p,subj,f,band,y8){const tp=shuffle(TOPICS[subj]||TOPICS.Maths),o={T:tp[0],T2:tp[1]};
+  if(subj==='Games')return f==='ebi'?fillT(pick(['{N} should keep working on {T} and communicate more with teammates.','{N} should be braver in calling for the ball and work on {T}.','{N} should focus on {T} so that {he} can step up to the next team.']),p,o):fillT('{N} has worked hard in games this term.',p,o);
+  if(f==='www')return y8?fillT(pick(['{N} answered the {T} questions particularly well.','{N} was well prepared for the {T} section of the paper.']),p,o)+' '+fillT(pick(WWW2),p,o):fillT(pick(WWW[band]),p,o)+' '+fillT(pick(WWW2),p,o);
+  if(f==='ebi')return y8?fillT('{N} should revise {T2} carefully before the next assessment.',p,o):fillT(pick(EBI),p,o);
+  if(f==='pcom')return fillT('{N} has worked hard in lessons this term and is making good progress.',p,o);
+  return fillT('{N} has worked well this term.',p,o)}
+function genRecord(p,set,c,ci,fields){const s=set.subject,r={t:{},by:{}};
+  if(s==='Tutor'){if(fields.includes('tutor')){r.tutor=genTutor(p,false);r.by.tutor=set.teacher}return r}
+  const a=clamp(p.ability+(p.off[s]||0)+(R()-.5)*.8-ci*.04,1,5),band=a<2.3?0:a<3.6?1:2;let ex=null;
+  for(const f of fields){const t=FIELD[f].type;
+    if(t==='num')r[f]=String(clamp(Math.round(a*.6+R()*1.8),1,5));
+    else if(t==='desc')r[f]=f==='achS'?DESC[clamp(2+Math.round(-(p.off[s]||0)*1.6+(R()-.5)*1.4),0,4)][0]:DESC[clamp(4-Math.floor((a-1)/0.82),0,4)][0];
+    else if(t==='text'){ex=ex||genExam(p,s,a);r[f]=ex[f]||'—'}
+    else if(t==='long')r[f]=genText(p,s,f,band,c.kind==='Y8')}
+  fields.forEach(f=>r.by[f]=set.subject==='Games'?pick(set.writers||[set.teacher]):set.teacher);
   return r}
 
 /* ================= data ================= */
-const DATA={},GEN={};
+const DATA={},GEN={};let QUERIES=[];
 PAST.forEach((c,ci)=>{DATA[c.id]={};GEN[c.id]={};for(const set of setsIn(c)){const f=fieldsFor(c,set);DATA[c.id][set.id]={};set.ids.forEach(pid=>DATA[c.id][set.id][pid]=genRecord(PUP[pid],set,c,ci,f));if(hasGeneral(c,set))GEN[c.id][set.id]=genGeneral(set.subject)}});
-const RATIO={RPA:1,HAR:.85,LOW:.6,DKO:.45,BYR:.8,MLA:.3,BEL:1,REI:.7,ASH:.2,CLA:.5,ABA:.4,RHU:.1,KPA:.6,SWI:0,CFO:.3,MDE:.5,JRO:.2};
+const RATIO={RPA:1,HAR:.85,LOW:.6,DKO:.45,BYR:.8,MLA:.3,BEL:1,REI:.7,ASH:.2,CLA:.5,ABA:.4,RHU:.1,KPA:.6,SWI:0,CFO:.3,MDE:.5,JRO:.2,CAR:.35,FEN:.55};
 const MYRATIO={'27 6Mat TAJ':.7,'27 7Mat TAJ':.25,'27 8Mat TAJ':0,'27 5TJ Tutor group':.3};
 function freshOpen(){const D={},G={};const c=CUR,ci=PAST.length;const now=Date.now()-86400000*3;
   for(const set of setsIn(c)){const f=fieldsFor(c,set),n=set.ids.length,ratio=MYRATIO[set.name]??RATIO[set.teacher]??.5;const done=Math.round(n*ratio),part=ratio<1&&ratio>0?Math.max(1,Math.round(n*.15)):0;D[set.id]={};
-    set.ids.forEach((pid,i)=>{const full=genRecord(PUP[pid],set,c,ci,f),r={t:{}};
-      if(i<done)f.forEach(x=>r[x]=full[x]);else if(i<done+part){if(set.subject==='Tutor')r.tutor=genTutor(PUP[pid],true);else GRADEF.forEach(x=>{if(f.includes(x))r[x]=full[x]})}
-      f.forEach(x=>{if(r[x])r.t[x]=now});D[set.id][pid]=r});
+    set.ids.forEach((pid,i)=>{const full=genRecord(PUP[pid],set,c,ci,f),r={t:{},by:{}};
+      if(i<done)f.forEach(x=>r[x]=full[x]);else if(i<done+part){if(set.subject==='Tutor')r.tutor=genTutor(PUP[pid],true);else f.forEach(x=>{if(SCALE_T.includes(FIELD[x].type))r[x]=full[x]})}
+      f.forEach(x=>{if(r[x]){r.t[x]=now;r.by[x]=full.by[x]}});D[set.id][pid]=r});
     if(hasGeneral(c,set)&&ratio>.4)G[set.id]=genGeneral(set.subject)}
-  // deliberate slips in 27 6Mat TAJ, to show the checker
   const s6=SETS.find(s=>s.name==='27 6Mat TAJ');if(s6){const ros=roster(s6),done=ros.slice(0,Math.round(ros.length*.7));const girl=done.find(p=>p.sex==='F');const other=ros.find(p=>p!==girl&&p.sex==='M');
-    if(girl&&other){const r=D[s6.id][girl.id];r.www=`${call(other)} has shown real confidence with ratio, and his written work is consistently accurate. He is a focused and cooperative member of the class.`}
-    const prefP=done.find(p=>p.pref&&p!==girl);if(prefP){D[s6.id][prefP.id].www=`${prefP.first} has made steady progress with fractions and is becoming more independent. ${pron(prefP).He} settles quickly and always tries ${pron(prefP).his} best.`}}
+    if(girl&&other)D[s6.id][girl.id].www=`${call(other)} has shown real confidence with ratio, and his written work is consistently accurate. He is a focused and cooperative member of the class.`;
+    const prefP=done.find(p=>p.pref&&p!==girl);if(prefP)D[s6.id][prefP.id].www=`${prefP.first} has made steady progress with fractions and is becoming more independent. ${pron(prefP).He} settles quickly and always tries ${pron(prefP).his} best.`}
   return{D,G}}
-const LS_KEY='reportbook-proto-v2';
+const LS_KEY='reportbook-proto-v3';
 function load(){let j=null;try{j=JSON.parse(localStorage.getItem(LS_KEY)||'null')}catch(e){}
-  if(j&&j.seed===PUPILS[0].id&&j.open){EXTRA=j.extra||[];Object.entries(j.settings||{}).forEach(([id,v])=>{const c=CYCLES.find(x=>x.id===id);if(c){if(v.limits)c.limits=v.limits;if(v.general!=null)c.general=v.general}});for(const[id,v]of Object.entries(j.open)){DATA[id]=v.d;GEN[id]=v.g}}else{const f=freshOpen();DATA[CUR.id]=f.D;GEN[CUR.id]=f.G;EXTRA=[]}
+  if(j&&j.seed===PUPILS[0].id&&j.open){EXTRA=j.extra||[];for(const[id,v]of Object.entries(j.open)){DATA[id]=v.d;GEN[id]=v.g}
+    if(j.cur){CUR.cfg=j.cur.cfg;['opens','deadline','proof','publish','due'].forEach(x=>{if(j.cur[x])CUR[x]=j.cur[x]})}
+    if(j.field)FIELD=j.field;if(j.templates)TEMPLATES=j.templates;if(j.subj)SUBJ_CFG=j.subj;if(j.games)GAMES=j.games;QUERIES=j.queries||[]}
+  else{const f=freshOpen();DATA[CUR.id]=f.D;GEN[CUR.id]=f.G;EXTRA=[]}
   EXTRA.forEach(c=>{DATA[c.id]=DATA[c.id]||{};GEN[c.id]=GEN[c.id]||{}})}
 load();
 let saveTimer;
-function save(){const el=$('#saved');if(el){el.textContent='Saving…';el.classList.add('busy')}clearTimeout(saveTimer);saveTimer=setTimeout(()=>{const open={};allCycles().filter(c=>c.status!=='Published').forEach(c=>open[c.id]={d:DATA[c.id]||{},g:GEN[c.id]||{}});const settings={};CYCLES.filter(isOpen).forEach(c=>settings[c.id]={limits:c.limits,general:c.general});try{localStorage.setItem(LS_KEY,JSON.stringify({seed:PUPILS[0].id,open,extra:EXTRA,settings}))}catch(e){}const s=$('#saved');if(s){s.textContent='All changes saved';s.classList.remove('busy')}},350)}
-function rec(c,set,pid){const d=DATA[c.id]=DATA[c.id]||{};const s=d[set.id]=d[set.id]||{};return s[pid]=s[pid]||{t:{}}}
+function save(){const el=$('#saved');if(el){el.textContent='Saving…';el.classList.add('busy')}clearTimeout(saveTimer);saveTimer=setTimeout(()=>{const open={};allCycles().filter(isOpen).forEach(c=>open[c.id]={d:DATA[c.id]||{},g:GEN[c.id]||{}});
+  try{localStorage.setItem(LS_KEY,JSON.stringify({seed:PUPILS[0].id,open,extra:EXTRA,cur:{cfg:CUR.cfg,opens:CUR.opens,deadline:CUR.deadline,proof:CUR.proof,publish:CUR.publish,due:CUR.due},field:FIELD,templates:TEMPLATES,subj:SUBJ_CFG,games:GAMES,queries:QUERIES}))}catch(e){}
+  const s=$('#saved');if(s){s.textContent='All changes saved';s.classList.remove('busy')}},350)}
+function rec(c,set,pid){const d=DATA[c.id]=DATA[c.id]||{};const s=d[set.id]=d[set.id]||{};return s[pid]=s[pid]||{t:{},by:{}}}
 const getGen=(c,set)=>(GEN[c.id]||{})[set.id]||'';
-function setVal(c,set,pid,f,v){const r=rec(c,set,pid);if((r[f]||'')===v)return false;r[f]=v;r.t=r.t||{};r.t[f]=Date.now();return true}
+const actor=()=>state.role==='admin'?'ADMIN':ME;
+function setVal(c,set,pid,f,v,by){const r=rec(c,set,pid);if((r[f]||'')===v)return false;r[f]=v;r.t=r.t||{};r.t[f]=Date.now();r.by=r.by||{};r.by[f]=by||actor();return true}
 function status(c,set,pid){const fs=fieldsFor(c,set),r=rec(c,set,pid);let filled=0,ok=true;for(const f of fs){const v=String(r[f]||'').trim();if(v){filled++;if(!valid(f,v,c))ok=false}}if(!filled)return'none';return filled===fs.length&&ok?'done':'part'}
 const STLABEL={none:'Not started',part:'In progress',done:'Complete'};
 function progress(c,set){return{done:set.ids.filter(id=>status(c,set,id)==='done').length,total:set.ids.length}}
-const isOpen=c=>c.status!=='Published';
+const openQ=(c,set,pid)=>QUERIES.filter(q=>!q.resolved&&q.cycle===c.id&&q.set===set.id&&(!pid||q.pid===pid));
 
 /* ================= checker ================= */
 function checks(c,set,p,r,fields){const out=[];const longs=fields.filter(f=>FIELD[f].type==='long');const text=longs.map(f=>r[f]||'').join('\n');if(!text.trim())return out;
@@ -461,82 +527,11 @@ function checks(c,set,p,r,fields){const out=[];const longs=fields.filter(f=>FIEL
   if(/\[|\]|\bXX+\b|\?\?/.test(text))out.push(['bad','Looks like a placeholder is still in the text']);
   if(/ {2,}/.test(text))out.push(['warn','Contains a double space']);
   return out}
-
-/* ================= state + navigation ================= */
-const state={role:'teacher',view:'home',teacher:ME,cycle:CUR.id,set:null,sel:null,pupil:null,pcyc:null,subj:null,measure:'achY',q:'',dept:'All',pcycle:CUR.id,nudged:{}};
-const stack=[];
-const SNAP=['view','teacher','cycle','set','sel','pupil','pcyc','subj'];
-function nav(view,patch){stack.push(Object.fromEntries(SNAP.map(k=>[k,state[k]])));Object.assign(state,patch||{},{view});render();window.scrollTo(0,0)}
-function back(){const s=stack.pop();if(s){Object.assign(state,s);render();window.scrollTo(0,0)}else top()}
-function top(v){stack.length=0;if(v)state.view=v;if(state.role==='teacher'){state.teacher=ME}render();window.scrollTo(0,0)}
-const TEACHER_NAV=[['home','My reports'],['pupils','Pupils']];
-const ADMIN_NAV=[['cycles','Cycles'],['progress','Progress'],['publish','Publish to MSP'],['pupils','Pupils']];
-function renderNav(){const items=state.role==='teacher'?TEACHER_NAV:ADMIN_NAV;const map={cycle:state.role==='teacher'?'home':'progress',write:state.role==='teacher'?'home':'progress',pupil:'pupils',wizard:'cycles'};const active=map[state.view]||state.view;
-  $('#nav').innerHTML=items.map(([v,l])=>`<button data-act="top" data-v="${v}" class="${active===v?'on':''}">${l}</button>`).join('');
-  $('#r-teacher').classList.toggle('on',state.role==='teacher');$('#r-admin').classList.toggle('on',state.role==='admin')}
-function render(){renderNav();const V={home:viewHome,cycle:viewTeacherCycle,write:viewWrite,pupils:viewPupils,pupil:viewPupil,cycles:viewCycles,wizard:viewWizard,progress:viewProgress,publish:viewPublish}[state.view]||viewHome;$('#main').innerHTML=V();if(state.view==='write')updateEditor()}
-let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3400)}
-function openModal(html){$('#mbox').innerHTML=html;$('#modal').classList.add('open');const b=$('#mbox button');if(b)b.focus()}
-function closeModal(){$('#modal').classList.remove('open')}
-const backBtn=label=>`<button class="back" data-act="back">← ${label||'Back'}</button>`;
-const adminBanner=()=>state.role==='admin'&&state.teacher?`<div class="banner">Viewing <b>${STAFF[state.teacher]}</b>’s reports as an admin. ${isOpen(CYC(state.cycle))?'Any changes you make save straight into their reports.':'This cycle is published, so it’s read-only.'}</div>`:'';
-
-/* ================= teacher: home + cycle ================= */
-function setCards(c,t){const sets=setsIn(c,t);if(!sets.length)return'<p class="muted">No groups to report on in this cycle.</p>';
-  return`<div class="sets">${sets.map(s=>{const g=progress(c,s),full=g.done===g.total,gen=hasGeneral(c,s);return`<button class="card set" data-act="openset" data-v="${s.id}" data-c="${c.id}">
-    <div class="spread" style="align-items:flex-start;width:100%"><div><h2 class="setname">${esc(s.name)}</h2><p class="sub">${s.subject==='Tutor'?'Tutor comments':esc(s.subject)+' · '+optLabel(c,s)}</p></div>${!isOpen(c)?'<span class="chip ok">Published</span>':full?'<span class="chip ok">Complete</span>':g.done?'<span class="chip">In progress</span>':'<span class="chip amb">Not started</span>'}</div>
-    <div class="row" style="width:100%;align-items:baseline"><span class="big">${g.done}</span><span class="muted">of ${g.total} complete</span>${gen?`<span class="small ${getGen(c,s)?'muted':'warnt'}" style="margin-left:auto">${getGen(c,s)?'General comment ✓':'No general comment yet'}</span>`:''}</div>
-    <div class="bar" style="width:100%"><i style="width:${g.done/g.total*100}%"></i></div></button>`}).join('')}</div>`}
-function viewHome(){const t=state.teacher,c=CUR;const sets=setsIn(c,t);const tot=sets.reduce((a,s)=>{const g=progress(c,s);return[a[0]+g.done,a[1]+g.total]},[0,0]);
-  const earlier=PAST.slice().reverse().filter(x=>setsIn(x,t).length);
-  return`<section class="wrap">${stack.length?backBtn():''}${adminBanner()}
-  <div class="spread"><div><p class="sub" style="margin:0 0 6px">Open now${state.role==='admin'?` · ${STAFF[t]}`:''}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]} · ${tot[0]} of ${tot[1]} complete across ${sets.length} groups</p></div>
-  <div class="tools"><div class="deadline" style="margin:0 6px 0 0">Teacher deadline · ${c.due}</div><button class="btn" data-act="export" data-v="mine">Download all my classes</button>${importBtn()}</div></div><p class="small muted" style="margin:10px 0 0">One Excel file with a sheet for each class. Write in it, then import it back: as many times as you like.</p>${setCards(c,t)}
-  <div class="past"><h3>Earlier cycles</h3><ul>${earlier.map(x=>`<li><button class="pastbtn" data-act="opencycle" data-v="${x.id}"><span><b>${x.name}</b><span class="muted"> · ${KIND_LABEL[x.kind]} · ${setsIn(x,t).length} group${setsIn(x,t).length>1?'s':''}</span></span><span class="chip ok">Published ${x.pub}</span></button></li>`).join('')}</ul></div></section>`}
-function viewTeacherCycle(){const c=CYC(state.cycle),t=state.teacher;if(c.id===CUR.id&&isOpen(c)&&state.role==='teacher')return viewHome();
-  return`<section class="wrap">${backBtn()}${adminBanner()}<div class="spread"><div><p class="sub" style="margin:0 0 6px">${STAFF[t]}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}</p></div>${setsIn(c,t).length?`<div class="tools"><button class="btn" data-act="export" data-v="mine">Download all${isOpen(c)?'':' (read-only copy)'}</button>${isOpen(c)?importBtn():''}</div>`:''}</div>${setCards(c,t)}</section>`}
-
-/* ================= writing view ================= */
-const genCount=(c,v)=>{const n=chars(v),L=lim(c,'general');return`<span class="${n>L?'over':''}">${n} / ${L} characters</span>`};
-const gridCols=fs=>fs.filter(f=>FIELD[f].type!=='long');
-const longCols=fs=>fs.filter(f=>FIELD[f].type==='long');
-function rowHTML(c,set,p,i,ro){const r=rec(c,set,p.id),st=status(c,set,p.id);
-  return`<tr data-pid="${p.id}" class="${state.sel===p.id?'on':''}"><td><button class="pname" data-act="sel" data-v="${p.id}">${esc(fullName(p))}</button></td>${gridCols(fieldsFor(c,set)).map(f=>`<td class="g"><input class="gin${FIELD[f].type==='text'?' wide':''}${r[f]&&!valid(f,r[f])?' bad':''}" data-f="${f}" data-pid="${p.id}" data-row="${i}" value="${esc(r[f]||'')}" autocomplete="off" ${ro?'disabled':''} aria-label="${FIELD[f].label} for ${esc(niceName(p))}"></td>`).join('')}<td class="st"><span class="dot ${st}" title="${STLABEL[st]}" role="img" aria-label="${STLABEL[st]}"></span></td></tr>`}
-function viewWrite(){const c=CYC(state.cycle),set=SET[state.set],fs=fieldsFor(c,set),ros=roster(set),ro=!isOpen(c);if(!state.sel||!set.ids.includes(state.sel))state.sel=ros[0].id;const cols=gridCols(fs);
-  const gen=hasGeneral(c,set);
-  return`<section class="wrap">${backBtn()}${adminBanner()}
-  <div class="whead"><div><h1 class="setname">${esc(set.name)}</h1><p class="sub">${c.name} · ${set.subject==='Tutor'?'Tutor comments':esc(set.subject)+' · '+optLabel(c,set)}${c.due&&!ro?` · deadline ${c.due}`:''}${ro?' · published, read-only':''}</p></div>
-  ${ro?'':`<div class="tools"><span class="saved" id="saved">All changes saved</span><button class="btn" data-act="export" data-v="set">Download this class</button>${importBtn()}</div>`}</div>
-  ${gen?`<div class="card gc"><div class="spread"><label class="lbl" for="gen">General comment for the whole set</label><span class="small muted">Appears at the top of every report in ${esc(set.name)} · <span id="gwc">${genCount(c,getGen(c,set))}</span></span></div>${ro?`<p class="gtext">${esc(getGen(c,set))}</p>`:`<textarea id="gen" rows="3" spellcheck="true" lang="en-GB" placeholder="What the class has covered this term…">${esc(getGen(c,set))}</textarea>`}</div>`:''}
-  <div class="wgrid"><div class="card tablecard"><div class="scroll"><table class="roster"><thead><tr><th>Pupil</th>${cols.map(f=>`<th class="g" title="${FIELD[f].label} (${FIELD[f].hint})">${FIELD[f].short}</th>`).join('')}<th class="st">Status</th></tr></thead><tbody id="rows">${ros.map((p,i)=>rowHTML(c,set,p,i,ro)).join('')}</tbody></table></div>
-  ${cols.length?`<p class="hint">${cols.some(f=>FIELD[f].type==='num')?'AtL and Org: 1–5 (1 is best). ':''}${cols.some(f=>FIELD[f].type==='desc')?'Set / Year: E = Emerging, WT = Working towards, M = Meeting, EX = Exceeding, GD = Greater depth (typing the full word works too). ':''}${ro?'':'Paste columns straight from your markbook and they fill downwards. Arrow keys and Enter move between cells.'}</p>`:''}</div>
-  <div class="card editor" id="editor"></div></div></section>`}
-function contextHTML(c,set,p){
-  if(set.subject==='Tutor'){const subs=pupilSets(p,c.ay).filter(s=>s.subject!=='Tutor'&&fieldsFor(c,s).length);
-    return`<h3>${esc(call(p))}’s reports this cycle</h3><p class="small muted" style="margin:0 0 8px">Live from each teacher, so you can see what’s been written so far.</p>${subs.map(s=>{const f=fieldsFor(c,s),r=rec(c,s,p.id);const hasRep=f.includes('www');return`<div class="ctx"><div class="spread"><b>${esc(s.subject)}</b><span class="small muted">${STAFF[s.teacher]}</span></div>${gradeChips(r,f)}${hasRep?(r.www||r.ebi?`<p><b>WWW</b> ${esc(r.www||'—')}</p><p><b>EBI</b> ${esc(r.ebi||'—')}</p>`:'<p class="muted small">Report not written yet.</p>'):''}</div>`}).join('')||'<p class="muted">No other reports this cycle.</p>'}`}
-  const prev=PAST.filter(x=>x.ay<=c.ay&&x!==c).slice().reverse();let lastRep=null,lastGr=null;
-  for(const x of prev){const s=pupilSets(p,x.ay).find(s=>s.subject===set.subject&&fieldsFor(x,s).length);if(!s)continue;const r=(DATA[x.id][s.id]||{})[p.id];if(!r)continue;if(!lastGr&&r.atl)lastGr={x,s,r};if(!lastRep&&r.www)lastRep={x,s,r};if(lastGr&&lastRep)break}
-  return`<h3>Last time in ${SUBJ_TEXT[set.subject]}</h3>${lastGr?`<p class="small muted" style="margin:0">${lastGr.x.name} · ${STAFF[lastGr.s.teacher]}</p>${gradeChips(lastGr.r,GRADEF)}`:''}${lastRep?`<p class="small muted" style="margin:8px 0 0">${lastRep.x.name} · ${STAFF[lastRep.s.teacher]}</p>${lastRep.r.exam?`<p><b>Exam</b> ${esc(lastRep.r.exam)} · <b>${SCORE_LABEL}</b> ${esc(lastRep.r.score)}</p>`:''}<p><b>WWW</b> ${esc(lastRep.r.www)}</p><p><b>EBI</b> ${esc(lastRep.r.ebi)}</p>`:'<p class="muted">No earlier report in this subject.</p>'}`}
-function gradeChips(r,f){const g=GRADEF.filter(x=>f.includes(x)&&r[x]);const e=['exam','score'].filter(x=>f.includes(x)&&r[x]);if(!g.length&&!e.length)return f.some(x=>GRADEF.includes(x))?'<p class="muted small" style="margin:4px 0 0">No grades yet.</p>':'';
-  return`<div class="minigrades">${g.map(x=>`<span class="mg">${FIELD[x].type==='desc'?`${x==='achS'?'Set':'Year'}: <b>${descName(r[x])}</b>`:`${FIELD[x].short} <b>${esc(r[x])}</b>`}</span>`).join('')}${e.map(x=>`<span class="mg">${x==='exam'?'Exam':SCORE_LABEL} <b>${esc(r[x])}</b></span>`).join('')}</div>`}
-function editorHTML(){const c=CYC(state.cycle),set=SET[state.set],p=PUP[state.sel],fs=fieldsFor(c,set),r=rec(c,set,p.id),idx=set.ids.indexOf(p.id),ro=!isOpen(c);
-  return`<div class="ehead"><div><h2>${esc(niceName(p))}</h2><p class="sub">${p.first!==call(p)?`Legal first name ${esc(p.first)} · `:''}${formAt(p,c.ay)} · ${p.id}</p></div><button class="btn ghost" data-act="pupil" data-v="${p.id}">Full history →</button></div>
-  ${longCols(fs).map(f=>`<div class="lf"><div class="spread"><label class="lbl" for="f-${f}">${FIELD[f].label}${f!=='tutor'?` (${FIELD[f].short})`:''}</label><span class="small muted" id="wc-${f}"></span></div>${ro?`<p class="gtext">${esc(r[f]||'—')}</p>`:`<textarea id="f-${f}" class="lt-in" data-f="${f}" data-pid="${p.id}" rows="${f==='tutor'?8:4}" spellcheck="true" lang="en-GB" placeholder="${FIELD[f].label}…">${esc(r[f]||'')}</textarea>`}</div>`).join('')}
-  ${longCols(fs).length?'<ul class="checks" id="checks"></ul>':''}
-  <div class="last">${contextHTML(c,set,p)}</div>
-  <div class="enav"><button class="btn" data-act="step" data-v="-1" ${idx===0?'disabled':''}>← Previous</button><span class="muted small">${idx+1} of ${set.ids.length}</span><button class="btn" data-act="step" data-v="1" ${idx===set.ids.length-1?'disabled':''}>Next →</button></div>`}
-function updateEditor(){$('#editor').innerHTML=editorHTML();updateChecks()}
-function updateChecks(){const c=CYC(state.cycle),set=SET[state.set],p=PUP[state.sel],fs=fieldsFor(c,set),r=rec(c,set,p.id);
-  longCols(fs).forEach(f=>{const el=$('#wc-'+f);if(el){const n=chars(r[f]),L=lim(c,f);el.innerHTML=`<span class="${n>L?'over':''}">${n} / ${L} characters</span>`}});
-  const ul=$('#checks');if(!ul)return;const ck=checks(c,set,p,r,fs);const any=longCols(fs).some(f=>(r[f]||'').trim());ul.innerHTML=ck.length?ck.map(([k,m])=>`<li class="${k==='warn'?'warn':''}">${esc(m)}</li>`).join(''):(any?'<li class="good">No problems spotted</li>':'')}
-function updateRow(pid){const c=CYC(state.cycle),set=SET[state.set],tr=document.querySelector(`#rows tr[data-pid="${pid}"]`);if(!tr)return;const st=status(c,set,pid),d=tr.querySelector('.dot');d.className='dot '+st;d.title=STLABEL[st];d.setAttribute('aria-label',STLABEL[st]);tr.querySelectorAll('.gin').forEach(inp=>inp.classList.toggle('bad',!!inp.value&&!valid(inp.dataset.f,inp.value)))}
-function selectPupil(pid,keepFocus){state.sel=pid;document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('on',tr.dataset.pid===pid));updateEditor();if(!keepFocus){const ta=document.querySelector('.lt-in');if(ta)ta.focus()}}
-
 /* ================= Excel ================= */
 let DL=null;(async()=>{try{if(window.claude&&window.claude.use)DL=await window.claude.use('downloads')}catch(e){}})();
 async function offerFile(name,blob,what){if(DL){try{await DL.save({filename:name,data:blob});toast(`${what} saved: ${name}`)}catch(e){toast(e&&e.code==='declined'?'Download cancelled':'Downloads are not available in this view')}return}
   try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();toast(`${what} downloaded: ${name}`)}catch(e){toast('Downloads are not available in this view')}}
-const headLabel=(c,f)=>FIELD[f].label+(FIELD[f].type==='long'?` (max ${lim(c,f)} characters)`:FIELD[f].type==='text'?'':` (${FIELD[f].hint})`);
+const headLabel=(c,f)=>FIELD[f].label+(FIELD[f].type==='long'?` (max ${lim(c,f)} characters)`:FIELD[f].type==='text'?'':` (${HINT[FIELD[f].type]})`);
 const xlVal=(f,v)=>FIELD[f].type==='desc'&&v?descName(v):(v||'');
 const sheetName=set=>set.name.replace(/[\[\]:*?\/\\]/g,'-').slice(0,31);
 function buildWorkbook(c,sets){const wb=XLSX.utils.book_new();const meta=[['reportbook-export',3],['cycle',c.id],['exported',Date.now()]];
@@ -549,7 +544,7 @@ function buildWorkbook(c,sets){const wb=XLSX.utils.book_new();const meta=[['repo
 function exportScope(scope){const c=scope==='all'?CYC(state.pcycle):state.view==='home'?CUR:CYC(state.cycle);
   if(scope==='set')return{c,sets:[SET[state.set]],name:`${SET[state.set].name} - ${c.short}.xlsx`};
   if(scope==='all')return{c,sets:setsIn(c),name:`All classes - ${c.short}.xlsx`};
-  return{c,sets:setsIn(c,state.teacher),name:`${STAFF[state.teacher]} - all classes - ${c.short}.xlsx`}}
+  return{c,sets:mySets(c,state.teacher),name:`${STAFF[state.teacher]} - all classes - ${c.short}.xlsx`}}
 async function exportXlsx(scope){if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');const{c,sets,name}=exportScope(scope);if(!sets.length)return toast('Nothing to download in this cycle.');
   await offerFile(name,new Blob([XLSX.write(buildWorkbook(c,sets),{bookType:'xlsx',type:'array'})]),sets.length>1?`Excel file (${sets.length} classes)`:'Excel file')}
 function readMeta(wb){const ms=wb.Sheets._meta;if(!ms)return null;const m=XLSX.utils.sheet_to_json(ms,{header:1,defval:''});if(!m[0]||m[0][0]!=='reportbook-export')return null;
@@ -603,20 +598,108 @@ function applyPending(){if(!PENDING)return;const{res,c}=PENDING;let n=0;
   PENDING=null;closeModal();save();render();toast(`Imported ${n} change${n===1?'':'s'}${res.sets.size>1?` across ${res.sets.size} classes`:''}. Re-import whenever you like.`)}
 const importBtn=()=>`<label class="btn pop" tabindex="0">Import from Excel<input type="file" accept=".xlsx,.xls" id="imp" hidden></label>`;
 
+
+/* ================= state + navigation ================= */
+const state={role:'teacher',view:'home',teacher:ME,cycle:CUR.id,set:null,sel:null,pupil:null,pcyc:null,subj:null,measure:'achY',q:'',dept:'All',pcycle:CUR.id,nudged:{},tedit:null,scycle:null,draft:null,ddates:null};
+const stack=[];
+const SNAP=['view','teacher','cycle','set','sel','pupil','pcyc','subj','scycle'];
+function nav(view,patch){stack.push(Object.fromEntries(SNAP.map(k=>[k,state[k]])));Object.assign(state,patch||{},{view,tedit:null});render();window.scrollTo(0,0)}
+function back(){const s=stack.pop();if(s){Object.assign(state,s,{tedit:null});render();window.scrollTo(0,0)}else top()}
+function top(v){stack.length=0;if(v)state.view=v;if(state.role==='teacher')state.teacher=ME;state.tedit=null;render();window.scrollTo(0,0)}
+const TEACHER_NAV=[['home','My reports'],['pupils','Pupils']];
+const ADMIN_NAV=[['cycles','Cycles'],['progress','Progress'],['subjects','Subjects'],['templates','Templates'],['publish','Publish to MSP'],['pupils','Pupils']];
+function renderNav(){const items=state.role==='teacher'?TEACHER_NAV:ADMIN_NAV;const map={cycle:state.role==='teacher'?'home':'progress',write:state.role==='teacher'?'home':'progress',pupil:'pupils',wizard:'cycles',setup:'cycles'};const active=map[state.view]||state.view;
+  $('#nav').innerHTML=items.map(([v,l])=>`<button data-act="top" data-v="${v}" class="${active===v?'on':''}">${l}</button>`).join('');
+  $('#r-teacher').classList.toggle('on',state.role==='teacher');$('#r-admin').classList.toggle('on',state.role==='admin')}
+function render(){renderNav();const V={home:viewHome,cycle:viewTeacherCycle,write:viewWrite,pupils:viewPupils,pupil:viewPupil,cycles:viewCycles,wizard:viewWizard,setup:viewSetup,progress:viewProgress,publish:viewPublish,subjects:viewSubjects,templates:viewTemplates}[state.view]||viewHome;$('#main').innerHTML=V();if(state.view==='write')updateEditor()}
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3600)}
+function openModal(html){$('#mbox').innerHTML=html;$('#modal').classList.add('open');const b=$('#mbox button');if(b)b.focus()}
+function closeModal(){$('#modal').classList.remove('open')}
+const backBtn=label=>`<button class="back" data-act="back">← ${label||'Back'}</button>`;
+const tname=t=>STAFF[t]+(ROLE_NOTE[t]?` (${ROLE_NOTE[t]})`:'');
+const adminBanner=()=>state.role==='admin'&&state.teacher?`<div class="banner">Viewing <b>${tname(state.teacher)}</b>’s reports as an admin. ${isOpen(CYC(state.cycle)||CUR)?'Any changes you make save straight into their reports.':'This cycle is published, so it’s read-only.'}</div>`:'';
+
+/* ================= teacher: home + cycle ================= */
+function setCard(c,s){const g=progress(c,s),full=g.done===g.total,gen=hasGeneral(c,s),q=openQ(c,s).length;
+  return`<button class="card set" data-act="openset" data-v="${s.id}" data-c="${c.id}">
+    <div class="spread" style="align-items:flex-start;width:100%"><div><h2 class="setname">${esc(s.name)}</h2><p class="sub">${s.subject==='Tutor'?'Tutor comments':esc(s.subject)+' · '+cellLabel(c,s)}</p>${s.writers?`<p class="small muted" style="margin:4px 0 0">Owned by ${tname(s.teacher)} · ${s.writers.length} coaches can write</p>`:''}</div>${!isOpen(c)?'<span class="chip ok">Published</span>':full?'<span class="chip ok">Complete</span>':g.done?'<span class="chip">In progress</span>':'<span class="chip amb">Not started</span>'}</div>
+    <div class="row" style="width:100%;align-items:baseline"><span class="big">${g.done}</span><span class="muted">of ${g.total} complete</span>${q?`<span class="chip crim" style="margin-left:auto">${q} sent back</span>`:gen?`<span class="small ${getGen(c,s)?'muted':'warnt'}" style="margin-left:auto">${getGen(c,s)?'General comment ✓':'No general comment yet'}</span>`:''}</div>
+    <div class="bar" style="width:100%"><i style="width:${g.done/g.total*100}%"></i></div></button>`}
+function setCards(c,t){const own=setsIn(c,t),sh=sharedIn(c,t);if(!own.length&&!sh.length)return'<p class="muted">No groups to report on in this cycle.</p>';
+  return`${own.length?`<div class="sets">${own.map(s=>setCard(c,s)).join('')}</div>`:''}${sh.length?`<h3 style="margin-top:28px">Shared with me</h3><p class="sub small" style="margin:0 0 4px">Groups owned by someone else that you can write in, like games.</p><div class="sets" style="margin-top:10px">${sh.map(s=>setCard(c,s)).join('')}</div>`:''}`}
+function viewHome(){const t=state.teacher,c=CUR;const sets=setsIn(c,t);const tot=sets.reduce((a,s)=>{const g=progress(c,s);return[a[0]+g.done,a[1]+g.total]},[0,0]);
+  const earlier=PAST.slice().reverse().filter(x=>mySets(x,t).length);
+  return`<section class="wrap">${stack.length?backBtn():''}${adminBanner()}
+  <div class="spread"><div><p class="sub" style="margin:0 0 6px">Open now${state.role==='admin'?` · ${tname(t)}`:''}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]} · ${tot[0]} of ${tot[1]} complete across your ${sets.length} group${sets.length===1?'':'s'}</p></div>
+  <div class="tools"><div class="deadline" style="margin:0 6px 0 0">Teacher deadline · ${c.due}</div><button class="btn" data-act="export" data-v="mine">Download all my classes</button>${importBtn()}</div></div><p class="small muted" style="margin:10px 0 0">One Excel file with a sheet for each class. Write in it, then import it back: as many times as you like.</p>${setCards(c,t)}
+  <div class="past"><h3>Earlier cycles</h3><ul>${earlier.map(x=>`<li><button class="pastbtn" data-act="opencycle" data-v="${x.id}"><span><b>${x.name}</b><span class="muted"> · ${KIND_LABEL[x.kind]} · ${mySets(x,t).length} group${mySets(x,t).length>1?'s':''}</span></span><span class="chip ok">Published ${x.pub}</span></button></li>`).join('')}</ul></div></section>`}
+function viewTeacherCycle(){const c=CYC(state.cycle),t=state.teacher;if(c.id===CUR.id&&isOpen(c)&&state.role==='teacher')return viewHome();
+  return`<section class="wrap">${backBtn()}${adminBanner()}<div class="spread"><div><p class="sub" style="margin:0 0 6px">${tname(t)}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}</p></div>${mySets(c,t).length?`<div class="tools"><button class="btn" data-act="export" data-v="mine">Download all${isOpen(c)?'':' (read-only copy)'}</button>${isOpen(c)?importBtn():''}</div>`:''}</div>${setCards(c,t)}</section>`}
+
+/* ================= writing view ================= */
+const gridCols=fs=>fs.filter(f=>FIELD[f].type!=='long');
+const longCols=fs=>fs.filter(f=>FIELD[f].type==='long');
+const genCount=(c,v)=>{const n=chars(v),L=lim(c,'general');return`<span class="${n>L?'over':''}">${n} / ${L} characters</span>`};
+function rowHTML(c,set,p,i,ro){const r=rec(c,set,p.id),st=status(c,set,p.id),q=openQ(c,set,p.id).length;const fs=fieldsFor(c,set);const writer=set.writers?[...new Set(fs.map(f=>r.by&&r.by[f]).filter(Boolean))].map(x=>STAFF[x]).join(', '):'';
+  return`<tr data-pid="${p.id}" class="${state.sel===p.id?'on':''}"><td><button class="pname" data-act="sel" data-v="${p.id}">${esc(fullName(p))}</button>${q?'<span class="qflag" title="Sent back">⚑</span>':''}${writer?`<div class="small muted">by ${esc(writer)}</div>`:''}</td>${gridCols(fs).map(f=>`<td class="g"><input class="gin${FIELD[f].type==='text'?' wide':''}${r[f]&&!valid(f,r[f],c)?' bad':''}" data-f="${f}" data-pid="${p.id}" data-row="${i}" value="${esc(r[f]||'')}" autocomplete="off" ${ro?'disabled':''} aria-label="${esc(FIELD[f].label)} for ${esc(niceName(p))}"></td>`).join('')}<td class="st"><span class="dot ${st}" title="${STLABEL[st]}" role="img" aria-label="${STLABEL[st]}"></span></td></tr>`}
+function viewWrite(){const c=CYC(state.cycle),set=SET[state.set],fs=fieldsFor(c,set),ros=roster(set),ro=!isOpen(c);if(!state.sel||!set.ids.includes(state.sel))state.sel=ros[0].id;const cols=gridCols(fs);const gen=hasGeneral(c,set);
+  const types=new Set(cols.map(f=>FIELD[f].type));
+  return`<section class="wrap">${backBtn()}${adminBanner()}
+  ${set.writers?`<div class="banner">Shared group owned by <b>${tname(set.teacher)}</b>. Any of these coaches can write for any pupil: ${set.writers.map(x=>STAFF[x]).join(', ')}. Each entry records who wrote it.</div>`:''}
+  <div class="whead"><div><h1 class="setname">${esc(set.name)}</h1><p class="sub">${c.name} · ${set.subject==='Tutor'?'Tutor comments':esc(set.subject)+' · '+cellLabel(c,set)}${c.due&&!ro?` · deadline ${c.due}`:''}${ro?' · published, read-only':''}</p></div>
+  ${ro?'':`<div class="tools"><span class="saved" id="saved">All changes saved</span><button class="btn" data-act="export" data-v="set">Download this class</button>${importBtn()}</div>`}</div>
+  ${gen?`<div class="card gc"><div class="spread"><label class="lbl" for="gen">General comment for the whole class</label><span class="small muted">Appears at the top of every report in ${esc(set.name)} · <span id="gwc">${genCount(c,getGen(c,set))}</span></span></div>${ro?`<p class="gtext">${esc(getGen(c,set))}</p>`:`<textarea id="gen" rows="3" spellcheck="true" lang="en-GB" placeholder="What the class has covered this term…">${esc(getGen(c,set))}</textarea>`}</div>`:''}
+  <div class="wgrid"><div class="card tablecard"><div class="scroll"><table class="roster"><thead><tr><th>Pupil</th>${cols.map(f=>`<th class="g" title="${esc(FIELD[f].label)}${HINT[FIELD[f].type]?` (${HINT[FIELD[f].type]})`:''}">${esc(FIELD[f].short)}</th>`).join('')}<th class="st">Status</th></tr></thead><tbody id="rows">${ros.map((p,i)=>rowHTML(c,set,p,i,ro)).join('')}</tbody></table></div>
+  ${cols.length?`<p class="hint">${types.has('num')?'Grades 1–5: 1 is best. ':''}${types.has('desc')?'E = Emerging, WT = Working towards, M = Meeting, EX = Exceeding, GD = Greater depth (typing the full word works too). ':''}${ro?'':'Paste columns straight from your markbook and they fill downwards. Arrow keys and Enter move between cells.'}</p>`:''}</div>
+  <div class="card editor" id="editor"></div></div></section>`}
+function gradeChips(r,f){const g=f.filter(x=>SCALE_T.includes(FIELD[x].type)&&r[x]);const e=f.filter(x=>FIELD[x].type==='text'&&r[x]);if(!g.length&&!e.length)return f.some(x=>SCALE_T.includes(FIELD[x].type))?'<p class="muted small" style="margin:4px 0 0">No grades yet.</p>':'';
+  return`<div class="minigrades">${g.map(x=>`<span class="mg">${esc(FIELD[x].short)}: <b>${esc(FIELD[x].type==='desc'?descName(r[x]):r[x])}</b></span>`).join('')}${e.map(x=>`<span class="mg">${esc(FIELD[x].short)} <b>${esc(r[x])}</b></span>`).join('')}</div>`}
+const commentsHTML=(r,f)=>longCols(f).filter(x=>r[x]).map(x=>`<p><b>${esc(FIELD[x].short)}</b> ${esc(r[x])}</p>`).join('');
+function tutorBlock(c,s,p){const f=fieldsFor(c,s),r=rec(c,s,p.id),ro=!isOpen(c),editing=state.tedit===s.id,q=openQ(c,s,p.id);const edited=Object.entries(r.by||{}).filter(([k,v])=>v&&f.includes(k)&&v!==s.teacher&&!(s.writers||[]).includes(v));
+  let body;
+  if(editing)body=`<div class="tedit">${f.map(x=>FIELD[x].type==='long'?`<label class="lbl small">${esc(FIELD[x].label)}</label><textarea class="tin" data-set="${s.id}" data-f="${x}" data-pid="${p.id}" rows="3">${esc(r[x]||'')}</textarea>`:`<label class="tinrow"><span>${esc(FIELD[x].label)}</span><input class="tin gin${FIELD[x].type==='text'?' wide':''}" data-set="${s.id}" data-f="${x}" data-pid="${p.id}" value="${esc(r[x]||'')}"></label>`).join('')}<div class="row" style="margin-top:8px"><button class="btn pop" data-act="tdone">Done editing</button><span class="small muted">Saves as you type. ${STAFF[s.teacher]} will see that you edited it.</span></div></div>`;
+  else body=`${gradeChips(r,f)}${f.some(x=>FIELD[x].type==='long')?(commentsHTML(r,f)||'<p class="muted small">Report not written yet.</p>'):''}`;
+  return`<div class="ctx"><div class="spread"><b>${esc(s.subject)}</b><span class="small muted">${tname(s.teacher)}</span></div>${body}
+    ${edited.length&&!editing?`<p class="small muted" style="margin:4px 0 0">Edited by ${[...new Set(edited.map(e=>STAFF[e[1]]))].join(', ')}</p>`:''}
+    ${q.length?`<p class="small" style="margin:6px 0 0;color:var(--crim)">⚑ Sent back: “${esc(q[q.length-1].msg)}”</p>`:''}
+    ${ro||editing?'':`<div class="row" style="margin-top:8px"><button class="mini2" data-act="tedit" data-v="${s.id}">Edit</button><button class="mini2" data-act="sendback" data-v="${s.id}" data-p="${p.id}">Send back</button></div>`}</div>`}
+function contextHTML(c,set,p){
+  if(set.subject==='Tutor'){const subs=pupilSets(p,c.ay).filter(s=>s.subject!=='Tutor'&&fieldsFor(c,s).length);
+    return`<h3>${esc(call(p))}’s reports this cycle</h3><p class="small muted" style="margin:0 0 8px">Live from each teacher. Edit a report yourself, or send it back to the teacher with a note.</p>${subs.map(s=>tutorBlock(c,s,p)).join('')||'<p class="muted">No other reports this cycle.</p>'}`}
+  const prev=PAST.filter(x=>x.ay<=c.ay&&x!==c).slice().reverse();let lastRep=null,lastGr=null;
+  for(const x of prev){const s=pupilSets(p,x.ay).find(s=>s.subject===set.subject&&fieldsFor(x,s).length);if(!s)continue;const r=(DATA[x.id][s.id]||{})[p.id];if(!r)continue;const f=fieldsFor(x,s);if(!lastGr&&f.some(k=>SCALE_T.includes(FIELD[k].type)))lastGr={x,s,r,f};if(!lastRep&&f.some(k=>FIELD[k].type==='long'))lastRep={x,s,r,f};if(lastGr&&lastRep)break}
+  return`<h3>Last time in ${SUBJ_TEXT[set.subject]||esc(set.subject)}</h3>${lastGr?`<p class="small muted" style="margin:0">${lastGr.x.name} · ${STAFF[lastGr.s.teacher]}</p>${gradeChips(lastGr.r,lastGr.f.filter(k=>SCALE_T.includes(FIELD[k].type)))}`:''}${lastRep?`<p class="small muted" style="margin:8px 0 0">${lastRep.x.name} · ${STAFF[lastRep.s.teacher]}</p>${gradeChips(lastRep.r,lastRep.f.filter(k=>FIELD[k].type==='text'))}${commentsHTML(lastRep.r,lastRep.f)}`:'<p class="muted">No earlier report in this subject.</p>'}`}
+function editorHTML(){const c=CYC(state.cycle),set=SET[state.set],p=PUP[state.sel],fs=fieldsFor(c,set),r=rec(c,set,p.id),idx=set.ids.indexOf(p.id),ro=!isOpen(c);const qs=openQ(c,set,p.id);
+  const ed=Object.entries(r.by||{}).filter(([k,v])=>v&&fs.includes(k)&&v!==set.teacher&&!(set.writers||[]).includes(v));
+  return`<div class="ehead"><div><h2>${esc(niceName(p))}</h2><p class="sub">${p.first!==call(p)?`Legal first name ${esc(p.first)} · `:''}${formAt(p,c.ay)} · ${p.id}</p></div><button class="btn ghost" data-act="pupil" data-v="${p.id}">Full history →</button></div>
+  ${qs.map(q=>`<div class="query"><b>⚑ Sent back by ${tname(q.from)}${q.fromRole?` (${q.fromRole})`:''}</b><p>${esc(q.msg)}</p>${ro?'':`<button class="mini2" data-act="resolveq" data-v="${q.id}">Mark as dealt with</button>`}</div>`).join('')}
+  ${ed.length?`<p class="small muted" style="margin:0">Some of this was edited by ${[...new Set(ed.map(e=>STAFF[e[1]]))].join(', ')}.</p>`:''}
+  ${longCols(fs).map(f=>`<div class="lf"><div class="spread"><label class="lbl" for="f-${f}">${esc(FIELD[f].label)}${f!=='tutor'?` (${esc(FIELD[f].short)})`:''}</label><span class="small muted" id="wc-${f}"></span></div>${ro?`<p class="gtext">${esc(r[f]||'—')}</p>`:`<textarea id="f-${f}" class="lt-in" data-f="${f}" data-pid="${p.id}" rows="${f==='tutor'?8:4}" spellcheck="true" lang="en-GB" placeholder="${esc(FIELD[f].label)}…">${esc(r[f]||'')}</textarea>`}</div>`).join('')}
+  ${longCols(fs).length?'<ul class="checks" id="checks"></ul>':''}
+  <div class="last">${contextHTML(c,set,p)}</div>
+  <div class="enav"><button class="btn" data-act="step" data-v="-1" ${idx===0?'disabled':''}>← Previous</button><span class="muted small">${idx+1} of ${set.ids.length}</span><button class="btn" data-act="step" data-v="1" ${idx===set.ids.length-1?'disabled':''}>Next →</button></div>`}
+function updateEditor(){$('#editor').innerHTML=editorHTML();updateChecks()}
+function updateChecks(){const c=CYC(state.cycle),set=SET[state.set],p=PUP[state.sel],fs=fieldsFor(c,set),r=rec(c,set,p.id);
+  longCols(fs).forEach(f=>{const el=$('#wc-'+f);if(el){const n=chars(r[f]),L=lim(c,f);el.innerHTML=`<span class="${n>L?'over':''}">${n} / ${L} characters</span>`}});
+  const ul=$('#checks');if(!ul)return;const ck=checks(c,set,p,r,fs);const any=longCols(fs).some(f=>(r[f]||'').trim());ul.innerHTML=ck.length?ck.map(([k,m])=>`<li class="${k==='warn'?'warn':''}">${esc(m)}</li>`).join(''):(any?'<li class="good">No problems spotted</li>':'')}
+function updateRow(pid){const c=CYC(state.cycle),set=SET[state.set],tr=document.querySelector(`#rows tr[data-pid="${pid}"]`);if(!tr)return;const st=status(c,set,pid),d=tr.querySelector('.dot');d.className='dot '+st;d.title=STLABEL[st];d.setAttribute('aria-label',STLABEL[st]);tr.querySelectorAll('.gin').forEach(inp=>inp.classList.toggle('bad',!!inp.value&&!valid(inp.dataset.f,inp.value,c)))}
+function selectPupil(pid,keepFocus){state.sel=pid;state.tedit=null;document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('on',tr.dataset.pid===pid));updateEditor();if(!keepFocus){const ta=document.querySelector('.lt-in');if(ta)ta.focus()}}
+function sendBackModal(sid,pid){const c=CYC(state.cycle),s=SET[sid],p=PUP[pid];
+  openModal(`<h2>Send back to ${tname(s.teacher)}</h2><p class="sub">${esc(s.subject)} report for ${esc(niceName(p))}. They’ll get an email and the report is flagged for them until they mark it as dealt with.</p><label class="lbl" for="qmsg">Your note</label><textarea id="qmsg" rows="4" placeholder="e.g. Could you check the EBI? It reads as quite negative for a pupil who has worked so hard."></textarea><div class="mfoot"><button class="btn" data-act="close">Cancel</button><button class="btn pop" data-act="sendq" data-v="${sid}" data-p="${pid}">Send back</button></div>`);setTimeout(()=>{const t=$('#qmsg');if(t)t.focus()},30)}
+
 /* ================= pupils ================= */
 function viewPupils(){return`<section class="wrap"><h1>Pupils</h1><p class="sub">Every pupil’s grades and reports, every cycle, one click away.</p>
   <input class="search" id="q" placeholder="Search by name, form or ID" value="${esc(state.q)}" aria-label="Search pupils"><div class="plist" id="plist">${pupilList()}</div></section>`}
 function pupilList(){const q=state.q.toLowerCase().trim();const list=PUPILS.filter(p=>!q||`${p.first} ${p.pref||''} ${p.last} ${formAt(p,2027)} ${p.id}`.toLowerCase().includes(q)).sort((a,b)=>formAt(a,2027).localeCompare(formAt(b,2027))||a.last.localeCompare(b.last));
   return list.length?list.map(p=>`<button class="card pitem" data-act="pupil" data-v="${p.id}"><span class="av">${call(p)[0]}${p.last[0]}</span><span><b>${esc(fullName(p))}</b><br><span class="muted small">${formAt(p,2027)} · Year ${p.year}</span></span></button>`).join(''):'<p class="muted">No pupils match.</p>'}
 function pupilCycles(p){return PAST.filter(c=>pupilSets(p,c.ay).some(s=>fieldsFor(c,s).length))}
-function gbox(lbl,v,hi){return v?`<div class="gbox${hi?' a':''}"><b>${esc(v)}</b><small>${lbl}</small></div>`:''}
-function gradeBoxes(r){return`${gbox('AtL',r.atl)}${gbox('Org',r.org)}${r.achS?`<div class="gbox d ${r.achS}"><b>${esc(r.achS)}</b><small>Set</small></div>`:''}${r.achY?`<div class="gbox d ${r.achY}"><b>${esc(r.achY)}</b><small>Year</small></div>`:''}`}
-function subjCard(c,s,p,showCycle){const r=(DATA[c.id][s.id]||{})[p.id]||{};const g=getGen(c,s);
-  return`<article class="card subj"><header><div>${showCycle?`<b>${c.name}</b>`:`<button class="linkish" data-act="subj" data-v="${esc(s.subject)}">${esc(s.subject)}</button>`}<div class="muted small">${STAFF[s.teacher]} · ${esc(s.name)}</div></div><div class="grades">${gradeBoxes(r)}</div></header>
-  ${r.achS||r.achY?`<p class="small muted">Set: ${descName(r.achS)} · Year: ${descName(r.achY)}</p>`:''}
-  ${r.exam?`<p class="exam"><b>Exam</b> ${esc(r.exam)} &nbsp;·&nbsp; <b>${SCORE_LABEL}</b> ${esc(r.score)}</p>`:''}
+function gradeBoxes(r,fs){return fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]).map(f=>FIELD[f].type==='desc'?`<div class="gbox d ${r[f]}" title="${esc(FIELD[f].label)}: ${descName(r[f])}"><b>${esc(r[f])}</b><small>${esc(FIELD[f].short)}</small></div>`:`<div class="gbox" title="${esc(FIELD[f].label)}"><b>${esc(r[f])}</b><small>${esc(FIELD[f].short)}</small></div>`).join('')}
+function subjCard(c,s,p,showCycle){const r=(DATA[c.id][s.id]||{})[p.id]||{};const g=getGen(c,s),fs=fieldsFor(c,s);const desc=fs.filter(f=>FIELD[f].type==='desc'&&r[f]),texts=fs.filter(f=>FIELD[f].type==='text'&&r[f]);
+  return`<article class="card subj"><header><div>${showCycle?`<b>${c.name}</b>`:`<button class="linkish" data-act="subj" data-v="${esc(s.subject)}">${esc(s.subject)}</button>`}<div class="muted small">${STAFF[s.teacher]} · ${esc(s.name)}</div></div><div class="grades">${gradeBoxes(r,fs)}</div></header>
+  ${desc.length?`<p class="small muted">${desc.map(f=>`${esc(FIELD[f].short)}: ${descName(r[f])}`).join(' · ')}</p>`:''}
+  ${texts.length?`<p class="exam">${texts.map(f=>`<b>${esc(FIELD[f].short)}</b> ${esc(r[f])}`).join(' &nbsp;·&nbsp; ')}</p>`:''}
   ${g?`<details class="gcd"><summary>Class comment</summary><p>${esc(g)}</p></details>`:''}
-  ${r.www?`<p><b>WWW</b> ${esc(r.www)}</p><p><b>EBI</b> ${esc(r.ebi)}</p>`:(!r.exam?'<p class="muted small">Grades only this cycle.</p>':'')}</article>`}
+  ${commentsHTML(r,fs)||(!texts.length?'<p class="muted small">Grades only this cycle.</p>':'')}</article>`}
 function viewPupil(){const p=PUP[state.pupil],cyc=pupilCycles(p);if(state.pcyc==null||!cyc[state.pcyc])state.pcyc=cyc.length-1;const ci=state.pcyc,c=cyc[ci];
   const top=`${backBtn()}<div class="ptop"><div class="row" style="gap:16px"><div class="avatar">${call(p)[0]}${p.last[0]}</div><div><h1>${esc(fullName(p))}</h1><p class="sub">${formAt(p,2027)} · Year ${p.year} · iSAMS ID ${p.id}</p></div></div>
   <button class="btn" data-act="preview" data-v="${p.id}" data-c="${c.id}">View as parent sees it</button></div>`;
@@ -630,47 +713,64 @@ function viewPupil(){const p=PUP[state.pupil],cyc=pupilCycles(p);if(state.pcyc==
     body=`${tr&&tr.tutor?`<div class="card tutorc"><div class="spread"><b>Tutor comment</b><span class="small muted">${STAFF[tut.teacher]} · ${tut.form}</span></div><p>${esc(tr.tutor)}</p></div>`:''}<div class="subjects">${sets.filter(s=>s.subject!=='Tutor').map(s=>subjCard(c,s,p,false)).join('')}</div>`}
   const M=[['achY','Achievement in year'],['achS','Achievement in set'],['atl','AtL'],['org','Organisation']];
   const gc=cyc.filter(x=>x.kind!=='Y8');
-  const ot=`<div class="card overtime"><div class="spread" style="padding:0 16px"><h3 style="padding:0">Over time</h3><div class="depts" style="margin:0">${M.map(([k,l])=>`<button class="${state.measure===k?'on':''}" data-act="measure" data-v="${k}">${l}</button>`).join('')}</div></div><p class="sub small" style="padding:4px 16px 8px">Click a subject to read all its reports in order.</p><div class="scroll"><table class="ot"><thead><tr><th>Subject</th>${gc.map(x=>`<th class="${x===c?'cur':''}">${x.short}</th>`).join('')}</tr></thead><tbody>${ACAD.filter(s=>gc.some(x=>pupilSets(p,x.ay).some(q=>q.subject===s))).map(s=>`<tr><td><button class="linkish" style="font-size:14px" data-act="subj" data-v="${esc(s)}">${esc(s)}</button></td>${gc.map(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);const v=st?((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]:'';return`<td class="${x===c?'cur':''}">${v?`<span class="lt ${FIELD[state.measure].type==='desc'?v:'n'+v}">${esc(v)}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  const ot=`<div class="card overtime"><div class="spread" style="padding:0 16px"><h3 style="padding:0">Over time</h3><div class="depts" style="margin:0">${M.map(([k,l])=>`<button class="${state.measure===k?'on':''}" data-act="measure" data-v="${k}">${l}</button>`).join('')}</div></div><p class="sub small" style="padding:4px 16px 8px">Click a subject to read all its reports in order.</p><div class="scroll"><table class="ot"><thead><tr><th>Subject</th>${gc.map(x=>`<th class="${x===c?'cur':''}">${x.short}</th>`).join('')}</tr></thead><tbody>${[...ACAD,'Games'].filter(s=>gc.some(x=>pupilSets(p,x.ay).some(q=>q.subject===s&&fieldsFor(x,q).length))).map(s=>`<tr><td><button class="linkish" style="font-size:14px" data-act="subj" data-v="${esc(s)}">${esc(s)}</button></td>${gc.map(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);const v=st?((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]:'';return`<td class="${x===c?'cur':''}">${v?`<span class="lt ${FIELD[state.measure].type==='desc'?v:'n'+v}">${esc(v)}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`;
   return`<section class="wrap">${top}${sw}${body}${ot}</section>`}
 function reportHTML(p,c){const sets=pupilSets(p,c.ay).filter(s=>fieldsFor(c,s).length);const tut=sets.find(s=>s.subject==='Tutor');const tr=tut?(DATA[c.id][tut.id]||{})[p.id]:null;
-  return`<div class="report"><div class="rh"><b>Reportbook</b><span>${esc(niceName(p))} · ${formAt(p,c.ay)}<br>${c.name}</span></div>${tr&&tr.tutor?`<div class="rs"><h4><span>Tutor</span><span>${STAFF[tut.teacher]}</span></h4><p>${esc(tr.tutor)}</p></div>`:''}${sets.filter(s=>s.subject!=='Tutor').map(s=>{const r=(DATA[c.id][s.id]||{})[p.id]||{};const g=getGen(c,s);return`<div class="rs"><h4><span>${esc(s.subject)}</span><span>${STAFF[s.teacher]}</span></h4>${g?`<p class="muted"><i>${esc(g)}</i></p>`:''}${r.atl?`<p class="small">Attitude to learning <b>${r.atl}</b> · Organisation <b>${r.org}</b> · Achievement in set <b>${descName(r.achS)}</b> · in year <b>${descName(r.achY)}</b></p>`:''}${r.exam?`<p class="small">Exam <b>${esc(r.exam)}</b> · ${SCORE_LABEL} <b>${esc(r.score)}</b></p>`:''}${r.www?`<p><b>What went well:</b> ${esc(r.www)}</p><p><b>Even better if:</b> ${esc(r.ebi)}</p>`:''}</div>`}).join('')}</div>`}
+  return`<div class="report"><div class="rh"><b>Reportbook</b><span>${esc(niceName(p))} · ${formAt(p,c.ay)}<br>${c.name}</span></div>${tr&&tr.tutor?`<div class="rs"><h4><span>Tutor</span><span>${STAFF[tut.teacher]}</span></h4><p>${esc(tr.tutor)}</p></div>`:''}${sets.filter(s=>s.subject!=='Tutor').map(s=>{const r=(DATA[c.id][s.id]||{})[p.id]||{},fs=fieldsFor(c,s),g=getGen(c,s);const gr=fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]),tx=fs.filter(f=>FIELD[f].type==='text'&&r[f]);
+    return`<div class="rs"><h4><span>${esc(s.subject)}</span><span>${STAFF[s.teacher]}</span></h4>${g?`<p class="muted"><i>${esc(g)}</i></p>`:''}${gr.length?`<p class="small">${gr.map(f=>`${esc(FIELD[f].label)} <b>${esc(FIELD[f].type==='desc'?descName(r[f]):r[f])}</b>`).join(' · ')}</p>`:''}${tx.length?`<p class="small">${tx.map(f=>`${esc(FIELD[f].label)} <b>${esc(r[f])}</b>`).join(' · ')}</p>`:''}${longCols(fs).filter(f=>r[f]).map(f=>`<p><b>${esc(FIELD[f].label)}:</b> ${esc(r[f])}</p>`).join('')}</div>`}).join('')}</div>`}
 
 /* ================= admin: cycles ================= */
 function cycleTotals(c){let d=0,t=0;setsIn(c).forEach(s=>{const g=progress(c,s);d+=g.done;t+=g.total});return{d,t}}
-function viewCycles(){const tt=cycleTotals(CUR),pct=Math.round(tt.d/tt.t*100);
-  return`<section class="wrap"><div class="spread"><div><h1>Reporting cycles</h1><p class="sub">Set up, run and publish each round of reports and grades. Click any cycle to see it.</p></div><button class="btn pop" data-act="newcycle">+ Set up a new cycle</button></div>
-  <div class="card hero"><div><span class="chip">Open now</span><h2 style="margin-top:10px">${CUR.name}</h2><p class="sub">${KIND_LABEL[CUR.kind]} · teacher deadline ${CUR.due} · proofreading by 9 Dec · publish 12 Dec</p><div class="bar" style="margin-top:14px"><i style="width:${pct}%"></i></div></div>
-  <div class="row" style="justify-content:space-between"><div><div class="bignum">${pct}%</div><div class="muted">${tt.d} of ${tt.t} complete</div></div><button class="btn ink" data-act="progressfor" data-v="${CUR.id}">View progress</button></div></div>
-  <div class="card scroll"><table class="tbl clickrows"><thead><tr><th>Cycle</th><th class="hide-s">What’s collected</th><th>Status</th><th class="hide-s">Dates</th></tr></thead><tbody>
-  ${allCycles().slice().reverse().map(c=>`<tr data-act="progressfor" data-v="${c.id}" tabindex="0"><td><b>${esc(c.name)}</b></td><td class="hide-s">${esc(c.summary||KIND_LABEL[c.kind])}</td><td>${c.status==='Published'?'<span class="chip ok">Published</span>':c.status==='Open'?'<span class="chip">Open</span>':'<span class="chip amb">Scheduled</span>'}</td><td class="hide-s muted small">${c.pub?'Published '+c.pub:`Opens ${fmtDate(c.opens)} · due ${fmtDate(c.deadline)}`}</td></tr>`).join('')}
-  </tbody></table></div></section>`}
 function fmtDate(s){if(!s)return'';const d=new Date(s+'T12:00');return isNaN(d)?s:d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}
+function viewCycles(){const tt=cycleTotals(CUR),pct=Math.round(tt.d/tt.t*100);
+  return`<section class="wrap"><div class="spread"><div><h1>Reporting cycles</h1><p class="sub">Set up, run and publish each round of reports and grades. Click any cycle to see its progress.</p></div><button class="btn pop" data-act="newcycle">+ Set up a new cycle</button></div>
+  <div class="card hero"><div><span class="chip">Open now</span><h2 style="margin-top:10px">${CUR.name}</h2><p class="sub">${KIND_LABEL[CUR.kind]} · teacher deadline ${CUR.due} · publish ${fmtDate(CUR.publish)}</p><div class="bar" style="margin-top:14px"><i style="width:${pct}%"></i></div></div>
+  <div class="row" style="justify-content:space-between"><div><div class="bignum">${pct}%</div><div class="muted">${tt.d} of ${tt.t} complete</div></div><div class="row"><button class="btn" data-act="setup" data-v="${CUR.id}">Edit setup</button><button class="btn ink" data-act="progressfor" data-v="${CUR.id}">View progress</button></div></div></div>
+  <div class="card scroll"><table class="tbl clickrows"><thead><tr><th>Cycle</th><th class="hide-s">Type</th><th>Status</th><th class="hide-s">Dates</th><th></th></tr></thead><tbody>
+  ${allCycles().slice().reverse().map(c=>`<tr data-act="progressfor" data-v="${c.id}" tabindex="0"><td><b>${esc(c.name)}</b></td><td class="hide-s">${esc(KIND_LABEL[c.kind])}</td><td>${c.status==='Published'?'<span class="chip ok">Published</span>':c.status==='Open'?'<span class="chip">Open</span>':'<span class="chip amb">Scheduled</span>'}</td><td class="hide-s muted small">${c.pub?'Published '+c.pub:`Opens ${fmtDate(c.opens)} · due ${fmtDate(c.deadline)}`}</td><td style="text-align:right"><button class="mini2" data-act="setup" data-v="${c.id}">${isOpen(c)?'Edit setup':'View setup'}</button></td></tr>`).join('')}
+  </tbody></table></div></section>`}
 
-/* ================= admin: wizard ================= */
-const W={step:1,term:'Lent',type:'HT',opens:'2027-02-01',deadline:'2027-02-10',proof:'2027-02-12',publish:'2027-02-15',copy:null,matrix:null};
-const MOPTS=['none','grades','gradesReport','gradesExamReport','gradesExam','examFeedback','report','tutor'];
+/* ================= setup grid (wizard + after launch) ================= */
+function setupGrid(cfg,ro,c){const dis=ro?'disabled':'';const tpl=r=>(c&&c.tpl?c.tpl:TEMPLATES)[((c&&c.smap)||SUBJ_CFG)[r].template];
+  const commentFields=new Set();ROWS.forEach(r=>{const t=tpl(r);MYEARS.forEach(y=>t.chunks.filter(ch=>cfg.cells[r][y].includes(ch.id)).forEach(ch=>ch.fields.forEach(f=>{if(FIELD[f]&&FIELD[f].type==='long')commentFields.add(f)})))});
+  if(MYEARS.some(y=>cfg.tutor[y]))commentFields.add('tutor');if(ROWS.some(r=>cfg.gen[r]))commentFields.add('general');
+  const limVal=f=>(cfg.limits||{})[f]??DEF_LIM[f]??800;
+  return`<div class="card scroll"><table class="matrix2"><thead><tr><th>Subject</th>${MYEARS.map(y=>`<th>Year ${y}${y>3&&!ro?`<br><button class="mini" data-act="copycol" data-v="${y}">copy Year ${y-1}</button>`:''}</th>`).join('')}</tr></thead><tbody>
+  ${ROWS.map(r=>{const t=tpl(r);const sc=SUBJ_CFG[r];return`<tr><td class="subjcell"><b>${esc(r)}</b><div class="small muted">${esc(t.name)} template${sc.source==='peri'?' · lesson lists':sc.source==='chosen'?' · shared groups':''}</div>
+    ${ro?'':`<div class="rowchips">${t.chunks.map(ch=>`<button class="mini" data-act="rowchunk" data-r="${esc(r)}" data-v="${ch.id}" title="Switch ${esc(ch.label)} on or off for every year">${esc(ch.label)}: all years</button>`).join('')}</div>`}
+    <label class="gswitch"><input type="checkbox" data-gen="${esc(r)}" ${cfg.gen[r]?'checked':''} ${dis}>General comment</label></td>
+    ${MYEARS.map(y=>`<td>${avail(r,y)?t.chunks.map(ch=>{const on=cfg.cells[r][y].includes(ch.id);return`<button class="chunk ${on?'on':''}" data-act="cell" data-r="${esc(r)}" data-y="${y}" data-v="${ch.id}" aria-pressed="${on}" ${dis}>${esc(ch.label)}</button>`}).join(''):'<span class="small muted">n/a</span>'}</td>`).join('')}</tr>`}).join('')}
+  <tr class="tutorrow"><td class="subjcell"><b>Tutor comment</b><div class="small muted">On or off for each year group</div></td>${MYEARS.map(y=>`<td><button class="chunk ${cfg.tutor[y]?'on':''}" data-act="tutor" data-y="${y}" aria-pressed="${!!cfg.tutor[y]}" ${dis}>${cfg.tutor[y]?'On':'Off'}</button></td>`).join('')}</tr>
+  </tbody></table></div>
+  <div class="card settings" style="padding:18px;margin-top:16px"><h3>Character limits</h3><p class="sub small" style="margin-bottom:10px">For the comment boxes switched on above.</p><div class="fgrid">${[...commentFields].map(f=>`<label class="field">${f==='general'?'General comment':esc(FIELD[f].label)}<span class="inline"><input type="number" min="50" max="5000" step="50" data-climit="${f}" value="${limVal(f)}" ${dis}><span class="muted small">characters</span></span></label>`).join('')||'<p class="muted small">No comment boxes switched on.</p>'}</div></div>`}
+const draft=()=>state.view==='wizard'?W.cfg:state.draft;
+function impact(c,newCfg,T2,S2){const items=[];let added=0;
+  for(const set of SETS.filter(s=>s.ay===c.ay)){const before=fieldsFor(c,set),after=fieldsFor(c,set,newCfg||c.cfg,T2,S2);const gone=before.filter(f=>!after.includes(f));if(after.some(f=>!before.includes(f)))added++;
+    let n=0;if(gone.length){const d=(DATA[c.id]||{})[set.id]||{};for(const pid in d)if(gone.some(f=>String(d[pid][f]||'').trim()))n++}
+    const genGone=!!getGen(c,set)&&hasGeneral(c,set)&&!(newCfg||c.cfg).gen[set.subject];
+    if(n||genGone)items.push({set,n,gone,genGone})}
+  return{items,added}}
+let PENDING_ACT=null;
+function confirmImpact(groups,onOk,okLabel){const items=groups.flatMap(g=>g.items.map(i=>({...i,c:g.c})));if(!items.length){onOk();return}
+  PENDING_ACT=onOk;const total=items.reduce((a,i)=>a+i.n,0);
+  openModal(`<h2>This will hide some written work</h2><p class="sub">${total} pupil entr${total===1?'y':'ies'}${items.some(i=>i.genGone)?' and some general comments':''} will be hidden. Nothing is deleted: switch it back on before the cycle is published and it all comes back. Hidden work is discarded when the cycle is published.</p>
+  <ul class="dlist">${items.map(i=>`<li><span class="who">${esc(i.set.name)}</span> <span class="muted">(${tname(i.set.teacher)}${groups.length>1?`, ${esc(i.c.name)}`:''})</span><br>${i.n?`${i.n} pupil${i.n>1?'s’':'’s'} ${i.gone.map(f=>esc(FIELD[f].short)).join(', ')} hidden`:''}${i.n&&i.genGone?' · ':''}${i.genGone?'general comment hidden':''}</li>`).join('')}</ul>
+  <div class="mfoot"><button class="btn" data-act="close">Cancel</button><button class="btn pop" data-act="confirmact">${okLabel||'Hide and save'}</button></div>`)}
+const W={step:1,term:'Lent',type:'HT',opens:'2027-02-01',deadline:'2027-02-10',proof:'2027-02-12',publish:'2027-02-15',copy:null,cfg:null};
 const wYr=()=>W.term==='Michaelmas'?2026:2027;
 function wName(yr){yr=yr??wYr();return W.type==='Y8'?`Year 8 Exam Feedback, ${W.term} ${yr}`:`${W.term} ${W.type==='HT'?'Half Term':'End of Term'} ${yr}`}
 const wKind=()=>W.type==='Y8'?'Y8':W.term[0]+(W.type==='HT'?'H':'E');
 function suggestCopy(){const c=allCycles().find(x=>x.name===wName(wYr()-1));return c?c.id:'blank'}
 function wStepper(){return`<div class="steps">${['Details','Copy from','Subjects & fields','Check & launch'].map((l,i)=>`<span class="${W.step===i+1?'on':W.step>i+1?'done':''}">${i+1}. ${l}</span>`).join('')}</div>`}
+const dateFields=(o,pre,dis)=>`<label class="field">Opens to teachers<input type="date" id="${pre}opens" value="${o.opens||''}" ${dis}></label><label class="field">Teacher deadline<input type="date" id="${pre}deadline" value="${o.deadline||''}" ${dis}></label><label class="field">Proofreading done by<input type="date" id="${pre}proof" value="${o.proof||''}" ${dis}></label><label class="field">Publish to parents<input type="date" id="${pre}publish" value="${o.publish||''}" ${dis}></label>`;
 function viewWizard(){let b='';
   if(W.step===1)b=`<div class="fgrid"><label class="field">Term<select id="w-term">${['Michaelmas','Lent','Summer'].map(t=>`<option ${W.term===t?'selected':''}>${t}</option>`).join('')}</select></label>
-    <label class="field">Type<select id="w-type"><option value="HT" ${W.type==='HT'?'selected':''}>Half term</option><option value="END" ${W.type==='END'?'selected':''}>End of term</option><option value="Y8" ${W.type==='Y8'?'selected':''}>Year 8 exam feedback</option></select></label>
-    <label class="field">Opens to teachers<input type="date" id="w-opens" value="${W.opens}"></label><label class="field">Teacher deadline<input type="date" id="w-deadline" value="${W.deadline}"></label>
-    <label class="field">Proofreading done by<input type="date" id="w-proof" value="${W.proof}"></label><label class="field">Publish to parents<input type="date" id="w-publish" value="${W.publish}"></label></div>
-    <div class="namebox" id="w-name">${wName()}</div><p class="sub">The name is built from the term and type, so every cycle is named the same way.</p>`;
+    <label class="field">Type<select id="w-type"><option value="HT" ${W.type==='HT'?'selected':''}>Half term</option><option value="END" ${W.type==='END'?'selected':''}>End of term</option><option value="Y8" ${W.type==='Y8'?'selected':''}>Year 8 exam feedback</option></select></label>${dateFields(W,'w-','')}</div>
+    <div class="namebox" id="w-name">${wName()}</div><p class="sub">The name is built from the term and type, so every cycle is named the same way. “Year 8 exam feedback” is just a name and timing: you choose the fields in step 3 like any other cycle.</p>`;
   if(W.step===2){if(W.copy===null)W.copy=suggestCopy();const sug=suggestCopy();const list=[...allCycles().filter(c=>c.id!==CUR.id).slice().reverse()].sort((a,c)=>(c.id===sug)-(a.id===sug));
-    b=`<h2>Start from an earlier cycle?</h2><p class="sub">The same cycle last year is usually the closest match, so it’s suggested first.</p><div class="copylist">${[...list,{id:'blank',name:'Start blank'}].map(c=>`<label class="${W.copy===c.id?'on':''}"><input type="radio" name="copy" value="${c.id}" ${W.copy===c.id?'checked':''}><span><b>${esc(c.name)}</b>${c.id===sug?' <span class="chip">Suggested</span>':''}<br><span class="muted small">${c.id==='blank'?'Every cell starts as —':esc(c.summary||KIND_LABEL[c.kind])}</span></span></label>`).join('')}</div>`}
-  if(W.step===3){if(!W.matrix){const src=W.copy==='blank'?null:CYC(W.copy);W.matrix=src?JSON.parse(JSON.stringify(src.matrix)):matrixFor('BLANK');W.limits={...DEFAULT_LIMITS,...((src&&src.limits)||{})};W.general=src?genOn(src):wKind()!=='Y8'}
-    b=`<h2>Which subjects report, and what do they collect?</h2><p class="sub">${W.copy==='blank'?'Started blank.':`Copied from ${esc(CYC(W.copy).name)}.`} Change any cell. Peri music and LAMDA use their own lesson lists rather than iSAMS sets.</p>
-    <div class="legend">${MOPTS.filter(o=>o!=='none').map(o=>`<div><b>${OPTS[o].label}</b>${OPTS[o].fields.map(f=>FIELD[f].short).join(' · ')}</div>`).join('')}</div>
-    <div class="card scroll"><table class="matrix"><thead><tr><th>Subject</th>${MYEARS.map(y=>`<th>Year ${y}${y>3?`<br><button class="mini" data-act="copycol" data-v="${y}">copy Year ${y-1}</button>`:''}</th>`).join('')}</tr></thead><tbody>
-    ${MROWS.map(r=>`<tr><td><b>${r}</b><br><button class="mini" data-act="fillrow" data-v="${r}">same for all years</button></td>${MYEARS.map(y=>`<td><select data-mr="${r}" data-my="${y}" class="${W.matrix[r][y]==='none'?'off':'on'}" aria-label="${r}, Year ${y}">${MOPTS.map(o=>`<option value="${o}" ${W.matrix[r][y]===o?'selected':''}>${OPTS[o].label}</option>`).join('')}</select></td>`).join('')}</tr>`).join('')}
-    </tbody></table></div>
-    <div class="card settings" style="margin-top:18px;padding:18px"><h3>Character limits and general comment</h3><p class="sub small" style="margin-bottom:12px">Copied from the cycle above. Admins can change these later too.</p>${limitFields(W.limits,'data-wlimit',false)}
-    <label class="toggle"><input type="checkbox" id="wgen" ${W.general?'checked':''}>Include a general comment for each class</label></div>
-    <p class="small muted">Reports have What went well and Even better if for each pupil. Exam results are free text, so several papers can go in one box.</p>`}
+    b=`<h2>Start from an earlier cycle?</h2><p class="sub">The same cycle last year is usually the closest match, so it’s suggested first. Its subjects, fields, tutor comments and character limits are all copied.</p><div class="copylist">${[...list,{id:'blank',name:'Start blank'}].map(c=>`<label class="${W.copy===c.id?'on':''}"><input type="radio" name="copy" value="${c.id}" ${W.copy===c.id?'checked':''}><span><b>${esc(c.name)}</b>${c.id===sug?' <span class="chip">Suggested</span>':''}<br><span class="muted small">${c.id==='blank'?'Everything starts switched off':esc(KIND_LABEL[c.kind])}</span></span></label>`).join('')}</div>`}
+  if(W.step===3){if(!W.cfg){const src=W.copy==='blank'?null:CYC(W.copy);W.cfg=src?clone(src.cfg):cfgFor('BLANK')}
+    b=`<h2>What does each subject collect?</h2><p class="sub">${W.copy==='blank'?'Started blank.':`Copied from ${esc(CYC(W.copy).name)}.`} Tap a chip to switch it on or off. Use the buttons under a subject to switch something for every year at once. All of this can still be changed after launch.</p>${setupGrid(W.cfg,false)}`}
   if(W.step===4){const pf=preflight();
     b=`<h2>${wName()}</h2><p class="sub">Opens ${fmtDate(W.opens)} · teacher deadline ${fmtDate(W.deadline)} · publish ${fmtDate(W.publish)}</p>
     <div class="pf"><div class="card"><b>${pf.slots.toLocaleString('en-GB')}</b>report slots</div><div class="card"><b>${pf.staff}</b>staff involved</div><div class="card"><b>${pf.subjects}</b>subjects</div><div class="card"><b>${pf.years}</b>year groups</div></div>
@@ -680,40 +780,73 @@ function viewWizard(){let b='';
   return`<section class="wrap"><button class="back" data-act="top" data-v="cycles">← Cycles</button><h1>Set up a new cycle</h1>${wStepper()}${b}
   <div class="wfoot"><button class="btn" data-act="wstep" data-v="-1" ${W.step===1?'disabled':''}>← Back</button>${last?`<button class="btn pop" data-act="launch" ${errs?'disabled':''}>${errs?'Fix the errors to launch':'Launch cycle'}</button>`:`<button class="btn ink" data-act="wstep" data-v="1">Next →</button>`}</div></section>`}
 const PUPN={3:48,4:52,5:60,6:64,7:62,8:58};
-const STAFFN={English:5,Maths:6,Science:4,French:3,History:3,Geography:3,Latin:2,'Religious Studies':2,'Music (peri)':14,LAMDA:2,'Tutor comment':24};
-function preflight(){const m=W.matrix,iss=[];let slots=0,staff=0,subj=0;const yrs=new Set();
-  for(const r of MROWS){let any=false;for(const y of MYEARS){const v=m[r][y];if(v==='none')continue;any=true;yrs.add(y);slots+=Math.round(PUPN[y]*(r==='Music (peri)'?.45:r==='LAMDA'?.2:1))}if(any){subj++;staff+=STAFFN[r]}}
+const STAFFN={English:5,Maths:6,Science:4,French:3,History:3,Geography:3,Latin:2,'Religious Studies':2,Games:14,'Music (peri)':14,LAMDA:2};
+function dateIssues(o,iss){if(o.deadline<o.opens)iss.push(['err','The teacher deadline is before the cycle opens.']);if(o.proof<o.deadline)iss.push(['err','Proofreading finishes before the teacher deadline.']);if(o.publish<o.proof)iss.push(['err','The publish date is before proofreading finishes.'])}
+function preflight(){const cf=W.cfg,iss=[];let slots=0,staff=0,subj=0;const yrs=new Set();
+  for(const r of ROWS){let any=false;for(const y of MYEARS){if(!cf.cells[r][y].length)continue;any=true;yrs.add(y);slots+=Math.round(PUPN[y]*(r==='Music (peri)'?.45:r==='LAMDA'?.2:1))}if(any){subj++;staff+=STAFFN[r]}}
+  MYEARS.forEach(y=>{if(cf.tutor[y]){yrs.add(y);slots+=PUPN[y]}});if(MYEARS.some(y=>cf.tutor[y]))staff+=24;
   if(W.type!=='Y8')for(const y of MYEARS)if(!yrs.has(y))iss.push(['warn',`Year ${y} has nothing to report. Intended?`]);
-  if(W.type==='Y8'&&[...yrs].some(y=>y!==8))iss.push(['warn','This is a Year 8 exam feedback cycle, but other year groups are switched on.']);
-  if(MYEARS.some(y=>m.Latin[y]!=='none'))iss.push(['warn','Set 27 8B Lat has no teacher in iSAMS, so its 10 reports would have no writer. Assign one in iSAMS, then re-sync.']);
-  if(MYEARS.some(y=>m['Music (peri)'][y]!=='none'))iss.push(['warn','3 pupils on the peri lesson list have left the school and will be skipped.']);
-  if(W.deadline<W.opens)iss.push(['err','The teacher deadline is before the cycle opens.']);
-  if(W.proof<W.deadline)iss.push(['err','Proofreading finishes before the teacher deadline.']);
-  if(W.publish<W.proof)iss.push(['err','The publish date is before proofreading finishes.']);
-  if(allCycles().some(c=>c.name===wName()))iss.push(['err',`A cycle called “${wName()}” already exists.`]);
+  if(MYEARS.some(y=>cf.cells.Latin[y].length))iss.push(['warn','Set 27 8B Lat has no teacher in iSAMS, so its 10 reports would have no writer. Assign one in iSAMS, then re-sync.']);
+  if(MYEARS.some(y=>cf.cells.Games[y].length))iss.push(['fine',`Games uses one chosen iSAMS set per year group (set on the Subjects page). ${ISAMS_GAMES[2027].filter(x=>!x.head).length} games sets on coaches’ own timetables are ignored.`]);
+  if(MYEARS.some(y=>cf.cells['Music (peri)'][y].length))iss.push(['warn','3 pupils on the peri lesson list have left the school and will be skipped.']);
+  dateIssues(W,iss);if(allCycles().some(c=>c.name===wName()))iss.push(['err',`A cycle called “${wName()}” already exists.`]);
   return{slots,staff,subjects:subj,years:yrs.size,issues:iss}}
-function launch(){const today=new Date().toISOString().slice(0,10);const used=new Set();MROWS.forEach(r=>MYEARS.forEach(y=>{if(W.matrix[r][y]!=='none')used.add(W.matrix[r][y])}));const pf=preflight();
-  const c={id:'x'+Date.now(),name:wName(),short:wName().replace('Half Term','HT').replace('End of Term','End').replace('Year 8 Exam Feedback, ','Y8 exams ').replace('Michaelmas','Mich'),kind:wKind(),ay:2027,status:W.opens>today?'Scheduled':'Open',opens:W.opens,deadline:W.deadline,due:fmtDate(W.deadline),matrix:W.matrix,summary:[...used].map(u=>OPTS[u].label).join(', ')};
-  c.limits={...W.limits};c.general=W.general;EXTRA.push(c);DATA[c.id]={};GEN[c.id]={};save();toast(`${c.name} launched. ${pf.staff} staff would be emailed (prototype: no emails sent).`);Object.assign(W,{step:1,copy:null,matrix:null});top('cycles')}
+function launch(){const today=new Date().toISOString().slice(0,10);const pf=preflight();
+  const c={id:'x'+Date.now(),name:wName(),short:wName().replace('Half Term','HT').replace('End of Term','End').replace('Year 8 Exam Feedback, ','Y8 exams ').replace('Michaelmas','Mich'),kind:wKind(),ay:2027,status:W.opens>today?'Scheduled':'Open',opens:W.opens,deadline:W.deadline,proof:W.proof,publish:W.publish,due:fmtDate(W.deadline),cfg:clone(W.cfg)};
+  EXTRA.push(c);DATA[c.id]={};GEN[c.id]={};save();toast(`${c.name} launched. ${pf.staff} staff would be emailed (prototype: no emails sent).`);Object.assign(W,{step:1,copy:null,cfg:null});top('cycles')}
+function viewSetup(){const c=CYC(state.scycle),ro=!isOpen(c);if(!state.draft){state.draft=clone(c.cfg);state.ddates={opens:c.opens,deadline:c.deadline,proof:c.proof,publish:c.publish}}
+  const iss=[];if(!ro)dateIssues(state.ddates,iss);
+  return`<section class="wrap">${backBtn()}<div class="spread"><div><h1>${esc(c.name)}: setup</h1><p class="sub">${ro?'This cycle is published, so its setup is locked. This is exactly how it was set up.':'Change anything until the cycle is published. If a change would hide work teachers have already written, you’ll be warned first, and nothing is deleted.'}</p></div>${ro?'':'<button class="btn pop" data-act="savesetup">Save changes</button>'}</div>
+  ${c.opens||!ro?`<div class="fgrid" style="margin:18px 0">${dateFields(state.ddates,'d-',ro?'disabled':'')}</div>`:''}
+  ${iss.length?`<ul class="issues" style="margin-bottom:14px">${iss.map(([k,m])=>`<li class="${k}">${esc(m)}</li>`).join('')}</ul>`:''}
+  ${setupGrid(state.draft,ro,ro?c:null)}
+  ${ro?'':'<div class="wfoot"><button class="btn" data-act="back">Cancel</button><button class="btn pop" data-act="savesetup">Save changes</button></div>'}</section>`}
+function saveSetup(){const c=CYC(state.scycle),d=state.draft,iss=[];dateIssues(state.ddates,iss);if(iss.length)return toast(iss[0][1]);
+  const imp=impact(c,d);
+  confirmImpact([{c,items:imp.items}],()=>{c.cfg=clone(d);Object.assign(c,state.ddates);if(c.deadline)c.due=fmtDate(c.deadline);save();closeModal();state.draft=null;toast(`Setup saved.${imp.added?` ${imp.added} group${imp.added>1?'s have':' has'} new fields; those teachers would be notified (prototype: no emails sent).`:''}`);back()})}
 
 /* ================= admin: progress ================= */
-function teacherRows(c){const by={};setsIn(c).forEach(s=>{const g=progress(c,s);const t=by[s.teacher]=by[s.teacher]||{ini:s.teacher,done:0,total:0,depts:new Set()};t.done+=g.done;t.total+=g.total;t.depts.add(s.subject==='Tutor'?'Tutors':s.subject)});return Object.values(by).map(t=>({...t,depts:[...t.depts]}))}
-function limitFields(vals,attr,dis){return`<div class="fgrid">${['www','ebi','tutor','general'].map(f=>`<label class="field">${LIMIT_LABEL[f]}<span class="inline"><input type="number" min="50" max="5000" step="50" ${attr}="${f}" value="${vals[f]??DEFAULT_LIMITS[f]}" ${dis?'disabled':''}><span class="muted small">characters</span></span></label>`).join('')}</div>`}
-const settingsSummary=c=>` · character limits: WWW ${lim(c,'www')}, EBI ${lim(c,'ebi')}, tutor ${lim(c,'tutor')}, general ${lim(c,'general')} · general comment ${genOn(c)?'on':'off'}`;
-function settingsCard(c,open){return`<details class="card settings" ${open?'':''}><summary><b>Cycle settings</b><span class="muted small" id="set-sum">${settingsSummary(c)}</span></summary>
-  <p class="sub small">${open?'Changes apply straight away for every teacher in this cycle.':'This cycle is published, so its settings are locked.'}</p>${limitFields(c.limits||DEFAULT_LIMITS,'data-limit',!open)}
-  <label class="toggle"><input type="checkbox" id="gen-on" ${genOn(c)?'checked':''} ${open?'':'disabled'}>Include a general comment for each class (shown at the top of every report in that class)</label></details>`}
+function teacherRows(c){const by={};setsIn(c).forEach(s=>{const g=progress(c,s);const t=by[s.teacher]=by[s.teacher]||{ini:s.teacher,done:0,total:0,depts:new Set(),shared:0};t.done+=g.done;t.total+=g.total;t.depts.add(s.subject==='Tutor'?'Tutors':s.subject);if(s.writers)t.shared=Math.max(t.shared,s.writers.length)});return Object.values(by).map(t=>({...t,depts:[...t.depts]}))}
 function viewProgress(){const c=CYC(state.pcycle)||CUR;const rows=teacherRows(c),depts=['All',...new Set(rows.flatMap(r=>r.depts))].sort((a,b)=>a==='All'?-1:b==='All'?1:a.localeCompare(b));if(!depts.includes(state.dept))state.dept='All';
-  const shown=rows.filter(r=>state.dept==='All'||r.depts.includes(state.dept));const d=rows.reduce((a,r)=>a+r.done,0),t=rows.reduce((a,r)=>a+r.total,0);const open=isOpen(c);
+  const shown=rows.filter(r=>state.dept==='All'||r.depts.includes(state.dept));const d=rows.reduce((a,r)=>a+r.done,0),t=rows.reduce((a,r)=>a+r.total,0);const open=isOpen(c);const nq=QUERIES.filter(q=>!q.resolved&&q.cycle===c.id).length;
   return`<section class="wrap"><div class="spread"><div><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}. Click a teacher to open their reports${open?' and edit them':''}.</p></div>
   <label class="field" style="min-width:260px">Cycle<select id="pcycle">${allCycles().slice().reverse().map(x=>`<option value="${x.id}" ${x.id===c.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label></div>
-  <div class="card hero"><div><div class="bignum">${t?Math.round(d/t*100):0}%</div><div class="muted">${d.toLocaleString('en-GB')} of ${t.toLocaleString('en-GB')} complete</div><div class="bar" style="margin-top:14px"><i style="width:${t?d/t*100:0}%"></i></div></div>
-  <div class="row">${open?'<button class="btn" data-act="nudgeall">Nudge everyone under 50%</button>':'<span class="chip ok">Published</span>'}<button class="btn" data-act="export" data-v="all">Download all classes</button>${open?importBtn():''}</div></div>
-  ${settingsCard(c,open)}
+  <div class="card hero"><div><div class="bignum">${t?Math.round(d/t*100):0}%</div><div class="muted">${d.toLocaleString('en-GB')} of ${t.toLocaleString('en-GB')} complete${nq?` · ${nq} report${nq>1?'s':''} sent back by tutors`:''}</div><div class="bar" style="margin-top:14px"><i style="width:${t?d/t*100:0}%"></i></div></div>
+  <div class="row">${open?'<button class="btn" data-act="nudgeall">Nudge everyone under 50%</button>':'<span class="chip ok">Published</span>'}<button class="btn" data-act="setup" data-v="${c.id}">${open?'Edit setup':'View setup'}</button><button class="btn" data-act="export" data-v="all">Download all classes</button>${open?importBtn():''}</div></div>
   <div class="depts">${depts.map(x=>`<button class="${state.dept===x?'on':''}" data-act="dept" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
   ${rows.length?`<div class="card scroll"><table class="tbl clickrows"><thead><tr><th>Teacher</th><th class="hide-s">Teaching</th><th style="width:38%">Progress</th><th></th></tr></thead><tbody>
-  ${shown.sort((a,b)=>a.done/a.total-b.done/b.total||STAFF[a.ini].localeCompare(STAFF[b.ini])).map(r=>{const p=r.total?r.done/r.total:0;return`<tr data-act="teacher" data-v="${r.ini}" data-c="${c.id}" tabindex="0"><td><b>${STAFF[r.ini]}</b> <span class="muted small">${r.ini}</span></td><td class="hide-s muted">${r.depts.join(', ')}</td><td><div class="row" style="flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${p*100}%"></i></div><span class="small" style="white-space:nowrap">${r.done}/${r.total}</span></div></td><td style="text-align:right">${p>=1?'<span class="chip ok">Done</span>':!open?'':state.nudged[r.ini]?'<span class="chip">Nudged ✓</span>':`<button class="btn" style="min-height:38px" data-act="nudge" data-v="${r.ini}">Nudge</button>`}</td></tr>`}).join('')}
+  ${shown.sort((a,b)=>a.done/a.total-b.done/b.total||STAFF[a.ini].localeCompare(STAFF[b.ini])).map(r=>{const p=r.total?r.done/r.total:0;return`<tr data-act="teacher" data-v="${r.ini}" data-c="${c.id}" tabindex="0"><td><b>${STAFF[r.ini]}</b> <span class="muted small">${r.ini}</span>${ROLE_NOTE[r.ini]?`<div class="small muted">${ROLE_NOTE[r.ini]}</div>`:''}</td><td class="hide-s muted">${r.depts.join(', ')}${r.shared?` <span class="small">(shared with ${r.shared} coaches)</span>`:''}</td><td><div class="row" style="flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${p*100}%"></i></div><span class="small" style="white-space:nowrap">${r.done}/${r.total}</span></div></td><td style="text-align:right">${p>=1?'<span class="chip ok">Done</span>':!open?'':state.nudged[r.ini]?'<span class="chip">Nudged ✓</span>':`<button class="btn" style="min-height:38px" data-act="nudge" data-v="${r.ini}">Nudge</button>`}</td></tr>`}).join('')}
   </tbody></table></div>`:'<p class="muted">Nothing to report in this cycle yet.</p>'}</section>`}
+
+/* ================= admin: subjects ================= */
+function viewSubjects(){const ign=ISAMS_GAMES[2027].filter(x=>!x.head);
+  return`<section class="wrap"><h1>Subjects</h1><p class="sub">Which template each subject uses, who heads it, and where its class lists come from. Heads of department can see every report in their subject.</p>
+  <div class="card scroll" style="margin-top:18px"><table class="tbl"><thead><tr><th>Subject</th><th>Template</th><th class="hide-s">Head of department</th><th>Class lists from</th></tr></thead><tbody>
+  ${ROWS.map(r=>{const sc=SUBJ_CFG[r];return`<tr><td><b>${esc(r)}</b></td><td><select class="sel" data-stpl="${esc(r)}">${Object.entries(TEMPLATES).map(([id,t])=>`<option value="${id}" ${sc.template===id?'selected':''}>${esc(t.name)}</option>`).join('')}</select></td><td class="hide-s">${STAFF[sc.hod]||'—'}</td><td class="small">${sc.source==='sets'?'iSAMS teaching sets':sc.source==='chosen'?'One chosen iSAMS set per year group (below)':'Peri lesson lists (to come)'}</td></tr>`}).join('')}
+  </tbody></table></div>
+  <h2 style="margin-top:34px">Games groups</h2><p class="sub">Games reports live with the Heads of Games, and any coach for that year group can write for any pupil in it. Pick which iSAMS set to take each list from (the Tuesday, Wednesday and Thursday sets hold the same pupils), or use the whole year group. The ${ign.length} games sets on coaches’ own timetables are ignored.</p>
+  <div class="card scroll" style="margin-top:14px"><table class="tbl gtable"><thead><tr><th>Group</th><th>Take the list from</th><th class="hide-s">Owner</th><th>Coaches who can write</th></tr></thead><tbody>
+  ${[5,6,7,8].flatMap(y=>['B','G'].map(g=>{const key=gkey(y,g),ch=GAMES.choice[key]??0,ws=gWriters(y,g),opts=ISAMS_GAMES[2027].filter(x=>x.head&&x.year===y&&x.g===g);
+    return`<tr><td><b>Year ${y} ${g==='B'?'boys':'girls'}</b><div class="small muted">${PUPILS.filter(p=>p.year===y&&p.sex===(g==='B'?'M':'F')).length} pupils</div></td>
+    <td><select class="sel" data-gchoice="${key}">${opts.map((o,i)=>`<option value="${i}" ${ch===i?'selected':''}>${esc(o.name)} (${o.n} pupils)</option>`).join('')}<option value="year" ${ch==='year'?'selected':''}>Whole year group (no set needed)</option></select></td>
+    <td class="hide-s">${tname(GAMES_OWNER[g])}</td>
+    <td><div class="wchips">${ws.map(w=>`<span class="wchip">${STAFF[w]}<button data-act="rmwriter" data-v="${key}|${w}" aria-label="Remove ${STAFF[w]}">×</button></span>`).join('')}<select class="sel small" data-addwriter="${key}"><option value="">+ Add coach</option>${COACHES[g].concat(COACHES[g==='B'?'G':'B']).filter(x=>!ws.includes(x)).map(x=>`<option value="${x}">${STAFF[x]}</option>`).join('')}</select></div></td></tr>`})).join('')}
+  </tbody></table></div><p class="small muted">Mixed games in Years 7 and 8: give the same coaches access to both year groups, then flick between them.</p></section>`}
+function switchTemplate(r,tid){const S2=clone(SUBJ_CFG);S2[r].template=tid;const newT=TEMPLATES[tid];
+  const groups=allCycles().filter(isOpen).map(c=>{const cfg2=clone(c.cfg);MYEARS.forEach(y=>{if(cfg2.cells[r][y].length&&avail(r,y))cfg2.cells[r][y]=newT.chunks.map(ch=>ch.id)});return{c,cfg2,items:impact(c,cfg2,null,S2).items}});
+  confirmImpact(groups,()=>{SUBJ_CFG[r].template=tid;groups.forEach(g=>g.c.cfg=g.cfg2);save();closeModal();render();toast(`${r} now uses the ${newT.name} template. Published cycles keep the template they were written with.`)},'Hide and switch')}
+
+/* ================= admin: templates ================= */
+function viewTemplates(){const usedIn=f=>Object.values(TEMPLATES).filter(t=>t.chunks.some(ch=>ch.fields.includes(f))).map(t=>t.name);
+  return`<section class="wrap"><div class="spread"><div><h1>Templates</h1><p class="sub">The fields each subject collects, grouped into chunks. Each chunk is one switch in a cycle’s setup. Published cycles keep the template they were written with, so changes here never alter old reports.</p></div><button class="btn" data-act="newtpl">+ New template</button></div>
+  ${Object.entries(TEMPLATES).map(([tid,t])=>`<div class="card tplcard"><div class="spread"><input class="tplname" data-tname="${tid}" value="${esc(t.name)}" aria-label="Template name"><span class="small muted">Used by: ${ROWS.filter(r=>SUBJ_CFG[r].template===tid).join(', ')||'no subjects yet'}</span></div>
+    ${t.chunks.map(ch=>`<div class="chunkbox"><div class="row"><span class="chunk on" style="pointer-events:none">${esc(ch.label)}</span><input class="chlabel" data-chlabel="${tid}|${ch.id}" value="${esc(ch.label)}" aria-label="Chunk name"></div>
+      <table class="ftable"><thead><tr><th>Field</th><th>Short label</th><th class="hide-s">Type</th><th></th></tr></thead><tbody>${ch.fields.filter(f=>FIELD[f]).map(f=>`<tr><td><input data-flabel="${f}" value="${esc(FIELD[f].label)}" aria-label="Field name"></td><td><input data-fshort="${f}" value="${esc(FIELD[f].short)}" style="max-width:120px" aria-label="Short label"></td><td class="hide-s small muted">${TYPE_LABEL[FIELD[f].type]}${usedIn(f).length>1?`<br>Shared with ${usedIn(f).filter(n=>n!==t.name).join(', ')}`:''}</td><td style="text-align:right"><button class="mini2" data-act="rmfield" data-v="${tid}|${ch.id}|${f}">Remove</button></td></tr>`).join('')}
+      <tr class="addrow"><td><input id="nf-l-${tid}-${ch.id}" placeholder="New field name"></td><td><input id="nf-s-${tid}-${ch.id}" placeholder="Short" style="max-width:120px"></td><td class="hide-s"><select id="nf-t-${tid}-${ch.id}" class="sel small">${Object.entries(TYPE_LABEL).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></td><td style="text-align:right"><button class="mini2" data-act="addfield" data-v="${tid}|${ch.id}">Add field</button></td></tr></tbody></table></div>`).join('')}
+    <button class="mini2" data-act="addchunk" data-v="${tid}">+ Add chunk</button></div>`).join('')}</section>`}
+function removeField(tid,chid,f){const T2=clone(TEMPLATES);const ch=T2[tid].chunks.find(x=>x.id===chid);ch.fields=ch.fields.filter(x=>x!==f);
+  const groups=allCycles().filter(isOpen).map(c=>({c,items:impact(c,null,T2,null).items}));
+  confirmImpact(groups,()=>{TEMPLATES=T2;save();closeModal();render();toast(`${FIELD[f].label} removed from the ${T2[tid].name} template.`)},'Hide and remove')}
 
 /* ================= admin: publish ================= */
 const PUB={cyc:'s26e',years:{}};
@@ -729,85 +862,107 @@ function viewPublish(){const c=CYC(PUB.cyc),ys=pubYears(c);if(!ys.some(y=>PUB.ye
   <p class="sub small" style="margin-top:14px">If iSAMS lets us write reports back through its API, this step can disappear: My School Portal would pick reports up from iSAMS as it does now.</p></section>`}
 function pdfFor(p,c){const{jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',format:'a4'});const clean=s=>String(s||'').replace(/[’‘]/g,"'").replace(/[“”]/g,'"').replace(/·/g,'|');
   d.setFillColor(0,2,55);d.rect(0,0,210,30,'F');d.setTextColor(255,255,255);d.setFont('helvetica','bold');d.setFontSize(20);d.text('Reportbook',14,14);d.setFont('helvetica','normal');d.setFontSize(10);d.text(c.name,14,23);d.text(clean(`${niceName(p)}  |  ${formAt(p,c.ay)}`),196,23,{align:'right'});
-  let y=42;const block=(title,right,paras)=>{d.setFontSize(10);const L=paras.flatMap(([b,t,it])=>{const lines=d.splitTextToSize(clean((b?b+' ':'')+t),182);return lines.map((l,i)=>[l,i===0?b:null,it])});if(y+12+L.length*4.8>286){d.addPage();y=20}
+  let y=42;const block=(title,right,paras)=>{d.setFontSize(10);const L=paras.flatMap(([t,it])=>d.splitTextToSize(clean(t),182).map(l=>[l,it]));if(y+12+L.length*4.8>286){d.addPage();y=20}
     d.setFillColor(0,189,255);d.rect(14,y-5.5,182,8,'F');d.setTextColor(0,2,55);d.setFont('helvetica','bold');d.setFontSize(11);d.text(clean(title),16,y);d.setFont('helvetica','normal');d.setFontSize(9);d.text(clean(right),194,y,{align:'right'});y+=8;d.setFontSize(10);
-    L.forEach(([l,b,it])=>{d.setFont('helvetica',it?'italic':'normal');d.text(l,14,y);y+=4.8});y+=6};
+    L.forEach(([l,it])=>{d.setFont('helvetica',it?'italic':'normal');d.text(l,14,y);y+=4.8});y+=6};
   const sets=pupilSets(p,c.ay).filter(s=>fieldsFor(c,s).length);const tut=sets.find(s=>s.subject==='Tutor');const tr=tut?(DATA[c.id][tut.id]||{})[p.id]:null;
-  if(tr&&tr.tutor)block('Tutor',STAFF[tut.teacher],[[null,tr.tutor]]);
-  sets.filter(s=>s.subject!=='Tutor').forEach(s=>{const r=(DATA[c.id][s.id]||{})[p.id]||{},g=getGen(c,s),paras=[];if(g)paras.push([null,g,true]);if(r.atl)paras.push([null,`Attitude to learning ${r.atl} | Organisation ${r.org} | Achievement in set: ${descName(r.achS)} | in year: ${descName(r.achY)}`]);if(r.exam)paras.push([null,`Exam: ${r.exam} | ${SCORE_LABEL}: ${r.score}`]);if(r.www){paras.push([null,'What went well: '+r.www]);paras.push([null,'Even better if: '+r.ebi])}block(s.subject,STAFF[s.teacher],paras)});
+  if(tr&&tr.tutor)block('Tutor',STAFF[tut.teacher],[[tr.tutor]]);
+  sets.filter(s=>s.subject!=='Tutor').forEach(s=>{const r=(DATA[c.id][s.id]||{})[p.id]||{},fs=fieldsFor(c,s),g=getGen(c,s),paras=[];if(g)paras.push([g,true]);const gr=fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]);if(gr.length)paras.push([gr.map(f=>`${FIELD[f].label}: ${FIELD[f].type==='desc'?descName(r[f]):r[f]}`).join(' | ')]);const tx=fs.filter(f=>FIELD[f].type==='text'&&r[f]);if(tx.length)paras.push([tx.map(f=>`${FIELD[f].label}: ${r[f]}`).join(' | ')]);longCols(fs).filter(f=>r[f]).forEach(f=>paras.push([`${FIELD[f].label}: ${r[f]}`]));block(s.subject,STAFF[s.teacher],paras)});
   return d.output('arraybuffer')}
 async function mspZip(){if(!window.JSZip||!window.jspdf)return toast('Still loading the PDF tools. Try again in a moment.');const c=CYC(PUB.cyc),list=pubPupils(c);toast(`Building ${list.length} PDFs…`);
   await new Promise(r=>setTimeout(r,30));const z=new JSZip();list.forEach(p=>z.file(`${p.id} ${c.name}.pdf`,pdfFor(p,c)));await offerFile(`MSP pack - ${c.name}.zip`,await z.generateAsync({type:'blob'}),'MSP pack')}
 
 /* ================= events ================= */
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
-  if(a==='top'){if(v==='progress')state.pcycle=state.pcycle||CUR.id;top(v)}
+  if(a==='top'){top(v)}
   else if(a==='back')back();
   else if(a==='role'){state.role=v;state.teacher=v==='teacher'?ME:null;top(v==='teacher'?'home':'cycles')}
   else if(a==='openset'){nav('write',{set:v,cycle:t.dataset.c,sel:null})}
   else if(a==='opencycle'){nav('cycle',{cycle:v})}
   else if(a==='teacher'){if(e.target.closest('[data-act="nudge"]'))return;const c=CYC(t.dataset.c);nav(c.id===CUR.id?'home':'cycle',{teacher:v,cycle:c.id})}
   else if(a==='progressfor'){state.pcycle=v;state.dept='All';nav('progress')}
+  else if(a==='setup'){state.draft=null;nav('setup',{scycle:v})}
+  else if(a==='savesetup')saveSetup();
+  else if(a==='confirmact'){const f=PENDING_ACT;PENDING_ACT=null;if(f)f()}
+  else if(a==='cell'){const d=draft(),r=t.dataset.r,y=t.dataset.y,arr=d.cells[r][y],i=arr.indexOf(v);if(i>=0)arr.splice(i,1);else arr.push(v);render()}
+  else if(a==='rowchunk'){const d=draft(),r=t.dataset.r,ys=MYEARS.filter(y=>avail(r,y));const all=ys.every(y=>d.cells[r][y].includes(v));ys.forEach(y=>{const arr=d.cells[r][y];if(all){const i=arr.indexOf(v);if(i>=0)arr.splice(i,1)}else if(!arr.includes(v))arr.push(v)});render()}
+  else if(a==='tutor'){const d=draft(),y=t.dataset.y;d.tutor[y]=!d.tutor[y];render()}
+  else if(a==='copycol'){const d=draft(),y=Number(v);ROWS.forEach(r=>{if(avail(r,y)&&avail(r,y-1))d.cells[r][y]=[...d.cells[r][y-1]]});d.tutor[y]=d.tutor[y-1];render()}
   else if(a==='sel')selectPupil(v);
   else if(a==='step'){const set=SET[state.set],i=set.ids.indexOf(state.sel)+Number(v);if(set.ids[i])selectPupil(set.ids[i])}
   else if(a==='pupil'){nav('pupil',{pupil:v,pcyc:null,subj:null})}
   else if(a==='pcyc'){state.pcyc=Number(v);render()}
   else if(a==='subj'){state.subj=v||null;render()}
   else if(a==='measure'){state.measure=v;render()}
+  else if(a==='tedit'){state.tedit=v;updateEditor()}
+  else if(a==='tdone'){state.tedit=null;updateEditor()}
+  else if(a==='sendback')sendBackModal(v,t.dataset.p);
+  else if(a==='sendq'){const msg=($('#qmsg').value||'').trim();if(!msg)return toast('Add a note so the teacher knows what to look at.');const s=SET[v];QUERIES.push({id:'q'+Date.now(),cycle:state.cycle,set:v,pid:t.dataset.p,from:actor(),fromRole:'tutor',to:s.teacher,msg,at:Date.now(),resolved:false});save();closeModal();updateEditor();toast(`Sent back to ${STAFF[s.teacher]}. They’d get an email (prototype: nothing was sent).`)}
+  else if(a==='resolveq'){const q=QUERIES.find(x=>x.id===v);if(q)q.resolved=true;save();render();toast('Marked as dealt with')}
   else if(a==='export')exportXlsx(v);
   else if(a==='apply')applyPending();
-  else if(a==='close')closeModal();
-  else if(a==='reset'){try{localStorage.removeItem(LS_KEY)}catch(x){}const f=freshOpen();DATA[CUR.id]=f.D;GEN[CUR.id]=f.G;CYCLES.forEach(c=>{delete c.limits;delete c.general});EXTRA=[];state.nudged={};top(state.role==='teacher'?'home':'cycles');toast('Sample data reset')}
-  else if(a==='newcycle'){Object.assign(W,{step:1,copy:null,matrix:null});nav('wizard')}
+  else if(a==='close'){closeModal();if(['subjects','templates'].includes(state.view))render()}
+  else if(a==='reset'){try{localStorage.removeItem(LS_KEY)}catch(x){}location.reload()}
+  else if(a==='newcycle'){Object.assign(W,{step:1,copy:null,cfg:null});nav('wizard')}
   else if(a==='wstep'){W.step=clamp(W.step+Number(v),1,4);render();window.scrollTo(0,0)}
-  else if(a==='copycol'){const y=Number(v);MROWS.forEach(r=>{let s=W.matrix[r][y-1];if(r==='Latin'&&y<6)s='none';W.matrix[r][y]=s});render()}
-  else if(a==='fillrow'){const row=W.matrix[v];const src=MYEARS.map(y=>row[y]).find(x=>x!=='none')||'none';MYEARS.forEach(y=>{if(!(v==='Latin'&&y<6))row[y]=src});render()}
   else if(a==='launch')launch();
   else if(a==='dept'){state.dept=v;render()}
   else if(a==='nudge'){e.stopPropagation();state.nudged[v]=true;render();toast(`Reminder sent to ${STAFF[v]} (prototype: nothing was sent)`)}
   else if(a==='nudgeall'){const c=CYC(state.pcycle);let n=0;teacherRows(c).forEach(r=>{if(r.total&&r.done/r.total<.5&&!state.nudged[r.ini]){state.nudged[r.ini]=true;n++}});render();toast(n?`Reminders sent to ${n} teachers (prototype: nothing was sent)`:'Everyone under 50% has already been nudged')}
   else if(a==='mspzip')mspZip();
   else if(a==='preview'){const p=PUP[v],c=CYC(t.dataset.c);openModal(`<div class="spread" style="margin-bottom:14px"><h2>As parents will see it</h2><button class="btn" data-act="close">Close</button></div>${reportHTML(p,c)}`)}
+  else if(a==='rmwriter'){const[key,w]=v.split('|');const y=Number(key[0]),g=key[1];GAMES.writers[key]=gWriters(y,g).filter(x=>x!==w);save();render();toast(`${STAFF[w]} can no longer write Year ${y} ${g==='B'?'boys':'girls'} games reports. Anything they’ve written stays.`)}
+  else if(a==='addfield'){const[tid,chid]=v.split('|');const l=$(`#nf-l-${tid}-${chid}`).value.trim(),s=$(`#nf-s-${tid}-${chid}`).value.trim(),ty=$(`#nf-t-${tid}-${chid}`).value;if(!l)return toast('Give the new field a name first.');const id='f'+Date.now().toString(36);FIELD[id]={label:l,short:s||l.slice(0,10),type:ty};TEMPLATES[tid].chunks.find(x=>x.id===chid).fields.push(id);save();render();toast(`${l} added. It appears straight away wherever this chunk is switched on.`)}
+  else if(a==='rmfield'){const[tid,chid,f]=v.split('|');removeField(tid,chid,f)}
+  else if(a==='addchunk'){TEMPLATES[v].chunks.push({id:'c'+Date.now().toString(36),label:'New chunk',fields:[]});save();render()}
+  else if(a==='newtpl'){TEMPLATES['t'+Date.now().toString(36)]={name:'New template',chunks:[{id:'c1',label:'Grades',fields:[]}]};save();render();window.scrollTo(0,document.body.scrollHeight)}
 });
 document.addEventListener('input',e=>{const t=e.target;
-  if(t.classList.contains('lt-in')){const c=CYC(state.cycle),set=SET[state.set];setVal(c,set,t.dataset.pid,t.dataset.f,t.value);save();updateChecks();updateRow(t.dataset.pid)}
+  if(t.classList.contains('tin')){const c=CYC(state.cycle),s=SET[t.dataset.set],f=t.dataset.f;let v=t.value;if(FIELD[f].type==='num'||FIELD[f].type==='desc'){v=v.toUpperCase().trim();if(v!==t.value)t.value=v}setVal(c,s,t.dataset.pid,f,FIELD[f].type==='long'?v:v.trim());save()}
+  else if(t.classList.contains('lt-in')){const c=CYC(state.cycle),set=SET[state.set];setVal(c,set,t.dataset.pid,t.dataset.f,t.value);save();updateChecks();updateRow(t.dataset.pid)}
   else if(t.id==='gen'){const c=CYC(state.cycle),set=SET[state.set];(GEN[c.id]=GEN[c.id]||{})[set.id]=t.value;$('#gwc').innerHTML=genCount(c,t.value);save()}
   else if(t.classList.contains('gin')){const c=CYC(state.cycle),set=SET[state.set],f=t.dataset.f;let v=t.value;if(FIELD[f].type!=='text')v=v.toUpperCase().trim();if(v!==t.value)t.value=v;setVal(c,set,t.dataset.pid,f,FIELD[f].type==='text'?v.trim():v);save();updateRow(t.dataset.pid);if(state.sel===t.dataset.pid)updateChecks()}
   else if(t.id==='q'){state.q=t.value;$('#plist').innerHTML=pupilList()}
 });
-document.addEventListener('focusout',e=>{const t=e.target;if(t.classList&&t.classList.contains('gin')&&FIELD[t.dataset.f].type==='desc'){const v=normDesc(t.value);if(v!==t.value){t.value=v;setVal(CYC(state.cycle),SET[state.set],t.dataset.pid,t.dataset.f,v);save();updateRow(t.dataset.pid)}}});
+document.addEventListener('focusout',e=>{const t=e.target;if(t.classList&&t.classList.contains('gin')&&FIELD[t.dataset.f]&&FIELD[t.dataset.f].type==='desc'){const v=normDesc(t.value);if(v!==t.value){t.value=v;const s=t.dataset.set?SET[t.dataset.set]:SET[state.set];setVal(CYC(state.cycle),s,t.dataset.pid,t.dataset.f,v);save();if(!t.dataset.set)updateRow(t.dataset.pid)}}});
 document.addEventListener('change',async e=>{const t=e.target;
   if(t.id==='imp'&&t.files[0]){const f=t.files[0];t.value='';if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');
-    const c=state.view==='progress'?CYC(state.pcycle):state.view==='home'?CUR:CYC(state.cycle);const allowed=state.view==='progress'?setsIn(c):setsIn(c,state.teacher);
+    const c=state.view==='progress'?CYC(state.pcycle):state.view==='home'?CUR:CYC(state.cycle);const allowed=state.view==='progress'?setsIn(c):mySets(c,state.teacher);
     let wb;try{wb=XLSX.read(await f.arrayBuffer())}catch(x){return openModal(`<h2>Couldn’t read that file</h2><p>It doesn’t look like an Excel workbook.</p><div class="mfoot"><button class="btn ink" data-act="close">OK</button></div>`)}
     showDiff(diffWorkbook(wb,c,allowed),c,f.name)}
   else if(t.dataset.cf!==undefined&&PENDING){PENDING.res.conflicts[Number(t.dataset.cf)].use=t.value}
-  else if(t.name==='copy'){W.copy=t.value;W.matrix=null;render()}
-  else if(t.dataset.mr){W.matrix[t.dataset.mr][t.dataset.my]=t.value;t.className=t.value==='none'?'off':'on'}
-  else if(t.id&&t.id.startsWith('w-')){W[t.id.slice(2)]=t.value;const n=$('#w-name');if(n)n.textContent=wName();if(t.id==='w-type'||t.id==='w-term'){W.copy=null;W.matrix=null}}
-  else if(t.dataset.limit){const c=CYC(state.pcycle);c.limits={...DEFAULT_LIMITS,...(c.limits||{}),[t.dataset.limit]:Math.max(50,Number(t.value)||DEFAULT_LIMITS[t.dataset.limit])};save();$('#set-sum').textContent=settingsSummary(c);toast('Character limit updated for '+c.name)}
-  else if(t.id==='gen-on'){const c=CYC(state.pcycle);c.general=t.checked;save();$('#set-sum').textContent=settingsSummary(c);toast(`General comment ${t.checked?'on':'off'} for ${c.name}`)}
-  else if(t.dataset.wlimit){W.limits[t.dataset.wlimit]=Math.max(50,Number(t.value)||DEFAULT_LIMITS[t.dataset.wlimit])}
-  else if(t.id==='wgen'){W.general=t.checked}
+  else if(t.name==='copy'){W.copy=t.value;W.cfg=null;render()}
+  else if(t.dataset.gen!==undefined){draft().gen[t.dataset.gen]=t.checked}
+  else if(t.dataset.climit){const d=draft();d.limits=d.limits||{};d.limits[t.dataset.climit]=Math.max(50,Number(t.value)||800);
+    if(state.view==='setup'){const c=CYC(state.scycle),f=t.dataset.climit,L=d.limits[f];let over=0;if(f==='general')setsIn(c).forEach(s=>{if(chars(getGen(c,s))>L)over++});else Object.values(DATA[c.id]||{}).forEach(ss=>Object.values(ss).forEach(r=>{if(chars(r[f])>L)over++}));if(over)toast(`${over} existing ${f==='general'?'general comment':'entr'}${over===1?(f==='general'?' is':'y is'):(f==='general'?'s are':'ies are')} longer than ${L} characters. Nothing will be cut; they’ll be flagged to their teachers.`)}}
+  else if(t.id&&t.id.startsWith('w-')){W[t.id.slice(2)]=t.value;const n=$('#w-name');if(n)n.textContent=wName();if(t.id==='w-type'||t.id==='w-term'){W.copy=null;W.cfg=null}}
+  else if(t.id&&t.id.startsWith('d-')){state.ddates[t.id.slice(2)]=t.value;render()}
   else if(t.id==='pub-cyc'){PUB.cyc=t.value;PUB.years={};render()}
   else if(t.id==='pcycle'){state.pcycle=t.value;state.dept='All';render()}
   else if(t.dataset.pubyear){PUB.years[t.dataset.pubyear]=t.checked;render()}
+  else if(t.dataset.stpl){if(SUBJ_CFG[t.dataset.stpl].template!==t.value)switchTemplate(t.dataset.stpl,t.value)}
+  else if(t.dataset.gchoice){const key=t.dataset.gchoice;GAMES.choice[key]=t.value==='year'?'year':Number(t.value);save();render();toast('Games group updated. The pupils and anything already written stay the same.')}
+  else if(t.dataset.addwriter){if(!t.value)return;const key=t.dataset.addwriter,y=Number(key[0]),g=key[1];GAMES.writers[key]=[...gWriters(y,g),t.value];save();render();toast(`${STAFF[t.value]} can now write Year ${y} ${g==='B'?'boys':'girls'} games reports.`)}
+  else if(t.dataset.tname){TEMPLATES[t.dataset.tname].name=t.value.trim()||'Untitled';save();render()}
+  else if(t.dataset.chlabel){const[tid,chid]=t.dataset.chlabel.split('|');TEMPLATES[tid].chunks.find(x=>x.id===chid).label=t.value.trim()||'Chunk';save();render()}
+  else if(t.dataset.flabel){FIELD[t.dataset.flabel].label=t.value.trim()||FIELD[t.dataset.flabel].label;save();toast('Field renamed everywhere it’s used')}
+  else if(t.dataset.fshort){FIELD[t.dataset.fshort].short=t.value.trim()||FIELD[t.dataset.fshort].short;save()}
 });
-document.addEventListener('focusin',e=>{const t=e.target;if(t.classList&&t.classList.contains('gin')&&t.dataset.pid!==state.sel)selectPupil(t.dataset.pid,true)});
+document.addEventListener('focusin',e=>{const t=e.target;if(t.classList&&t.classList.contains('gin')&&!t.classList.contains('tin')&&t.dataset.pid!==state.sel)selectPupil(t.dataset.pid,true)});
 document.addEventListener('keydown',e=>{const t=e.target;
   if(e.key==='Escape'&&$('#modal').classList.contains('open')){closeModal();return}
-  if(t.classList&&t.classList.contains('gin')){const c=CYC(state.cycle),cols=gridCols(fieldsFor(c,SET[state.set]));let r=Number(t.dataset.row),ci=cols.indexOf(t.dataset.f);const txt=FIELD[t.dataset.f].type==='text';
+  if(t.classList&&t.classList.contains('gin')&&!t.classList.contains('tin')){const c=CYC(state.cycle),cols=gridCols(fieldsFor(c,SET[state.set]));let r=Number(t.dataset.row),ci=cols.indexOf(t.dataset.f);const txt=FIELD[t.dataset.f].type==='text';
     if(e.key==='ArrowDown'||e.key==='Enter')r++;else if(e.key==='ArrowUp')r--;else if(e.key==='ArrowRight'&&(!txt||t.selectionStart===t.value.length))ci++;else if(e.key==='ArrowLeft'&&(!txt||t.selectionStart===0))ci--;else return;
     const n=document.querySelector(`.gin[data-row="${r}"][data-f="${cols[ci]}"]`);if(n){e.preventDefault();n.focus();n.select()}return}
   if(t.tagName==='TR'&&e.key==='Enter'&&t.dataset.act){t.click();return}
   if(t.tagName==='LABEL'&&(e.key==='Enter'||e.key===' ')&&t.querySelector('input[type=file]')){e.preventDefault();t.querySelector('input').click();return}
   if(state.view==='pupil'&&!/INPUT|TEXTAREA|SELECT/.test(t.tagName)&&!$('#modal').classList.contains('open')){const n=pupilCycles(PUP[state.pupil]).length;if(e.key==='ArrowLeft'&&state.pcyc>0){state.pcyc--;render()}else if(e.key==='ArrowRight'&&state.pcyc<n-1){state.pcyc++;render()}}
 });
-document.addEventListener('paste',e=>{const t=e.target;if(!(t.classList&&t.classList.contains('gin')))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/[\t\n]/.test(txt.trim()))return;e.preventDefault();
+document.addEventListener('paste',e=>{const t=e.target;if(!(t.classList&&t.classList.contains('gin'))||t.classList.contains('tin'))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/[\t\n]/.test(txt.trim()))return;e.preventDefault();
   const c=CYC(state.cycle),set=SET[state.set],cols=gridCols(fieldsFor(c,set)),lines=txt.replace(/\r/g,'').replace(/\n$/,'').split('\n');const r0=Number(t.dataset.row),c0=cols.indexOf(t.dataset.f);let n=0;
-  lines.forEach((ln,i)=>{const pid=set.ids[r0+i];if(!pid)return;ln.split('\t').forEach((cell,j)=>{const f=cols[c0+j];if(!f)return;const v=normField(f,FIELD[f].type==='num'?cell:cell);setVal(c,set,pid,f,v);const inp=document.querySelector(`.gin[data-pid="${pid}"][data-f="${f}"]`);if(inp)inp.value=v;n++});updateRow(pid)});
+  lines.forEach((ln,i)=>{const pid=set.ids[r0+i];if(!pid)return;ln.split('\t').forEach((cell,j)=>{const f=cols[c0+j];if(!f)return;const v=normField(f,cell);setVal(c,set,pid,f,v);const inp=document.querySelector(`.gin[data-pid="${pid}"][data-f="${f}"]`);if(inp)inp.value=v;n++});updateRow(pid)});
   save();toast(`Pasted ${n} value${n===1?'':'s'}`)});
-$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'){closeModal();if(['subjects','templates'].includes(state.view))render()}});
 $('#build').textContent='Last build: '+BUILD;
 render();
 }
