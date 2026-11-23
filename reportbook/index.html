@@ -30,10 +30,10 @@ h3{font-size:16px;margin:0 0 6px}
 .top .in{max-width:1240px;margin:0 auto;padding:12px max(4vw,16px);display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
 .mark{font-family:Fraunces,Georgia,serif;font-size:24px;letter-spacing:-.01em;display:flex;align-items:center;gap:10px}
 .mark i{width:26px;height:26px;border-radius:6px;background:var(--pop);display:inline-grid;place-items:center;font-style:normal;color:#000237;font:700 15px "DM Sans"}
-.nav{display:flex;flex-wrap:wrap;gap:4px;flex:1}
-.nav button{background:none;border:0;color:#c9ccf0;padding:10px 12px;border-radius:8px;cursor:pointer;min-height:44px}
-.nav button:hover{color:#fff;background:#ffffff14}
-.nav button.on{color:#fff;box-shadow:inset 0 -3px 0 var(--pop)}
+.nav{display:flex;background:#ffffff14;border-radius:999px;padding:3px;margin-right:auto;overflow-x:auto;max-width:100%}
+.nav button{border:0;background:none;color:#c9ccf0;border-radius:999px;padding:8px 14px;cursor:pointer;min-height:38px;white-space:nowrap;flex:none}
+.nav button:hover:not(.on){color:#fff}
+.nav button.on{background:var(--pop);color:#000237;font-weight:600}
 .role{display:flex;background:#ffffff14;border-radius:999px;padding:3px}
 .role button{border:0;background:none;color:#c9ccf0;border-radius:999px;padding:8px 14px;cursor:pointer;min-height:38px}
 .role button.on{background:var(--pop);color:#000237;font-weight:600}
@@ -63,7 +63,7 @@ h3{font-size:16px;margin:0 0 6px}
 .set:hover{border-color:var(--ink)}
 .set .big{font-size:30px;font-weight:700;line-height:1}
 .set .done{background:var(--pop);color:var(--popink);border-color:var(--pop)}
-.deadline{display:inline-flex;gap:10px;align-items:center;background:var(--pop);color:var(--popink);padding:8px 14px;border-radius:10px;font-weight:600;margin-top:14px}
+.deadline{display:inline-flex;gap:10px;align-items:center;background:var(--soft);color:var(--ink);min-height:44px;padding:8px 14px;border-radius:10px;font-weight:600;margin-top:14px}
 .past{margin-top:34px}
 .past li{padding:10px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .past ul{list-style:none;margin:0;padding:0}
@@ -218,6 +218,14 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
 .report .rs{padding:12px 18px;border-bottom:1px solid var(--line)}
 .report .rs h4{margin:0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--pop);color:#000237;padding:6px 10px;border-radius:6px;font-size:15px}
 .report .rs p{margin:8px 0 0;font-size:14px}
+.settings{padding:14px 18px;margin:0 0 18px}
+.settings summary{cursor:pointer;min-height:32px;display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.settings .fgrid{margin-top:10px}
+.inline{display:flex;align-items:center;gap:8px}.inline input{width:120px}
+.toggle{display:flex;gap:10px;align-items:center;margin-top:14px;font-size:15px;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:#00bdff;flex:none}
+.dlist li.grp{background:var(--soft);font-weight:700;font-size:13px;padding:6px 14px}
+.over{color:var(--crim);font-weight:600}
 .banner{background:var(--soft);border-left:4px solid var(--pop);padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:15px}
 .gc{padding:16px 18px;margin-bottom:18px;display:flex;flex-direction:column;gap:8px}
 .gc textarea{min-height:84px}
@@ -260,7 +268,7 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
     <button id="r-admin" data-act="role" data-v="admin">Admin</button>
   </div>
 </div></header>
-<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 23 Nov 2026, 12:13</span><button data-act="reset">Reset sample data</button></span></div></div>
+<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 23 Nov 2026, 17:29</span><button data-act="reset">Reset sample data</button></span></div></div>
 <main id="main"></main>
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="mbox" id="mbox"></div></div>
 <div class="toast" id="toast" role="status"></div>
@@ -270,7 +278,7 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 {
-const BUILD='23 Nov 2026, 12:13';
+const BUILD='23 Nov 2026, 17:29';
 const SCORE_LABEL='School score';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -287,17 +295,22 @@ const DESC=[['E','Emerging'],['WT','Working towards'],['M','Meeting'],['EX','Exc
 const descName=c=>(DESC.find(d=>d[0]===c)||[])[1]||c;
 function normDesc(v){v=String(v??'').trim();if(!v)return'';const u=v.toUpperCase().replace(/\s+/g,' ');const d=DESC.find(([c,n])=>c===u||n.toUpperCase()===u);return d?d[0]:v}
 const FIELD={
-  atl:{label:'Attitude to learning',short:'ATL',type:'num',hint:'1–5'},
+  atl:{label:'Attitude to learning',short:'AtL',type:'num',hint:'1–5'},
   org:{label:'Organisation',short:'Org',type:'num',hint:'1–5'},
   achS:{label:'Achievement within the set',short:'Set',type:'desc',hint:'E / WT / M / EX / GD'},
   achY:{label:'Achievement within the year',short:'Year',type:'desc',hint:'E / WT / M / EX / GD'},
   exam:{label:'Exam percentage',short:'Exam %',type:'text',hint:'any text'},
   score:{label:SCORE_LABEL,short:'Score',type:'text',hint:'any text'},
-  www:{label:'What went well',short:'WWW',type:'long',limit:80},
-  ebi:{label:'Even better if',short:'EBI',type:'long',limit:60},
-  tutor:{label:'Tutor comment',short:'Tutor',type:'long',limit:150}
+  www:{label:'What went well',short:'WWW',type:'long'},
+  ebi:{label:'Even better if',short:'EBI',type:'long'},
+  tutor:{label:'Tutor comment',short:'Tutor',type:'long'}
 };
 const GRADEF=['atl','org','achS','achY'];
+const DEFAULT_LIMITS={www:800,ebi:800,tutor:1200,general:600};
+const LIMIT_LABEL={www:'What went well',ebi:'Even better if',tutor:'Tutor comment',general:'General comment'};
+const chars=s=>String(s||'').length;
+const lim=(c,f)=>((c&&c.limits)||DEFAULT_LIMITS)[f]??DEFAULT_LIMITS[f];
+const genOn=c=>c.general??(c.kind!=='Y8');
 const OPTS={
   none:{label:'—',fields:[]},
   grades:{label:'Grades',fields:[...GRADEF]},
@@ -308,7 +321,7 @@ const OPTS={
   report:{label:'Report only',fields:['www','ebi']},
   tutor:{label:'Tutor comment',fields:['tutor']}
 };
-function valid(f,v){v=String(v??'').trim();if(!v)return true;const t=FIELD[f].type;if(t==='num')return/^[1-5]$/.test(v);if(t==='desc')return DESC.some(d=>d[0]===v);if(t==='long')return words(v)<=FIELD[f].limit;return true}
+function valid(f,v,c){v=String(v??'').trim();if(!v)return true;const t=FIELD[f].type;if(t==='num')return/^[1-5]$/.test(v);if(t==='desc')return DESC.some(d=>d[0]===v);if(t==='long')return chars(v)<=lim(c,f);return true}
 function normField(f,v){v=String(v??'').replace(/\r\n?/g,'\n').trim();const t=FIELD[f].type;if(t==='desc')return normDesc(v);if(t==='num')return v.replace(/\.0+$/,'');return v}
 
 const SUBJ=[{name:'English',code:'Eng',by:'set'},{name:'Maths',code:'Mat',by:'set'},{name:'Science',code:'Sci'},{name:'French',code:'Fre'},{name:'History',code:'His'},{name:'Geography',code:'Geo'},{name:'Latin',code:'Lat',from:6},{name:'Religious Studies',code:'TPR'}];
@@ -384,7 +397,7 @@ const CYC=id=>allCycles().find(c=>c.id===id);
 const PAST=CYCLES.filter(c=>c.status==='Published');
 function fieldsFor(c,set){const row=set.subject==='Tutor'?'Tutor comment':set.subject;return OPTS[(c.matrix[row]||{})[set.year]||'none'].fields}
 const setsIn=(c,t)=>SETS.filter(s=>s.ay===c.ay&&fieldsFor(c,s).length&&(!t||s.teacher===t));
-const hasGeneral=(c,set)=>set.subject!=='Tutor'&&c.kind!=='Y8'&&fieldsFor(c,set).includes('www');
+const hasGeneral=(c,set)=>set.subject!=='Tutor'&&genOn(c)&&fieldsFor(c,set).some(f=>f!=='tutor');
 const optLabel=(c,set)=>{const row=set.subject==='Tutor'?'Tutor comment':set.subject;return OPTS[c.matrix[row][set.year]].label};
 
 /* ================= text generators ================= */
@@ -425,22 +438,22 @@ function freshOpen(){const D={},G={};const c=CUR,ci=PAST.length;const now=Date.n
   return{D,G}}
 const LS_KEY='reportbook-proto-v2';
 function load(){let j=null;try{j=JSON.parse(localStorage.getItem(LS_KEY)||'null')}catch(e){}
-  if(j&&j.seed===PUPILS[0].id&&j.open){EXTRA=j.extra||[];for(const[id,v]of Object.entries(j.open)){DATA[id]=v.d;GEN[id]=v.g}}else{const f=freshOpen();DATA[CUR.id]=f.D;GEN[CUR.id]=f.G;EXTRA=[]}
+  if(j&&j.seed===PUPILS[0].id&&j.open){EXTRA=j.extra||[];Object.entries(j.settings||{}).forEach(([id,v])=>{const c=CYCLES.find(x=>x.id===id);if(c){if(v.limits)c.limits=v.limits;if(v.general!=null)c.general=v.general}});for(const[id,v]of Object.entries(j.open)){DATA[id]=v.d;GEN[id]=v.g}}else{const f=freshOpen();DATA[CUR.id]=f.D;GEN[CUR.id]=f.G;EXTRA=[]}
   EXTRA.forEach(c=>{DATA[c.id]=DATA[c.id]||{};GEN[c.id]=GEN[c.id]||{}})}
 load();
 let saveTimer;
-function save(){const el=$('#saved');if(el){el.textContent='Saving…';el.classList.add('busy')}clearTimeout(saveTimer);saveTimer=setTimeout(()=>{const open={};allCycles().filter(c=>c.status!=='Published').forEach(c=>open[c.id]={d:DATA[c.id]||{},g:GEN[c.id]||{}});try{localStorage.setItem(LS_KEY,JSON.stringify({seed:PUPILS[0].id,open,extra:EXTRA}))}catch(e){}const s=$('#saved');if(s){s.textContent='All changes saved';s.classList.remove('busy')}},350)}
+function save(){const el=$('#saved');if(el){el.textContent='Saving…';el.classList.add('busy')}clearTimeout(saveTimer);saveTimer=setTimeout(()=>{const open={};allCycles().filter(c=>c.status!=='Published').forEach(c=>open[c.id]={d:DATA[c.id]||{},g:GEN[c.id]||{}});const settings={};CYCLES.filter(isOpen).forEach(c=>settings[c.id]={limits:c.limits,general:c.general});try{localStorage.setItem(LS_KEY,JSON.stringify({seed:PUPILS[0].id,open,extra:EXTRA,settings}))}catch(e){}const s=$('#saved');if(s){s.textContent='All changes saved';s.classList.remove('busy')}},350)}
 function rec(c,set,pid){const d=DATA[c.id]=DATA[c.id]||{};const s=d[set.id]=d[set.id]||{};return s[pid]=s[pid]||{t:{}}}
 const getGen=(c,set)=>(GEN[c.id]||{})[set.id]||'';
 function setVal(c,set,pid,f,v){const r=rec(c,set,pid);if((r[f]||'')===v)return false;r[f]=v;r.t=r.t||{};r.t[f]=Date.now();return true}
-function status(c,set,pid){const fs=fieldsFor(c,set),r=rec(c,set,pid);let filled=0,ok=true;for(const f of fs){const v=String(r[f]||'').trim();if(v){filled++;if(!valid(f,v))ok=false}}if(!filled)return'none';return filled===fs.length&&ok?'done':'part'}
+function status(c,set,pid){const fs=fieldsFor(c,set),r=rec(c,set,pid);let filled=0,ok=true;for(const f of fs){const v=String(r[f]||'').trim();if(v){filled++;if(!valid(f,v,c))ok=false}}if(!filled)return'none';return filled===fs.length&&ok?'done':'part'}
 const STLABEL={none:'Not started',part:'In progress',done:'Complete'};
 function progress(c,set){return{done:set.ids.filter(id=>status(c,set,id)==='done').length,total:set.ids.length}}
 const isOpen=c=>c.status!=='Published';
 
 /* ================= checker ================= */
-function checks(set,p,r,fields){const out=[];const longs=fields.filter(f=>FIELD[f].type==='long');const text=longs.map(f=>r[f]||'').join('\n');if(!text.trim())return out;
-  longs.forEach(f=>{const w=words(r[f]);if(w>FIELD[f].limit)out.push(['bad',`${FIELD[f].short}: ${w-FIELD[f].limit} word${w-FIELD[f].limit>1?'s':''} over the ${FIELD[f].limit}-word limit`])});
+function checks(c,set,p,r,fields){const out=[];const longs=fields.filter(f=>FIELD[f].type==='long');const text=longs.map(f=>r[f]||'').join('\n');if(!text.trim())return out;
+  longs.forEach(f=>{const n=chars(r[f]),L=lim(c,f);if(n>L)out.push(['bad',`${FIELD[f].short}: ${n-L} character${n-L>1?'s':''} over the ${L}-character limit`])});
   const own=new Set([p.first,p.pref].filter(Boolean)),named=new Set();
   for(const q of roster(set)){if(q.id===p.id)continue;for(const n of[q.first,q.pref]){if(!n||own.has(n)||named.has(n))continue;if(reName(n).test(text)){named.add(n);out.push(['bad',`Mentions ${n}, another pupil in this group. Copy-paste slip?`])}}}
   if(p.pref&&reName(p.first).test(text))out.push(['warn',`Uses “${p.first}”, but ${p.first} goes by ${p.pref}`]);
@@ -478,12 +491,13 @@ function viewHome(){const t=state.teacher,c=CUR;const sets=setsIn(c,t);const tot
   const earlier=PAST.slice().reverse().filter(x=>setsIn(x,t).length);
   return`<section class="wrap">${stack.length?backBtn():''}${adminBanner()}
   <div class="spread"><div><p class="sub" style="margin:0 0 6px">Open now${state.role==='admin'?` · ${STAFF[t]}`:''}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]} · ${tot[0]} of ${tot[1]} complete across ${sets.length} groups</p></div>
-  <div class="deadline">Teacher deadline · ${c.due}</div></div>${setCards(c,t)}
+  <div class="tools"><div class="deadline" style="margin:0 6px 0 0">Teacher deadline · ${c.due}</div><button class="btn" data-act="export" data-v="mine">Download all my classes</button>${importBtn()}</div></div><p class="small muted" style="margin:10px 0 0">One Excel file with a sheet for each class. Write in it, then import it back: as many times as you like.</p>${setCards(c,t)}
   <div class="past"><h3>Earlier cycles</h3><ul>${earlier.map(x=>`<li><button class="pastbtn" data-act="opencycle" data-v="${x.id}"><span><b>${x.name}</b><span class="muted"> · ${KIND_LABEL[x.kind]} · ${setsIn(x,t).length} group${setsIn(x,t).length>1?'s':''}</span></span><span class="chip ok">Published ${x.pub}</span></button></li>`).join('')}</ul></div></section>`}
 function viewTeacherCycle(){const c=CYC(state.cycle),t=state.teacher;if(c.id===CUR.id&&isOpen(c)&&state.role==='teacher')return viewHome();
-  return`<section class="wrap">${backBtn()}${adminBanner()}<div class="spread"><div><p class="sub" style="margin:0 0 6px">${STAFF[t]}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}</p></div></div>${setCards(c,t)}</section>`}
+  return`<section class="wrap">${backBtn()}${adminBanner()}<div class="spread"><div><p class="sub" style="margin:0 0 6px">${STAFF[t]}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}</p></div>${setsIn(c,t).length?`<div class="tools"><button class="btn" data-act="export" data-v="mine">Download all${isOpen(c)?'':' (read-only copy)'}</button>${isOpen(c)?importBtn():''}</div>`:''}</div>${setCards(c,t)}</section>`}
 
 /* ================= writing view ================= */
+const genCount=(c,v)=>{const n=chars(v),L=lim(c,'general');return`<span class="${n>L?'over':''}">${n} / ${L} characters</span>`};
 const gridCols=fs=>fs.filter(f=>FIELD[f].type!=='long');
 const longCols=fs=>fs.filter(f=>FIELD[f].type==='long');
 function rowHTML(c,set,p,i,ro){const r=rec(c,set,p.id),st=status(c,set,p.id);
@@ -492,10 +506,10 @@ function viewWrite(){const c=CYC(state.cycle),set=SET[state.set],fs=fieldsFor(c,
   const gen=hasGeneral(c,set);
   return`<section class="wrap">${backBtn()}${adminBanner()}
   <div class="whead"><div><h1 class="setname">${esc(set.name)}</h1><p class="sub">${c.name} · ${set.subject==='Tutor'?'Tutor comments':esc(set.subject)+' · '+optLabel(c,set)}${c.due&&!ro?` · deadline ${c.due}`:''}${ro?' · published, read-only':''}</p></div>
-  ${ro?'':`<div class="tools"><span class="saved" id="saved">All changes saved</span><button class="btn" data-act="export">Export to Excel</button><label class="btn pop" tabindex="0">Import from Excel<input type="file" accept=".xlsx,.xls" id="imp" hidden></label></div>`}</div>
-  ${gen?`<div class="card gc"><div class="spread"><label class="lbl" for="gen">General comment for the whole set</label><span class="small muted">Appears at the top of every report in ${esc(set.name)} · <span id="gwc">${words(getGen(c,set))} words</span></span></div>${ro?`<p class="gtext">${esc(getGen(c,set))}</p>`:`<textarea id="gen" rows="3" spellcheck="true" lang="en-GB" placeholder="What the class has covered this term…">${esc(getGen(c,set))}</textarea>`}</div>`:''}
+  ${ro?'':`<div class="tools"><span class="saved" id="saved">All changes saved</span><button class="btn" data-act="export" data-v="set">Download this class</button>${importBtn()}</div>`}</div>
+  ${gen?`<div class="card gc"><div class="spread"><label class="lbl" for="gen">General comment for the whole set</label><span class="small muted">Appears at the top of every report in ${esc(set.name)} · <span id="gwc">${genCount(c,getGen(c,set))}</span></span></div>${ro?`<p class="gtext">${esc(getGen(c,set))}</p>`:`<textarea id="gen" rows="3" spellcheck="true" lang="en-GB" placeholder="What the class has covered this term…">${esc(getGen(c,set))}</textarea>`}</div>`:''}
   <div class="wgrid"><div class="card tablecard"><div class="scroll"><table class="roster"><thead><tr><th>Pupil</th>${cols.map(f=>`<th class="g" title="${FIELD[f].label} (${FIELD[f].hint})">${FIELD[f].short}</th>`).join('')}<th class="st">Status</th></tr></thead><tbody id="rows">${ros.map((p,i)=>rowHTML(c,set,p,i,ro)).join('')}</tbody></table></div>
-  ${cols.length?`<p class="hint">${cols.some(f=>FIELD[f].type==='num')?'ATL and Org: 1–5. ':''}${cols.some(f=>FIELD[f].type==='desc')?'Set / Year: E = Emerging, WT = Working towards, M = Meeting, EX = Exceeding, GD = Greater depth (typing the full word works too). ':''}${ro?'':'Paste columns straight from your markbook and they fill downwards. Arrow keys and Enter move between cells.'}</p>`:''}</div>
+  ${cols.length?`<p class="hint">${cols.some(f=>FIELD[f].type==='num')?'AtL and Org: 1–5 (1 is best). ':''}${cols.some(f=>FIELD[f].type==='desc')?'Set / Year: E = Emerging, WT = Working towards, M = Meeting, EX = Exceeding, GD = Greater depth (typing the full word works too). ':''}${ro?'':'Paste columns straight from your markbook and they fill downwards. Arrow keys and Enter move between cells.'}</p>`:''}</div>
   <div class="card editor" id="editor"></div></div></section>`}
 function contextHTML(c,set,p){
   if(set.subject==='Tutor'){const subs=pupilSets(p,c.ay).filter(s=>s.subject!=='Tutor'&&fieldsFor(c,s).length);
@@ -513,8 +527,8 @@ function editorHTML(){const c=CYC(state.cycle),set=SET[state.set],p=PUP[state.se
   <div class="enav"><button class="btn" data-act="step" data-v="-1" ${idx===0?'disabled':''}>← Previous</button><span class="muted small">${idx+1} of ${set.ids.length}</span><button class="btn" data-act="step" data-v="1" ${idx===set.ids.length-1?'disabled':''}>Next →</button></div>`}
 function updateEditor(){$('#editor').innerHTML=editorHTML();updateChecks()}
 function updateChecks(){const c=CYC(state.cycle),set=SET[state.set],p=PUP[state.sel],fs=fieldsFor(c,set),r=rec(c,set,p.id);
-  longCols(fs).forEach(f=>{const el=$('#wc-'+f);if(el){const w=words(r[f]);el.innerHTML=`<span class="${w>FIELD[f].limit?'over':''}">${w} / ${FIELD[f].limit} words</span>`}});
-  const ul=$('#checks');if(!ul)return;const ck=checks(set,p,r,fs);const any=longCols(fs).some(f=>(r[f]||'').trim());ul.innerHTML=ck.length?ck.map(([k,m])=>`<li class="${k==='warn'?'warn':''}">${esc(m)}</li>`).join(''):(any?'<li class="good">No problems spotted</li>':'')}
+  longCols(fs).forEach(f=>{const el=$('#wc-'+f);if(el){const n=chars(r[f]),L=lim(c,f);el.innerHTML=`<span class="${n>L?'over':''}">${n} / ${L} characters</span>`}});
+  const ul=$('#checks');if(!ul)return;const ck=checks(c,set,p,r,fs);const any=longCols(fs).some(f=>(r[f]||'').trim());ul.innerHTML=ck.length?ck.map(([k,m])=>`<li class="${k==='warn'?'warn':''}">${esc(m)}</li>`).join(''):(any?'<li class="good">No problems spotted</li>':'')}
 function updateRow(pid){const c=CYC(state.cycle),set=SET[state.set],tr=document.querySelector(`#rows tr[data-pid="${pid}"]`);if(!tr)return;const st=status(c,set,pid),d=tr.querySelector('.dot');d.className='dot '+st;d.title=STLABEL[st];d.setAttribute('aria-label',STLABEL[st]);tr.querySelectorAll('.gin').forEach(inp=>inp.classList.toggle('bad',!!inp.value&&!valid(inp.dataset.f,inp.value)))}
 function selectPupil(pid,keepFocus){state.sel=pid;document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('on',tr.dataset.pid===pid));updateEditor();if(!keepFocus){const ta=document.querySelector('.lt-in');if(ta)ta.focus()}}
 
@@ -522,61 +536,72 @@ function selectPupil(pid,keepFocus){state.sel=pid;document.querySelectorAll('#ro
 let DL=null;(async()=>{try{if(window.claude&&window.claude.use)DL=await window.claude.use('downloads')}catch(e){}})();
 async function offerFile(name,blob,what){if(DL){try{await DL.save({filename:name,data:blob});toast(`${what} saved: ${name}`)}catch(e){toast(e&&e.code==='declined'?'Download cancelled':'Downloads are not available in this view')}return}
   try{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();toast(`${what} downloaded: ${name}`)}catch(e){toast('Downloads are not available in this view')}}
-const headLabel=f=>FIELD[f].label+(FIELD[f].type==='long'?` (max ${FIELD[f].limit} words)`:FIELD[f].type==='text'?'':` (${FIELD[f].hint})`);
+const headLabel=(c,f)=>FIELD[f].label+(FIELD[f].type==='long'?` (max ${lim(c,f)} characters)`:FIELD[f].type==='text'?'':` (${FIELD[f].hint})`);
 const xlVal=(f,v)=>FIELD[f].type==='desc'&&v?descName(v):(v||'');
-function buildWorkbook(c,set){const fs=fieldsFor(c,set),ros=roster(set);
-  const ws=XLSX.utils.aoa_to_sheet([['Pupil ID','Surname','First name','Preferred name','Form',...fs.map(headLabel)],...ros.map(p=>{const r=rec(c,set,p.id);return[p.id,p.last,p.first,p.pref||'',formAt(p,c.ay),...fs.map(f=>xlVal(f,r[f]))]})]);
-  ws['!cols']=[{wch:10},{wch:13},{wch:12},{wch:12},{wch:7},...fs.map(f=>({wch:FIELD[f].type==='long'?70:FIELD[f].type==='text'?24:16}))];
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Reports');
-  if(hasGeneral(c,set))XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['General comment (appears at the top of every report in this set)'],[getGen(c,set)]]),'General comment');
-  const ms=XLSX.utils.aoa_to_sheet([['reportbook-export',2],['cycle',c.id],['set',set.id],['exported',Date.now()],['general',getGen(c,set)],[],['Pupil ID',...fs],...ros.map(p=>[p.id,...fs.map(f=>rec(c,set,p.id)[f]||'')])]);
-  XLSX.utils.book_append_sheet(wb,ms,'_meta');wb.Workbook={Sheets:wb.SheetNames.map(n=>({Hidden:n==='_meta'?1:0}))};return wb}
-async function exportXlsx(){if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');const c=CYC(state.cycle),set=SET[state.set];
-  await offerFile(`${set.name} - ${c.short}.xlsx`,new Blob([XLSX.write(buildWorkbook(c,set),{bookType:'xlsx',type:'array'})]),'Excel file')}
-function diffWorkbook(wb,c,set){const fs=fieldsFor(c,set);const res={changes:[],conflicts:[],kept:[],warns:[],error:null};
-  const ws=wb.Sheets.Reports||wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-  if(!rows.length){res.error='The file looks empty.';return res}
-  const head=rows[0].map(h=>String(h).toLowerCase().trim());const ci={id:head.findIndex(h=>h.startsWith('pupil id'))};
-  fs.forEach(f=>ci[f]=head.findIndex(h=>h.startsWith(FIELD[f].label.toLowerCase())));
-  if(ci.id<0){res.error='No “Pupil ID” column found, so rows can’t be matched safely. Export a fresh file and write in that.';return res}
-  fs.forEach(f=>{if(ci[f]<0)res.warns.push(`No “${FIELD[f].label}” column in the file, so that field is left as it is`)});
-  let base=null,baseGen;const meta=wb.Sheets._meta;
-  if(meta){const m=XLSX.utils.sheet_to_json(meta,{header:1,defval:''});if(m[0]&&m[0][0]==='reportbook-export'){
-    if(String(m[2][1])!==set.id){res.error=`This file is for a different set, not ${set.name}. Nothing was imported.`;return res}
-    if(String(m[1][1])!==c.id)res.warns.push('This file was exported from a different cycle');
-    baseGen=normField('www',m[4][1]);const mc=m[6].slice(1);base={};m.slice(7).forEach(r=>{if(!r[0])return;base[r[0]]={};mc.forEach((f,i)=>{if(FIELD[f])base[r[0]][f]=normField(f,r[i+1])})})}}
-  else res.warns.push('This file wasn’t exported from Reportbook, so newer edits on the system can’t be protected. Check the changes carefully.');
-  const consider=(p,f,v,cur,b,label)=>{if(v===cur)return;if(b!==undefined&&v===b){res.kept.push({p,f,label});return}if(b!==undefined&&cur!==b){res.conflicts.push({p,f,cur,v,use:'excel',label});return}res.changes.push({p,f,cur,v,label})};
-  const gs=wb.Sheets['General comment'];if(gs&&hasGeneral(c,set)){const g=XLSX.utils.sheet_to_json(gs,{header:1,defval:''});const v=normField('www',(g[1]||[])[0]);consider(null,'general',v,normField('www',getGen(c,set)),baseGen,'General comment')}
-  const seen=new Set();
-  for(const r of rows.slice(1)){const id=String(r[ci.id]||'').trim();if(!id)continue;const p=PUP[id];
-    if(!p||!set.ids.includes(id)){res.warns.push(`Pupil ID ${id} isn’t in ${set.name}, so that row was skipped`);continue}seen.add(id);
-    for(const f of fs){if(ci[f]<0)continue;const v=normField(f,r[ci[f]]),cur=normField(f,rec(c,set,id)[f]);if(v===cur)continue;
-      if(FIELD[f].type!=='long'&&FIELD[f].type!=='text'&&v&&!valid(f,v)){res.warns.push(`${niceName(p)}: “${v}” isn’t a valid ${FIELD[f].label.toLowerCase()}, so it was skipped`);continue}
-      consider(p,f,v,cur,base&&base[id]?base[id][f]:undefined,FIELD[f].label);
-      if(FIELD[f].type==='long'&&words(v)>FIELD[f].limit)res.warns.push(`${niceName(p)}: ${FIELD[f].short} is ${words(v)} words (limit ${FIELD[f].limit}). It’s imported but flagged`)}}
-  const missing=set.ids.filter(id=>!seen.has(id)).length;if(missing)res.warns.push(`${missing} pupil${missing>1?'s are':' is'} not in the file and ${missing>1?'were':'was'} left unchanged`);
+const sheetName=set=>set.name.replace(/[\[\]:*?\/\\]/g,'-').slice(0,31);
+function buildWorkbook(c,sets){const wb=XLSX.utils.book_new();const meta=[['reportbook-export',3],['cycle',c.id],['exported',Date.now()]];
+  for(const set of sets){const fs=fieldsFor(c,set),ros=roster(set),g=hasGeneral(c,set);
+    const rows=[[set.name,c.name],g?[`General comment (appears on every report in this class, max ${lim(c,'general')} characters)`,getGen(c,set)]:['General comment','Not used in this cycle'],[],['Pupil ID','Surname','First name','Preferred name','Form',...fs.map(f=>headLabel(c,f))],...ros.map(p=>{const r=rec(c,set,p.id);return[p.id,p.last,p.first,p.pref||'',formAt(p,c.ay),...fs.map(f=>xlVal(f,r[f]))]})];
+    const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:22},{wch:13},{wch:12},{wch:12},{wch:7},...fs.map(f=>({wch:FIELD[f].type==='long'?70:FIELD[f].type==='text'?24:16}))];
+    XLSX.utils.book_append_sheet(wb,ws,sheetName(set));
+    meta.push(['set',set.id,sheetName(set),g?getGen(c,set):''],['fields',...fs],...ros.map(p=>[p.id,...fs.map(f=>rec(c,set,p.id)[f]||'')]),['end'])}
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(meta),'_meta');wb.Workbook={Sheets:wb.SheetNames.map(n=>({Hidden:n==='_meta'?1:0}))};return wb}
+function exportScope(scope){const c=scope==='all'?CYC(state.pcycle):state.view==='home'?CUR:CYC(state.cycle);
+  if(scope==='set')return{c,sets:[SET[state.set]],name:`${SET[state.set].name} - ${c.short}.xlsx`};
+  if(scope==='all')return{c,sets:setsIn(c),name:`All classes - ${c.short}.xlsx`};
+  return{c,sets:setsIn(c,state.teacher),name:`${STAFF[state.teacher]} - all classes - ${c.short}.xlsx`}}
+async function exportXlsx(scope){if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');const{c,sets,name}=exportScope(scope);if(!sets.length)return toast('Nothing to download in this cycle.');
+  await offerFile(name,new Blob([XLSX.write(buildWorkbook(c,sets),{bookType:'xlsx',type:'array'})]),sets.length>1?`Excel file (${sets.length} classes)`:'Excel file')}
+function readMeta(wb){const ms=wb.Sheets._meta;if(!ms)return null;const m=XLSX.utils.sheet_to_json(ms,{header:1,defval:''});if(!m[0]||m[0][0]!=='reportbook-export')return null;
+  const out={cycle:String(m[1][1]),exported:Number(m[2][1]),sets:{}};let cur=null,fields=[];
+  for(const r of m.slice(3)){if(r[0]==='set'){cur={id:String(r[1]),sheet:String(r[2]),gen:normField('www',r[3]),base:{}};out.sets[cur.sheet]=cur}else if(r[0]==='fields'){fields=r.slice(1).filter(Boolean)}else if(r[0]==='end'){cur=null}else if(cur&&r[0]){cur.base[r[0]]={};fields.forEach((f,i)=>{if(FIELD[f])cur.base[r[0]][f]=normField(f,r[i+1])})}}
+  return out}
+function diffWorkbook(wb,c,allowed){const res={changes:[],conflicts:[],kept:[],warns:[],error:null,sets:new Set()};const meta=readMeta(wb);
+  if(meta&&meta.cycle!==c.id)res.warns.push('This file was exported from a different cycle');
+  if(!meta)res.warns.push('This file wasn’t exported from Reportbook, so newer edits on the system can’t be protected. Check the changes carefully.');
+  const consider=(set,p,f,v,cur,b,label)=>{if(v===cur)return;res.sets.add(set.id);if(b!==undefined&&v===b){res.kept.push({set,p,f,label});return}if(b!==undefined&&cur!==b){res.conflicts.push({set,p,f,cur,v,use:'excel',label});return}res.changes.push({set,p,f,cur,v,label})};
+  let matched=0;
+  for(const sn of wb.SheetNames){if(sn==='_meta')continue;const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:''});if(!rows.length)continue;
+    const mi=meta&&meta.sets[sn];let set=mi?SET[mi.id]:allowed.find(x=>x.name===String(rows[0][0]).trim()||sheetName(x)===sn);
+    if(!set||!allowed.includes(set)){res.warns.push(`Sheet “${sn}” isn’t one of the classes you can edit here, so it was skipped`);continue}matched++;
+    const fs=fieldsFor(c,set),tag=allowed.length>1?`${set.name}: `:'';
+    const hi=rows.findIndex(r=>String(r[0]).toLowerCase().trim().startsWith('pupil id'));if(hi<0){res.warns.push(`${tag}no “Pupil ID” column found, so that sheet was skipped`);continue}
+    const head=rows[hi].map(h=>String(h).toLowerCase().trim());const ci={id:0};fs.forEach(f=>ci[f]=head.findIndex(h=>h.startsWith(FIELD[f].label.toLowerCase())));
+    fs.forEach(f=>{if(ci[f]<0)res.warns.push(`${tag}no “${FIELD[f].label}” column, so that field is left as it is`)});
+    const gr=rows.slice(0,hi).find(r=>String(r[0]).toLowerCase().startsWith('general comment'));
+    if(gr&&hasGeneral(c,set)){const v=normField('www',gr[1]);if(v!=='Not used in this cycle')consider(set,null,'general',v,normField('www',getGen(c,set)),mi?mi.gen:undefined,'General comment');if(chars(v)>lim(c,'general'))res.warns.push(`${tag}general comment is ${chars(v)} characters (limit ${lim(c,'general')}). It’s imported but flagged`)}
+    const seen=new Set();
+    for(const r of rows.slice(hi+1)){const id=String(r[0]||'').trim();if(!id)continue;const p=PUP[id];
+      if(!p||!set.ids.includes(id)){res.warns.push(`${tag}pupil ID ${id} isn’t in this class, so that row was skipped`);continue}seen.add(id);
+      for(const f of fs){if(ci[f]<0)continue;const v=normField(f,r[ci[f]]),cur=normField(f,rec(c,set,id)[f]);if(v===cur)continue;
+        if(FIELD[f].type!=='long'&&FIELD[f].type!=='text'&&v&&!valid(f,v,c)){res.warns.push(`${tag}${niceName(p)}: “${v}” isn’t a valid ${FIELD[f].label.toLowerCase()}, so it was skipped`);continue}
+        consider(set,p,f,v,cur,mi&&mi.base[id]?mi.base[id][f]:undefined,FIELD[f].label);
+        if(FIELD[f].type==='long'&&chars(v)>lim(c,f))res.warns.push(`${tag}${niceName(p)}: ${FIELD[f].short} is ${chars(v)} characters (limit ${lim(c,f)}). It’s imported but flagged`)}}
+    const missing=set.ids.filter(id=>!seen.has(id)).length;if(missing)res.warns.push(`${tag}${missing} pupil${missing>1?'s are':' is'} not in the sheet and ${missing>1?'were':'was'} left unchanged`)}
+  if(!matched&&!res.error)res.error='None of the sheets in this file match a class you can edit in this cycle. Nothing was imported.';
   return res}
 let PENDING=null;
-const who=x=>x.p?esc(niceName(x.p)):'<i>Whole set</i>';
-const shortV=(f,v)=>{if(!v)return'<i class="muted">blank</i>';const t=f==='general'?'long':FIELD[f].type;if(t==='long')return`${words(v)} words`;if(t==='desc')return`<b>${esc(descName(v))}</b>`;return`<b>${esc(v)}</b>`};
-function changeLine(x){const t=x.f==='general'?'long':FIELD[x.f].type;if(t==='long')return`<li><span class="who">${who(x)}</span>: ${esc(x.label)} ${x.cur?`updated (${words(x.cur)} → ${words(x.v)} words)`:`added (${words(x.v)} words)`}<details><summary>Show new text</summary><p>${esc(x.v)}</p></details></li>`;
+const who=x=>x.p?esc(niceName(x.p)):'<i>Whole class</i>';
+const shortV=(f,v)=>{if(!v)return'<i class="muted">blank</i>';const t=f==='general'?'long':FIELD[f].type;if(t==='long')return`${chars(v)} characters`;if(t==='desc')return`<b>${esc(descName(v))}</b>`;return`<b>${esc(v)}</b>`};
+function changeLine(x){const t=x.f==='general'?'long':FIELD[x.f].type;if(t==='long')return`<li><span class="who">${who(x)}</span>: ${esc(x.label)} ${x.cur?`updated (${chars(x.cur)} → ${chars(x.v)} characters)`:`added (${chars(x.v)} characters)`}<details><summary>Show new text</summary><p>${esc(x.v)}</p></details></li>`;
   return`<li><span class="who">${who(x)}</span>: ${esc(x.label)} <span class="was">${x.cur?esc(t==='desc'?descName(x.cur):x.cur):'blank'}</span> → ${shortV(x.f,x.v)}</li>`}
-function showDiff(res,c,set,fname){PENDING={res,c,set};
-  if(res.error)return openModal(`<h2>Couldn’t import that file</h2><p>${esc(res.error)}</p><div class="mfoot"><button class="btn ink" data-act="close">OK</button></div>`);
-  const n=res.changes.length+res.conflicts.length;
-  openModal(`<h2>Check before importing</h2><p class="sub">${esc(fname)} → ${esc(set.name)}. Nothing changes until you press Apply.</p>
+function grouped(list,fn){const by=new Map();list.forEach(x=>{if(!by.has(x.set))by.set(x.set,[]);by.get(x.set).push(x)});const multi=by.size>1;return[...by].map(([set,xs])=>`${multi?`<li class="grp">${esc(set.name)}</li>`:''}${xs.map(fn).join('')}`).join('')}
+function showDiff(res,c,fname){PENDING={res,c};
+  if(res.error)return openModal(`<h2>Couldn’t import that file</h2><p>${esc(res.error)}</p>${res.warns.length?`<ul class="checks">${res.warns.map(w=>`<li class="warn">${esc(w)}</li>`).join('')}</ul>`:''}<div class="mfoot"><button class="btn ink" data-act="close">OK</button></div>`);
+  const n=res.changes.length+res.conflicts.length;let ci=0;
+  openModal(`<h2>Check before importing</h2><p class="sub">${esc(fname)} → ${c.name}. Nothing changes until you press Apply.</p>
   <div class="sumrow"><div class="${res.changes.length?'pop':''}"><b>${res.changes.length}</b>changes</div><div><b>${res.conflicts.length}</b>conflicts</div><div><b>${res.kept.length}</b>newer on system, kept</div><div><b>${res.warns.length}</b>notes</div></div>
   ${!n?`<p><span class="chip ok">Everything in the file already matches. You can re-import as often as you like.</span></p>`:''}
-  ${res.changes.length?`<h3>Changes</h3><ul class="dlist">${res.changes.map(changeLine).join('')}</ul>`:''}
-  ${res.conflicts.length?`<h3>Conflicts: changed on the system and in Excel since you exported</h3><ul class="dlist">${res.conflicts.map((x,i)=>`<li><span class="who">${who(x)}</span>: ${esc(x.label)}<div class="conf"><label><input type="radio" name="cf${i}" value="system" data-cf="${i}">Keep system: ${shortV(x.f,x.cur)}</label><label><input type="radio" name="cf${i}" value="excel" data-cf="${i}" checked>Use Excel: ${shortV(x.f,x.v)}</label></div></li>`).join('')}</ul>`:''}
-  ${res.kept.length?`<details><summary class="small muted">${res.kept.length} field${res.kept.length>1?'s were':' was'} edited on the system after you exported and not touched in Excel, so the newer system version stays</summary><ul class="dlist">${res.kept.map(x=>`<li><span class="who">${who(x)}</span>: ${esc(x.label)}</li>`).join('')}</ul></details>`:''}
+  ${res.changes.length?`<h3>Changes${res.sets.size>1?` across ${res.sets.size} classes`:''}</h3><ul class="dlist">${grouped(res.changes,changeLine)}</ul>`:''}
+  ${res.conflicts.length?`<h3>Conflicts: changed on the system and in Excel since you exported</h3><ul class="dlist">${grouped(res.conflicts,x=>{const i=res.conflicts.indexOf(x);return`<li><span class="who">${who(x)}</span>: ${esc(x.label)}<div class="conf"><label><input type="radio" name="cf${i}" value="system" data-cf="${i}">Keep system: ${shortV(x.f,x.cur)}</label><label><input type="radio" name="cf${i}" value="excel" data-cf="${i}" checked>Use Excel: ${shortV(x.f,x.v)}</label></div></li>`})}</ul>`:''}
+  ${res.kept.length?`<details><summary class="small muted">${res.kept.length} field${res.kept.length>1?'s were':' was'} edited on the system after you exported and not touched in Excel, so the newer system version stays</summary><ul class="dlist">${grouped(res.kept,x=>`<li><span class="who">${who(x)}</span>: ${esc(x.label)}</li>`)}</ul></details>`:''}
   ${res.warns.length?`<h3 style="margin-top:12px">Notes</h3><ul class="checks">${res.warns.map(w=>`<li class="warn">${esc(w)}</li>`).join('')}</ul>`:''}
   <div class="mfoot"><button class="btn" data-act="close">${n?'Cancel':'Close'}</button>${n?`<button class="btn pop" data-act="apply">Apply ${n} change${n>1?'s':''}</button>`:''}</div>`)}
-function applyPending(){if(!PENDING)return;const{res,c,set}=PENDING;let n=0;
-  const put=x=>{if(x.f==='general'){(GEN[c.id]=GEN[c.id]||{})[set.id]=x.v}else setVal(c,set,x.p.id,x.f,x.v);n++};
+function applyPending(){if(!PENDING)return;const{res,c}=PENDING;let n=0;
+  const put=x=>{if(x.f==='general'){(GEN[c.id]=GEN[c.id]||{})[x.set.id]=x.v}else setVal(c,x.set,x.p.id,x.f,x.v);n++};
   res.changes.forEach(put);res.conflicts.forEach(x=>{if(x.use==='excel')put(x)});
-  PENDING=null;closeModal();save();render();toast(`Imported ${n} change${n===1?'':'s'}. Re-import whenever you like.`)}
+  PENDING=null;closeModal();save();render();toast(`Imported ${n} change${n===1?'':'s'}${res.sets.size>1?` across ${res.sets.size} classes`:''}. Re-import whenever you like.`)}
+const importBtn=()=>`<label class="btn pop" tabindex="0">Import from Excel<input type="file" accept=".xlsx,.xls" id="imp" hidden></label>`;
 
 /* ================= pupils ================= */
 function viewPupils(){return`<section class="wrap"><h1>Pupils</h1><p class="sub">Every pupil’s grades and reports, every cycle, one click away.</p>
@@ -585,7 +610,7 @@ function pupilList(){const q=state.q.toLowerCase().trim();const list=PUPILS.filt
   return list.length?list.map(p=>`<button class="card pitem" data-act="pupil" data-v="${p.id}"><span class="av">${call(p)[0]}${p.last[0]}</span><span><b>${esc(fullName(p))}</b><br><span class="muted small">${formAt(p,2027)} · Year ${p.year}</span></span></button>`).join(''):'<p class="muted">No pupils match.</p>'}
 function pupilCycles(p){return PAST.filter(c=>pupilSets(p,c.ay).some(s=>fieldsFor(c,s).length))}
 function gbox(lbl,v,hi){return v?`<div class="gbox${hi?' a':''}"><b>${esc(v)}</b><small>${lbl}</small></div>`:''}
-function gradeBoxes(r){return`${gbox('ATL',r.atl)}${gbox('Org',r.org)}${r.achS?`<div class="gbox d ${r.achS}"><b>${esc(r.achS)}</b><small>Set</small></div>`:''}${r.achY?`<div class="gbox d ${r.achY}"><b>${esc(r.achY)}</b><small>Year</small></div>`:''}`}
+function gradeBoxes(r){return`${gbox('AtL',r.atl)}${gbox('Org',r.org)}${r.achS?`<div class="gbox d ${r.achS}"><b>${esc(r.achS)}</b><small>Set</small></div>`:''}${r.achY?`<div class="gbox d ${r.achY}"><b>${esc(r.achY)}</b><small>Year</small></div>`:''}`}
 function subjCard(c,s,p,showCycle){const r=(DATA[c.id][s.id]||{})[p.id]||{};const g=getGen(c,s);
   return`<article class="card subj"><header><div>${showCycle?`<b>${c.name}</b>`:`<button class="linkish" data-act="subj" data-v="${esc(s.subject)}">${esc(s.subject)}</button>`}<div class="muted small">${STAFF[s.teacher]} · ${esc(s.name)}</div></div><div class="grades">${gradeBoxes(r)}</div></header>
   ${r.achS||r.achY?`<p class="small muted">Set: ${descName(r.achS)} · Year: ${descName(r.achY)}</p>`:''}
@@ -603,7 +628,7 @@ function viewPupil(){const p=PUP[state.pupil],cyc=pupilCycles(p);if(state.pcyc==
     body=`<div class="spread" style="margin-top:24px"><h2>${esc(s)} across every cycle</h2><button class="btn" data-act="subj" data-v="">Show all subjects</button></div><div class="timeline">${items}</div>`}
   else{const sets=pupilSets(p,c.ay).filter(s=>fieldsFor(c,s).length);const tut=sets.find(s=>s.subject==='Tutor');const tr=tut?(DATA[c.id][tut.id]||{})[p.id]:null;
     body=`${tr&&tr.tutor?`<div class="card tutorc"><div class="spread"><b>Tutor comment</b><span class="small muted">${STAFF[tut.teacher]} · ${tut.form}</span></div><p>${esc(tr.tutor)}</p></div>`:''}<div class="subjects">${sets.filter(s=>s.subject!=='Tutor').map(s=>subjCard(c,s,p,false)).join('')}</div>`}
-  const M=[['achY','Achievement in year'],['achS','Achievement in set'],['atl','ATL'],['org','Organisation']];
+  const M=[['achY','Achievement in year'],['achS','Achievement in set'],['atl','AtL'],['org','Organisation']];
   const gc=cyc.filter(x=>x.kind!=='Y8');
   const ot=`<div class="card overtime"><div class="spread" style="padding:0 16px"><h3 style="padding:0">Over time</h3><div class="depts" style="margin:0">${M.map(([k,l])=>`<button class="${state.measure===k?'on':''}" data-act="measure" data-v="${k}">${l}</button>`).join('')}</div></div><p class="sub small" style="padding:4px 16px 8px">Click a subject to read all its reports in order.</p><div class="scroll"><table class="ot"><thead><tr><th>Subject</th>${gc.map(x=>`<th class="${x===c?'cur':''}">${x.short}</th>`).join('')}</tr></thead><tbody>${ACAD.filter(s=>gc.some(x=>pupilSets(p,x.ay).some(q=>q.subject===s))).map(s=>`<tr><td><button class="linkish" style="font-size:14px" data-act="subj" data-v="${esc(s)}">${esc(s)}</button></td>${gc.map(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);const v=st?((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]:'';return`<td class="${x===c?'cur':''}">${v?`<span class="lt ${FIELD[state.measure].type==='desc'?v:'n'+v}">${esc(v)}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`;
   return`<section class="wrap">${top}${sw}${body}${ot}</section>`}
@@ -637,13 +662,15 @@ function viewWizard(){let b='';
     <div class="namebox" id="w-name">${wName()}</div><p class="sub">The name is built from the term and type, so every cycle is named the same way.</p>`;
   if(W.step===2){if(W.copy===null)W.copy=suggestCopy();const sug=suggestCopy();const list=[...allCycles().filter(c=>c.id!==CUR.id).slice().reverse()].sort((a,c)=>(c.id===sug)-(a.id===sug));
     b=`<h2>Start from an earlier cycle?</h2><p class="sub">The same cycle last year is usually the closest match, so it’s suggested first.</p><div class="copylist">${[...list,{id:'blank',name:'Start blank'}].map(c=>`<label class="${W.copy===c.id?'on':''}"><input type="radio" name="copy" value="${c.id}" ${W.copy===c.id?'checked':''}><span><b>${esc(c.name)}</b>${c.id===sug?' <span class="chip">Suggested</span>':''}<br><span class="muted small">${c.id==='blank'?'Every cell starts as —':esc(c.summary||KIND_LABEL[c.kind])}</span></span></label>`).join('')}</div>`}
-  if(W.step===3){if(!W.matrix)W.matrix=W.copy==='blank'?matrixFor('BLANK'):JSON.parse(JSON.stringify(CYC(W.copy).matrix));
+  if(W.step===3){if(!W.matrix){const src=W.copy==='blank'?null:CYC(W.copy);W.matrix=src?JSON.parse(JSON.stringify(src.matrix)):matrixFor('BLANK');W.limits={...DEFAULT_LIMITS,...((src&&src.limits)||{})};W.general=src?genOn(src):wKind()!=='Y8'}
     b=`<h2>Which subjects report, and what do they collect?</h2><p class="sub">${W.copy==='blank'?'Started blank.':`Copied from ${esc(CYC(W.copy).name)}.`} Change any cell. Peri music and LAMDA use their own lesson lists rather than iSAMS sets.</p>
     <div class="legend">${MOPTS.filter(o=>o!=='none').map(o=>`<div><b>${OPTS[o].label}</b>${OPTS[o].fields.map(f=>FIELD[f].short).join(' · ')}</div>`).join('')}</div>
     <div class="card scroll"><table class="matrix"><thead><tr><th>Subject</th>${MYEARS.map(y=>`<th>Year ${y}${y>3?`<br><button class="mini" data-act="copycol" data-v="${y}">copy Year ${y-1}</button>`:''}</th>`).join('')}</tr></thead><tbody>
     ${MROWS.map(r=>`<tr><td><b>${r}</b><br><button class="mini" data-act="fillrow" data-v="${r}">same for all years</button></td>${MYEARS.map(y=>`<td><select data-mr="${r}" data-my="${y}" class="${W.matrix[r][y]==='none'?'off':'on'}" aria-label="${r}, Year ${y}">${MOPTS.map(o=>`<option value="${o}" ${W.matrix[r][y]===o?'selected':''}>${OPTS[o].label}</option>`).join('')}</select></td>`).join('')}</tr>`).join('')}
     </tbody></table></div>
-    <p class="small muted">Reports include a general comment for each set, plus What went well and Even better if for each pupil. Exam results are free text, so several papers can go in one box.</p>`}
+    <div class="card settings" style="margin-top:18px;padding:18px"><h3>Character limits and general comment</h3><p class="sub small" style="margin-bottom:12px">Copied from the cycle above. Admins can change these later too.</p>${limitFields(W.limits,'data-wlimit',false)}
+    <label class="toggle"><input type="checkbox" id="wgen" ${W.general?'checked':''}>Include a general comment for each class</label></div>
+    <p class="small muted">Reports have What went well and Even better if for each pupil. Exam results are free text, so several papers can go in one box.</p>`}
   if(W.step===4){const pf=preflight();
     b=`<h2>${wName()}</h2><p class="sub">Opens ${fmtDate(W.opens)} · teacher deadline ${fmtDate(W.deadline)} · publish ${fmtDate(W.publish)}</p>
     <div class="pf"><div class="card"><b>${pf.slots.toLocaleString('en-GB')}</b>report slots</div><div class="card"><b>${pf.staff}</b>staff involved</div><div class="card"><b>${pf.subjects}</b>subjects</div><div class="card"><b>${pf.years}</b>year groups</div></div>
@@ -667,16 +694,22 @@ function preflight(){const m=W.matrix,iss=[];let slots=0,staff=0,subj=0;const yr
   return{slots,staff,subjects:subj,years:yrs.size,issues:iss}}
 function launch(){const today=new Date().toISOString().slice(0,10);const used=new Set();MROWS.forEach(r=>MYEARS.forEach(y=>{if(W.matrix[r][y]!=='none')used.add(W.matrix[r][y])}));const pf=preflight();
   const c={id:'x'+Date.now(),name:wName(),short:wName().replace('Half Term','HT').replace('End of Term','End').replace('Year 8 Exam Feedback, ','Y8 exams ').replace('Michaelmas','Mich'),kind:wKind(),ay:2027,status:W.opens>today?'Scheduled':'Open',opens:W.opens,deadline:W.deadline,due:fmtDate(W.deadline),matrix:W.matrix,summary:[...used].map(u=>OPTS[u].label).join(', ')};
-  EXTRA.push(c);DATA[c.id]={};GEN[c.id]={};save();toast(`${c.name} launched. ${pf.staff} staff would be emailed (prototype: no emails sent).`);Object.assign(W,{step:1,copy:null,matrix:null});top('cycles')}
+  c.limits={...W.limits};c.general=W.general;EXTRA.push(c);DATA[c.id]={};GEN[c.id]={};save();toast(`${c.name} launched. ${pf.staff} staff would be emailed (prototype: no emails sent).`);Object.assign(W,{step:1,copy:null,matrix:null});top('cycles')}
 
 /* ================= admin: progress ================= */
 function teacherRows(c){const by={};setsIn(c).forEach(s=>{const g=progress(c,s);const t=by[s.teacher]=by[s.teacher]||{ini:s.teacher,done:0,total:0,depts:new Set()};t.done+=g.done;t.total+=g.total;t.depts.add(s.subject==='Tutor'?'Tutors':s.subject)});return Object.values(by).map(t=>({...t,depts:[...t.depts]}))}
+function limitFields(vals,attr,dis){return`<div class="fgrid">${['www','ebi','tutor','general'].map(f=>`<label class="field">${LIMIT_LABEL[f]}<span class="inline"><input type="number" min="50" max="5000" step="50" ${attr}="${f}" value="${vals[f]??DEFAULT_LIMITS[f]}" ${dis?'disabled':''}><span class="muted small">characters</span></span></label>`).join('')}</div>`}
+const settingsSummary=c=>` · character limits: WWW ${lim(c,'www')}, EBI ${lim(c,'ebi')}, tutor ${lim(c,'tutor')}, general ${lim(c,'general')} · general comment ${genOn(c)?'on':'off'}`;
+function settingsCard(c,open){return`<details class="card settings" ${open?'':''}><summary><b>Cycle settings</b><span class="muted small" id="set-sum">${settingsSummary(c)}</span></summary>
+  <p class="sub small">${open?'Changes apply straight away for every teacher in this cycle.':'This cycle is published, so its settings are locked.'}</p>${limitFields(c.limits||DEFAULT_LIMITS,'data-limit',!open)}
+  <label class="toggle"><input type="checkbox" id="gen-on" ${genOn(c)?'checked':''} ${open?'':'disabled'}>Include a general comment for each class (shown at the top of every report in that class)</label></details>`}
 function viewProgress(){const c=CYC(state.pcycle)||CUR;const rows=teacherRows(c),depts=['All',...new Set(rows.flatMap(r=>r.depts))].sort((a,b)=>a==='All'?-1:b==='All'?1:a.localeCompare(b));if(!depts.includes(state.dept))state.dept='All';
   const shown=rows.filter(r=>state.dept==='All'||r.depts.includes(state.dept));const d=rows.reduce((a,r)=>a+r.done,0),t=rows.reduce((a,r)=>a+r.total,0);const open=isOpen(c);
   return`<section class="wrap"><div class="spread"><div><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}. Click a teacher to open their reports${open?' and edit them':''}.</p></div>
   <label class="field" style="min-width:260px">Cycle<select id="pcycle">${allCycles().slice().reverse().map(x=>`<option value="${x.id}" ${x.id===c.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label></div>
   <div class="card hero"><div><div class="bignum">${t?Math.round(d/t*100):0}%</div><div class="muted">${d.toLocaleString('en-GB')} of ${t.toLocaleString('en-GB')} complete</div><div class="bar" style="margin-top:14px"><i style="width:${t?d/t*100:0}%"></i></div></div>
-  <div class="row">${open?'<button class="btn" data-act="nudgeall">Nudge everyone under 50%</button>':'<span class="chip ok">Published</span>'}</div></div>
+  <div class="row">${open?'<button class="btn" data-act="nudgeall">Nudge everyone under 50%</button>':'<span class="chip ok">Published</span>'}<button class="btn" data-act="export" data-v="all">Download all classes</button>${open?importBtn():''}</div></div>
+  ${settingsCard(c,open)}
   <div class="depts">${depts.map(x=>`<button class="${state.dept===x?'on':''}" data-act="dept" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
   ${rows.length?`<div class="card scroll"><table class="tbl clickrows"><thead><tr><th>Teacher</th><th class="hide-s">Teaching</th><th style="width:38%">Progress</th><th></th></tr></thead><tbody>
   ${shown.sort((a,b)=>a.done/a.total-b.done/b.total||STAFF[a.ini].localeCompare(STAFF[b.ini])).map(r=>{const p=r.total?r.done/r.total:0;return`<tr data-act="teacher" data-v="${r.ini}" data-c="${c.id}" tabindex="0"><td><b>${STAFF[r.ini]}</b> <span class="muted small">${r.ini}</span></td><td class="hide-s muted">${r.depts.join(', ')}</td><td><div class="row" style="flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${p*100}%"></i></div><span class="small" style="white-space:nowrap">${r.done}/${r.total}</span></div></td><td style="text-align:right">${p>=1?'<span class="chip ok">Done</span>':!open?'':state.nudged[r.ini]?'<span class="chip">Nudged ✓</span>':`<button class="btn" style="min-height:38px" data-act="nudge" data-v="${r.ini}">Nudge</button>`}</td></tr>`}).join('')}
@@ -721,10 +754,10 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
   else if(a==='pcyc'){state.pcyc=Number(v);render()}
   else if(a==='subj'){state.subj=v||null;render()}
   else if(a==='measure'){state.measure=v;render()}
-  else if(a==='export')exportXlsx();
+  else if(a==='export')exportXlsx(v);
   else if(a==='apply')applyPending();
   else if(a==='close')closeModal();
-  else if(a==='reset'){try{localStorage.removeItem(LS_KEY)}catch(x){}const f=freshOpen();DATA[CUR.id]=f.D;GEN[CUR.id]=f.G;EXTRA=[];state.nudged={};top(state.role==='teacher'?'home':'cycles');toast('Sample data reset')}
+  else if(a==='reset'){try{localStorage.removeItem(LS_KEY)}catch(x){}const f=freshOpen();DATA[CUR.id]=f.D;GEN[CUR.id]=f.G;CYCLES.forEach(c=>{delete c.limits;delete c.general});EXTRA=[];state.nudged={};top(state.role==='teacher'?'home':'cycles');toast('Sample data reset')}
   else if(a==='newcycle'){Object.assign(W,{step:1,copy:null,matrix:null});nav('wizard')}
   else if(a==='wstep'){W.step=clamp(W.step+Number(v),1,4);render();window.scrollTo(0,0)}
   else if(a==='copycol'){const y=Number(v);MROWS.forEach(r=>{let s=W.matrix[r][y-1];if(r==='Latin'&&y<6)s='none';W.matrix[r][y]=s});render()}
@@ -738,17 +771,24 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
 });
 document.addEventListener('input',e=>{const t=e.target;
   if(t.classList.contains('lt-in')){const c=CYC(state.cycle),set=SET[state.set];setVal(c,set,t.dataset.pid,t.dataset.f,t.value);save();updateChecks();updateRow(t.dataset.pid)}
-  else if(t.id==='gen'){const c=CYC(state.cycle),set=SET[state.set];(GEN[c.id]=GEN[c.id]||{})[set.id]=t.value;$('#gwc').textContent=words(t.value)+' words';save()}
+  else if(t.id==='gen'){const c=CYC(state.cycle),set=SET[state.set];(GEN[c.id]=GEN[c.id]||{})[set.id]=t.value;$('#gwc').innerHTML=genCount(c,t.value);save()}
   else if(t.classList.contains('gin')){const c=CYC(state.cycle),set=SET[state.set],f=t.dataset.f;let v=t.value;if(FIELD[f].type!=='text')v=v.toUpperCase().trim();if(v!==t.value)t.value=v;setVal(c,set,t.dataset.pid,f,FIELD[f].type==='text'?v.trim():v);save();updateRow(t.dataset.pid);if(state.sel===t.dataset.pid)updateChecks()}
   else if(t.id==='q'){state.q=t.value;$('#plist').innerHTML=pupilList()}
 });
 document.addEventListener('focusout',e=>{const t=e.target;if(t.classList&&t.classList.contains('gin')&&FIELD[t.dataset.f].type==='desc'){const v=normDesc(t.value);if(v!==t.value){t.value=v;setVal(CYC(state.cycle),SET[state.set],t.dataset.pid,t.dataset.f,v);save();updateRow(t.dataset.pid)}}});
 document.addEventListener('change',async e=>{const t=e.target;
-  if(t.id==='imp'&&t.files[0]){const f=t.files[0];t.value='';if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');try{const wb=XLSX.read(await f.arrayBuffer());const c=CYC(state.cycle),set=SET[state.set];showDiff(diffWorkbook(wb,c,set),c,set,f.name)}catch(x){openModal(`<h2>Couldn’t read that file</h2><p>It doesn’t look like an Excel workbook.</p><div class="mfoot"><button class="btn ink" data-act="close">OK</button></div>`)}}
+  if(t.id==='imp'&&t.files[0]){const f=t.files[0];t.value='';if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');
+    const c=state.view==='progress'?CYC(state.pcycle):state.view==='home'?CUR:CYC(state.cycle);const allowed=state.view==='progress'?setsIn(c):setsIn(c,state.teacher);
+    let wb;try{wb=XLSX.read(await f.arrayBuffer())}catch(x){return openModal(`<h2>Couldn’t read that file</h2><p>It doesn’t look like an Excel workbook.</p><div class="mfoot"><button class="btn ink" data-act="close">OK</button></div>`)}
+    showDiff(diffWorkbook(wb,c,allowed),c,f.name)}
   else if(t.dataset.cf!==undefined&&PENDING){PENDING.res.conflicts[Number(t.dataset.cf)].use=t.value}
   else if(t.name==='copy'){W.copy=t.value;W.matrix=null;render()}
   else if(t.dataset.mr){W.matrix[t.dataset.mr][t.dataset.my]=t.value;t.className=t.value==='none'?'off':'on'}
   else if(t.id&&t.id.startsWith('w-')){W[t.id.slice(2)]=t.value;const n=$('#w-name');if(n)n.textContent=wName();if(t.id==='w-type'||t.id==='w-term'){W.copy=null;W.matrix=null}}
+  else if(t.dataset.limit){const c=CYC(state.pcycle);c.limits={...DEFAULT_LIMITS,...(c.limits||{}),[t.dataset.limit]:Math.max(50,Number(t.value)||DEFAULT_LIMITS[t.dataset.limit])};save();$('#set-sum').textContent=settingsSummary(c);toast('Character limit updated for '+c.name)}
+  else if(t.id==='gen-on'){const c=CYC(state.pcycle);c.general=t.checked;save();$('#set-sum').textContent=settingsSummary(c);toast(`General comment ${t.checked?'on':'off'} for ${c.name}`)}
+  else if(t.dataset.wlimit){W.limits[t.dataset.wlimit]=Math.max(50,Number(t.value)||DEFAULT_LIMITS[t.dataset.wlimit])}
+  else if(t.id==='wgen'){W.general=t.checked}
   else if(t.id==='pub-cyc'){PUB.cyc=t.value;PUB.years={};render()}
   else if(t.id==='pcycle'){state.pcycle=t.value;state.dept='All';render()}
   else if(t.dataset.pubyear){PUB.years[t.dataset.pubyear]=t.checked;render()}
