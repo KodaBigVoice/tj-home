@@ -16,7 +16,7 @@ Small pages without their own site live here in their own folders:
 | `family-tree/` | Family Tree |
 | `lunch-queue/` | Matchday Queues |
 | `timetable-maker/` | Timetable Maker |
-| `reportbook/` | Reportbook (prototype) |
+| `mysams/` | mySAMS (prototype; `reportbook/` redirects here) |
 | `prep-generator/` | Prep Generator (weekly retrieval preps + answer copy) |
 
 Apps with their own site (PMU, Morning Slide, Crooket, MusicLAMDA, Simple Track Builder, Vobiscum Configurator) are only linked.
