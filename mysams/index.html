@@ -264,6 +264,26 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
 .wchip button{border:0;background:none;cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;border-radius:999px;color:var(--mut)}
 .wchip button:hover{color:var(--crim)}
 .issues .fine{background:var(--soft);color:var(--ink)}
+.cb{position:relative;display:inline-block}
+.cb .cbx{width:64px;text-align:left;text-transform:none;padding-right:22px;font-size:15px}
+.cb.cbw .cbx{width:158px;font-weight:500;font-size:14px}
+.cb .caret{position:absolute;right:7px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mut);cursor:pointer}
+.cblist{position:fixed;z-index:40;list-style:none;margin:0;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px #0003;max-height:260px;overflow:auto}
+.cblist li{padding:8px 12px;border-radius:7px;cursor:pointer;font-size:14px;white-space:nowrap}
+.cblist li.hi{background:var(--pop);color:#000237;font-weight:600}
+.cblist li.cur:not(.hi){background:var(--soft)}
+.cblist li.none{color:var(--mut);cursor:default}
+.gbox b.w{font-size:12px;line-height:1.15;white-space:nowrap}
+.gbox.d{min-width:64px;padding:5px 8px}
+.lt.w{font-size:12px;font-weight:600;white-space:nowrap}
+.roster .g{width:auto}
+.subj header{flex-direction:column;align-items:stretch}
+.subj .grades{flex-wrap:wrap}
+.roster td:first-child,.roster th:first-child{min-width:165px}
+.roster td{padding:4px 6px}.roster th{padding:8px 6px}
+.cb .cbx{width:56px;padding-left:9px}.cb.cbw .cbx{width:142px;font-size:13px;padding-right:20px}
+.roster .st{width:44px;padding-inline:4px}
+@media(min-width:980px){.wgrid{grid-template-columns:minmax(0,1.75fr) minmax(0,1fr)}}
 .banner{background:var(--soft);border-left:4px solid var(--pop);padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:15px}
 .gc{padding:16px 18px;margin-bottom:18px;display:flex;flex-direction:column;gap:8px}
 .gc textarea{min-height:84px}
@@ -306,17 +326,18 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
     <button id="r-admin" data-act="role" data-v="admin">Admin</button>
   </div>
 </div></header>
-<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 24 Nov 2026, 10:55</span><button data-act="reset">Reset sample data</button></span></div></div>
+<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 24 Nov 2026, 22:16</span><button data-act="reset">Reset sample data</button></span></div></div>
 <main id="main"></main>
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="mbox" id="mbox"></div></div>
 <div class="toast" id="toast" role="status"></div>
+<ul id="cblist" class="cblist" role="listbox" hidden></ul>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 {
-const BUILD='24 Nov 2026, 10:55';
+const BUILD='24 Nov 2026, 22:16';
 const SCORE_LABEL='School score';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -350,7 +371,8 @@ const DEF_FIELD={
   gSkill:{label:'Skill / technical ability',short:'Skill',type:'num'},
   gAware:{label:'Game awareness',short:'Awareness',type:'num'},
   pcom:{label:'Comment',short:'Comment',type:'long'},
-  tutor:{label:'Tutor comment',short:'Tutor',type:'long'}
+  tutor:{label:'Tutor comment',short:'Tutor',type:'long'},
+  head:{label:'Headmaster’s comment',short:'Head',type:'long'}
 };
 const DEF_TEMPLATES={
   academic:{name:'Academic',chunks:[{id:'atlorg',label:'AtL + Org',fields:['atl','org']},{id:'ach',label:'Achievement',fields:['achS','achY']},{id:'exam',label:'Exam',fields:['exam','score']},{id:'rep',label:'WWW + EBI',fields:['www','ebi']}]},
@@ -364,7 +386,7 @@ const DEF_SUBJ_CFG={English:{template:'academic',source:'sets',hod:'HAR'},Maths:
 let FIELD=clone(DEF_FIELD),TEMPLATES=clone(DEF_TEMPLATES),SUBJ_CFG=clone(DEF_SUBJ_CFG);
 const SUBJ_TEXT={English:'English',Maths:'maths',Science:'science',French:'French',History:'history',Geography:'geography',Latin:'Latin','Religious Studies':'RS',Games:'games'};
 const TOPICS={Maths:['fractions','algebraic expressions','ratio','angles in polygons','solving equations','probability','area and perimeter'],English:['persuasive writing','poetry analysis','the class novel','descriptive writing','comprehension'],Science:['forces','separating mixtures','the solar system','electric circuits','habitats'],French:['describing family','the past tense','listening tasks','vocabulary','role plays'],History:['the Norman Conquest','source analysis','the Tudors','Victorian Britain','the Romans'],Geography:['rivers','map skills','weather and climate','volcanoes','settlements'],Latin:['the first declension','translation','verb endings','Roman myths','the imperfect tense'],'Religious Studies':['world religions','ethical questions','the parables','festivals of light','sacred texts'],Games:['passing under pressure','tackling technique','positional play','calling for the ball','defending as a unit']};
-const STAFF={TAJ:'Mr Joshi',RPA:'Mrs Patel',HAR:'Mrs Hart',LOW:'Mr Lowe',DKO:'Dr Okafor',BYR:'Ms Byrne',MLA:'Mme Laurent',BEL:'Mr Bell',REI:'Miss Reid',ASH:'Mr Ashworth',CLA:'Revd Clarke',ABA:'Mr Abbott',RHU:'Mr Rhodes',KPA:'Mrs Parr',SWI:'Mrs Wilde',CFO:'Mr Ford',MDE:'Mrs Dean',JRO:'Mr Rowe',NGR:'Mrs Grey',LPO:'Mr Pole',HTA:'Ms Tate',EWE:'Mr West',BCO:'Mrs Cole',MFI:'Mr Finch',RDA:'Mrs Day',AKE:'Mr Kemp',CAR:'Mr Carver',FEN:'Mrs Fenwick',DOY:'Mrs Doyle',GRA:'Ms Grant',ADMIN:'an admin'};
+const STAFF={TAJ:'Mr Joshi',RPA:'Mrs Patel',HAR:'Mrs Hart',LOW:'Mr Lowe',DKO:'Dr Okafor',BYR:'Ms Byrne',MLA:'Mme Laurent',BEL:'Mr Bell',REI:'Miss Reid',ASH:'Mr Ashworth',CLA:'Revd Clarke',ABA:'Mr Abbott',RHU:'Mr Rhodes',KPA:'Mrs Parr',SWI:'Mrs Wilde',CFO:'Mr Ford',MDE:'Mrs Dean',JRO:'Mr Rowe',NGR:'Mrs Grey',LPO:'Mr Pole',HTA:'Ms Tate',EWE:'Mr West',BCO:'Mrs Cole',MFI:'Mr Finch',RDA:'Mrs Day',AKE:'Mr Kemp',CAR:'Mr Carver',FEN:'Mrs Fenwick',DOY:'Mrs Doyle',GRA:'Ms Grant',ADMIN:'an admin',HEA:'The Headmaster'};
 const ROLE_NOTE={CAR:'Head of Boys’ Games',FEN:'Head of Girls’ Games'};
 function teacherFor(code,y,idx){switch(code){case'Mat':return y<=5?'RPA':y===8?(idx===0?'RPA':'TAJ'):(idx===0?'TAJ':'RPA');case'Eng':return y<=5?'HAR':(idx===0?'HAR':'LOW');case'Sci':return y<=6?'DKO':'BYR';case'Fre':return'MLA';case'His':return'BEL';case'Geo':return'REI';case'Lat':return'ASH';case'TPR':return'CLA'}}
 const FORMS={2027:{5:['5TJ','5AB'],6:['6RH','6KP'],7:['7SW','7CF'],8:['8MD','8JR']},2026:{4:['4NG','4LP'],5:['5HT','5EW'],6:['6BC','6MF'],7:['7RD','7AK']}};
@@ -398,7 +420,7 @@ const fillT=(t,p,o)=>t.replace(/\{(\w+)\}/g,(m,key)=>key==='N'?call(p):(o&&o[key
 
 /* ================= sets ================= */
 const SETS=[],SET={},PSETS={};let sn=0;
-function addSet(o){o.id='s'+(++sn);o.ids.sort((a,b)=>(PUP[a].last+PUP[a].first).localeCompare(PUP[b].last+PUP[b].first));SETS.push(o);SET[o.id]=o;o.ids.forEach(pid=>{(PSETS[o.ay+pid]=PSETS[o.ay+pid]||[]).push(o.id)});return o}
+function addSet(o){o.id='s'+(++sn);o.base=null;o.ids.sort((a,b)=>(PUP[a].last+PUP[a].first).localeCompare(PUP[b].last+PUP[b].first));o.base=o.ids.slice();SETS.push(o);SET[o.id]=o;o.ids.forEach(pid=>{(PSETS[o.ay+pid]=PSETS[o.ay+pid]||[]).push(o.id)});return o}
 const ISAMS_GAMES={}; // per ay: list of games sets as they come from iSAMS
 function gamesSetName(ay,y,g,i){return`${ay%100} ${y}${g} Games ${GAMES_DAYS[i]} ${GAMES_OWNER[g]}`}
 for(const ay of[2026,2027]){const yy=String(ay%100);ISAMS_GAMES[ay]=[];
@@ -413,8 +435,11 @@ for(const ay of[2026,2027]){const yy=String(ay%100);ISAMS_GAMES[ay]=[];
       const set=addSet({ay,year:y,subject:'Games',code:'Gam',gender:g,teacher:GAMES_OWNER[g],ids});
       Object.defineProperty(set,'name',{get(){const ch=GAMES.choice[gkey(y,g)];return ch==='year'?`${yy} Year ${y} ${g==='B'?'Boys':'Girls'} Games`:gamesSetName(ay,y,g,ch||0)},enumerable:true});
       Object.defineProperty(set,'writers',{get(){return gWriters(y,g)},enumerable:true})}
+    addSet({ay,year:y,subject:'Head',code:'HM',teacher:'HEA',name:`${yy} Year ${y} Headmaster`,ids:coh.map(p=>p.id)});
     FORMS[ay][y].forEach((f,fi)=>addSet({ay,year:y,subject:'Tutor',code:'Tut',teacher:TUTOR[f],name:`${yy} ${f} Tutor group`,form:f,ids:coh.filter(p=>p.fi===fi).map(p=>p.id)}))}}
 const roster=set=>set.ids.map(id=>PUP[id]);
+let SETMOD={}; // admin changes to set lists: {setId:{add:[],rm:[]}}
+function reindexSets(){for(const k in PSETS)delete PSETS[k];SETS.forEach(o=>{const m=SETMOD[o.id];o.ids=o.base.filter(id=>!(m&&m.rm.includes(id))).concat(m?m.add.filter(id=>!o.base.includes(id)):[]);o.ids.sort((a,b)=>(PUP[a].last+PUP[a].first).localeCompare(PUP[b].last+PUP[b].first));o.ids.forEach(pid=>{(PSETS[o.ay+pid]=PSETS[o.ay+pid]||[]).push(o.id)})})}
 const pupilSets=(p,ay)=>(PSETS[ay+p.id]||[]).map(id=>SET[id]);
 
 /* ================= cycles ================= */
@@ -427,7 +452,7 @@ function cfgFor(kind){const cells={},gen={},tutor={};
     else if(t==='games'){if(kind==='ME'||kind==='SE')v=['gg','gebi']}
     else if(t==='peri'){if(kind==='ME'||kind==='SE')v=['pc']}}
     cells[r][y]=v}gen[r]=ACAD.includes(r)&&['ME','SE','Y8'].includes(kind)}
-  MYEARS.forEach(y=>tutor[y]=['MH','ME','LE','SE'].includes(kind));return{cells,gen,tutor,limits:{}}}
+  const head={};MYEARS.forEach(y=>{tutor[y]=['MH','ME','LE','SE'].includes(kind);head[y]=kind==='SE'&&y===8});return{cells,gen,tutor,head,limits:{}}}
 const CYCLES=[
   ['m25h','Michaelmas Half Term 2025','Mich HT 25','MH',2026,'17 Oct 2025'],['y8m25','Year 8 Exam Feedback, Michaelmas 2025','Y8 exams Nov 25','Y8',2026,'21 Nov 2025'],['m25e','Michaelmas End of Term 2025','Mich End 25','ME',2026,'12 Dec 2025'],
   ['l26h','Lent Half Term 2026','Lent HT 26','LH',2026,'13 Feb 2026'],['y8l26','Year 8 Exam Feedback, Lent 2026','Y8 exams Mar 26','Y8',2026,'6 Mar 2026'],['l26e','Lent End of Term 2026','Lent End 26','LE',2026,'27 Mar 2026'],
@@ -442,15 +467,17 @@ const allCycles=()=>[...CYCLES,...EXTRA];
 const CYC=id=>allCycles().find(c=>c.id===id);
 const PAST=CYCLES.filter(c=>c.status==='Published');
 const isOpen=c=>c.status!=='Published';
-const DEF_LIM={tutor:1200,general:600};
+const DEF_LIM={tutor:1200,general:600,head:600};
 const lim=(c,f)=>(c.cfg.limits||{})[f]??DEF_LIM[f]??800;
 function tplOf(c,subject,T,S){T=T||c.tpl||TEMPLATES;S=S||c.smap||SUBJ_CFG;const id=(S[subject]||{}).template;return T[id]}
-function fieldsFor(c,set,cfg,T,S){cfg=cfg||c.cfg;if(set.subject==='Tutor')return cfg.tutor[set.year]?['tutor']:[];const t=tplOf(c,set.subject,T,S);if(!t)return[];const on=(cfg.cells[set.subject]||{})[set.year]||[];return t.chunks.filter(ch=>on.includes(ch.id)).flatMap(ch=>ch.fields).filter(f=>FIELD[f])}
+function fieldsFor(c,set,cfg,T,S){cfg=cfg||c.cfg;if(set.subject==='Tutor')return cfg.tutor[set.year]?['tutor']:[];if(set.subject==='Head')return(cfg.head||{})[set.year]?['head']:[];const t=tplOf(c,set.subject,T,S);if(!t)return[];const on=(cfg.cells[set.subject]||{})[set.year]||[];return t.chunks.filter(ch=>on.includes(ch.id)).flatMap(ch=>ch.fields).filter(f=>FIELD[f])}
 const setsIn=(c,t)=>SETS.filter(s=>s.ay===c.ay&&fieldsFor(c,s).length&&(!t||s.teacher===t));
 const sharedIn=(c,t)=>SETS.filter(s=>s.ay===c.ay&&s.writers&&s.writers.includes(t)&&s.teacher!==t&&fieldsFor(c,s).length);
 const mySets=(c,t)=>[...setsIn(c,t),...sharedIn(c,t)];
-const hasGeneral=(c,set,cfg)=>{cfg=cfg||c.cfg;return set.subject!=='Tutor'&&!!cfg.gen[set.subject]&&fieldsFor(c,set,cfg).length>0};
-function cellLabel(c,set){if(set.subject==='Tutor')return'Tutor comments';const t=tplOf(c,set.subject);const on=(c.cfg.cells[set.subject]||{})[set.year]||[];return t.chunks.filter(ch=>on.includes(ch.id)).map(ch=>ch.label).join(' · ')}
+const PASTORAL=['Tutor','Head'];
+const hasGeneral=(c,set,cfg)=>{cfg=cfg||c.cfg;return!PASTORAL.includes(set.subject)&&!!cfg.gen[set.subject]&&fieldsFor(c,set,cfg).length>0};
+const subjLabel=s=>s.subject==='Tutor'?'Tutor comments':s.subject==='Head'?'Headmaster’s comment':s.subject;
+function cellLabel(c,set){if(set.subject==='Tutor')return'Tutor comments';if(set.subject==='Head')return'Headmaster’s comment';const t=tplOf(c,set.subject);const on=(c.cfg.cells[set.subject]||{})[set.year]||[];return t.chunks.filter(ch=>on.includes(ch.id)).map(ch=>ch.label).join(' · ')}
 const SCALE_T=['num','desc'];
 function valid(f,v,c){v=String(v??'').trim();if(!v)return true;const t=FIELD[f].type;if(t==='num')return/^[1-5]$/.test(v);if(t==='desc')return DESC.some(d=>d[0]===v);if(t==='long')return chars(v)<=lim(c,f);return true}
 function normField(f,v){v=String(v??'').replace(/\r\n?/g,'\n').trim();const t=FIELD[f]?FIELD[f].type:'long';if(t==='desc')return normDesc(v);if(t==='num')return v.replace(/\.0+$/,'');return v}
@@ -472,6 +499,7 @@ function genText(p,subj,f,band,y8){const tp=shuffle(TOPICS[subj]||TOPICS.Maths),
   return fillT('{N} has worked well this term.',p,o)}
 function genRecord(p,set,c,ci,fields){const s=set.subject,r={t:{},by:{}};
   if(s==='Tutor'){if(fields.includes('tutor')){r.tutor=genTutor(p,false);r.by.tutor=set.teacher}return r}
+  if(s==='Head'){if(fields.includes('head')){r.head=fillT('{N} has been a valued member of the school community, and leaves us well prepared for the next stage. We wish {him} every success.',p);r.by.head='HEA'}return r}
   const a=clamp(p.ability+(p.off[s]||0)+(R()-.5)*.8-ci*.04,1,5),band=a<2.3?0:a<3.6?1:2;let ex=null;
   for(const f of fields){const t=FIELD[f].type;
     if(t==='num')r[f]=String(clamp(Math.round(a*.6+R()*1.8),1,5));
@@ -496,17 +524,17 @@ function freshOpen(){const D={},G={};const c=CUR,ci=PAST.length;const now=Date.n
     if(girl&&other)D[s6.id][girl.id].www=`${call(other)} has shown real confidence with ratio, and his written work is consistently accurate. He is a focused and cooperative member of the class.`;
     const prefP=done.find(p=>p.pref&&p!==girl);if(prefP)D[s6.id][prefP.id].www=`${prefP.first} has made steady progress with fractions and is becoming more independent. ${pron(prefP).He} settles quickly and always tries ${pron(prefP).his} best.`}
   return{D,G}}
-const LS_KEY='reportbook-proto-v3';
+const LS_KEY='reportbook-proto-v4';
 function load(){let j=null;try{j=JSON.parse(localStorage.getItem(LS_KEY)||'null')}catch(e){}
   if(j&&j.seed===PUPILS[0].id&&j.open){EXTRA=j.extra||[];for(const[id,v]of Object.entries(j.open)){DATA[id]=v.d;GEN[id]=v.g}
     if(j.cur){CUR.cfg=j.cur.cfg;['opens','deadline','proof','publish','due'].forEach(x=>{if(j.cur[x])CUR[x]=j.cur[x]})}
-    if(j.field)FIELD=j.field;if(j.templates)TEMPLATES=j.templates;if(j.subj)SUBJ_CFG=j.subj;if(j.games)GAMES=j.games;QUERIES=j.queries||[]}
+    if(j.field)FIELD=j.field;if(j.templates)TEMPLATES=j.templates;if(j.subj)SUBJ_CFG=j.subj;if(j.games)GAMES=j.games;QUERIES=j.queries||[];SETMOD=j.setmod||{}}
   else{const f=freshOpen();DATA[CUR.id]=f.D;GEN[CUR.id]=f.G;EXTRA=[]}
-  EXTRA.forEach(c=>{DATA[c.id]=DATA[c.id]||{};GEN[c.id]=GEN[c.id]||{}})}
+  EXTRA.forEach(c=>{DATA[c.id]=DATA[c.id]||{};GEN[c.id]=GEN[c.id]||{}});reindexSets()}
 load();
 let saveTimer;
 function save(){const el=$('#saved');if(el){el.textContent='Saving…';el.classList.add('busy')}clearTimeout(saveTimer);saveTimer=setTimeout(()=>{const open={};allCycles().filter(isOpen).forEach(c=>open[c.id]={d:DATA[c.id]||{},g:GEN[c.id]||{}});
-  try{localStorage.setItem(LS_KEY,JSON.stringify({seed:PUPILS[0].id,open,extra:EXTRA,cur:{cfg:CUR.cfg,opens:CUR.opens,deadline:CUR.deadline,proof:CUR.proof,publish:CUR.publish,due:CUR.due},field:FIELD,templates:TEMPLATES,subj:SUBJ_CFG,games:GAMES,queries:QUERIES}))}catch(e){}
+  try{localStorage.setItem(LS_KEY,JSON.stringify({seed:PUPILS[0].id,open,extra:EXTRA,cur:{cfg:CUR.cfg,opens:CUR.opens,deadline:CUR.deadline,proof:CUR.proof,publish:CUR.publish,due:CUR.due},field:FIELD,templates:TEMPLATES,subj:SUBJ_CFG,games:GAMES,queries:QUERIES,setmod:SETMOD}))}catch(e){}
   const s=$('#saved');if(s){s.textContent='All changes saved';s.classList.remove('busy')}},350)}
 function rec(c,set,pid){const d=DATA[c.id]=DATA[c.id]||{};const s=d[set.id]=d[set.id]||{};return s[pid]=s[pid]||{t:{},by:{}}}
 const getGen=(c,set)=>(GEN[c.id]||{})[set.id]||'';
@@ -600,29 +628,30 @@ const importBtn=()=>`<label class="btn pop" tabindex="0">Import from Excel<input
 
 
 /* ================= state + navigation ================= */
-const state={role:'teacher',view:'home',teacher:ME,cycle:CUR.id,set:null,sel:null,pupil:null,pcyc:null,subj:null,measure:'achY',q:'',dept:'All',pcycle:CUR.id,nudged:{},tedit:null,scycle:null,draft:null,ddates:null};
+const state={unlocked:{},role:'teacher',view:'home',teacher:ME,cycle:CUR.id,set:null,sel:null,pupil:null,pcyc:null,subj:null,measure:'achY',q:'',dept:'All',pcycle:CUR.id,nudged:{},tedit:null,scycle:null,draft:null,ddates:null};
 const stack=[];
 const SNAP=['view','teacher','cycle','set','sel','pupil','pcyc','subj','scycle'];
 function nav(view,patch){stack.push(Object.fromEntries(SNAP.map(k=>[k,state[k]])));Object.assign(state,patch||{},{view,tedit:null});render();window.scrollTo(0,0)}
 function back(){const s=stack.pop();if(s){Object.assign(state,s,{tedit:null});render();window.scrollTo(0,0)}else top()}
 function top(v){stack.length=0;if(v)state.view=v;if(state.role==='teacher')state.teacher=ME;state.tedit=null;render();window.scrollTo(0,0)}
-const TEACHER_NAV=[['home','My reports'],['pupils','Pupils']];
+const TEACHER_NAV=[['home','My reports'],['staff','All reports'],['pupils','Pupils']];
 const ADMIN_NAV=[['cycles','Cycles'],['progress','Progress'],['subjects','Subjects'],['templates','Templates'],['publish','Publish to MSP'],['pupils','Pupils']];
-function renderNav(){const items=state.role==='teacher'?TEACHER_NAV:ADMIN_NAV;const map={cycle:state.role==='teacher'?'home':'progress',write:state.role==='teacher'?'home':'progress',pupil:'pupils',wizard:'cycles',setup:'cycles'};const active=map[state.view]||state.view;
+function renderNav(){const items=state.role==='teacher'?TEACHER_NAV:ADMIN_NAV;const tv=state.role==='teacher'?(state.teacher===ME?'home':'staff'):'progress';const map={cycle:tv,write:tv,pupil:'pupils',wizard:'cycles',setup:'cycles'};const active=map[state.view]||state.view;
   $('#nav').innerHTML=items.map(([v,l])=>`<button data-act="top" data-v="${v}" class="${active===v?'on':''}">${l}</button>`).join('');
   $('#r-teacher').classList.toggle('on',state.role==='teacher');$('#r-admin').classList.toggle('on',state.role==='admin')}
-function render(){renderNav();const V={home:viewHome,cycle:viewTeacherCycle,write:viewWrite,pupils:viewPupils,pupil:viewPupil,cycles:viewCycles,wizard:viewWizard,setup:viewSetup,progress:viewProgress,publish:viewPublish,subjects:viewSubjects,templates:viewTemplates}[state.view]||viewHome;$('#main').innerHTML=V();if(state.view==='write')updateEditor()}
+function render(){renderNav();const V={home:viewHome,cycle:viewTeacherCycle,write:viewWrite,pupils:viewPupils,pupil:viewPupil,cycles:viewCycles,wizard:viewWizard,setup:viewSetup,progress:viewProgress,publish:viewPublish,subjects:viewSubjects,templates:viewTemplates,staff:viewStaff}[state.view]||viewHome;$('#main').innerHTML=V();if(state.view==='write')updateEditor()}
 let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3600)}
 function openModal(html){$('#mbox').innerHTML=html;$('#modal').classList.add('open');const b=$('#mbox button');if(b)b.focus()}
 function closeModal(){$('#modal').classList.remove('open')}
 const backBtn=label=>`<button class="back" data-act="back">← ${label||'Back'}</button>`;
 const tname=t=>STAFF[t]+(ROLE_NOTE[t]?` (${ROLE_NOTE[t]})`:'');
-const adminBanner=()=>state.role==='admin'&&state.teacher?`<div class="banner">Viewing <b>${tname(state.teacher)}</b>’s reports as an admin. ${isOpen(CYC(state.cycle)||CUR)?'Any changes you make save straight into their reports.':'This cycle is published, so it’s read-only.'}</div>`:'';
+function canEdit(c,set){if(!isOpen(c))return false;if(state.role==='admin')return true;return set.teacher===ME||(set.writers||[]).includes(ME)||!!state.unlocked[set.id]}
+const adminBanner=()=>state.role==='teacher'&&state.teacher&&state.teacher!==ME?`<div class="banner">You’re looking at <b>${tname(state.teacher)}</b>’s reports. Everyone can read everyone’s reports; to change something, open a class and unlock it first.</div>`:state.role==='admin'&&state.teacher?`<div class="banner">Viewing <b>${tname(state.teacher)}</b>’s reports as an admin. ${isOpen(CYC(state.cycle)||CUR)?'Any changes you make save straight into their reports.':'This cycle is published, so it’s read-only.'}</div>`:'';
 
 /* ================= teacher: home + cycle ================= */
 function setCard(c,s){const g=progress(c,s),full=g.done===g.total,gen=hasGeneral(c,s),q=openQ(c,s).length;
   return`<button class="card set" data-act="openset" data-v="${s.id}" data-c="${c.id}">
-    <div class="spread" style="align-items:flex-start;width:100%"><div><h2 class="setname">${esc(s.name)}</h2><p class="sub">${s.subject==='Tutor'?'Tutor comments':esc(s.subject)+' · '+cellLabel(c,s)}</p>${s.writers?`<p class="small muted" style="margin:4px 0 0">Owned by ${tname(s.teacher)} · ${s.writers.length} coaches can write</p>`:''}</div>${!isOpen(c)?'<span class="chip ok">Published</span>':full?'<span class="chip ok">Complete</span>':g.done?'<span class="chip">In progress</span>':'<span class="chip amb">Not started</span>'}</div>
+    <div class="spread" style="align-items:flex-start;width:100%"><div><h2 class="setname">${esc(s.name)}</h2><p class="sub">${PASTORAL.includes(s.subject)?subjLabel(s):esc(s.subject)+' · '+cellLabel(c,s)}</p>${s.writers?`<p class="small muted" style="margin:4px 0 0">Owned by ${tname(s.teacher)} · ${s.writers.length} coaches can write</p>`:''}</div>${!isOpen(c)?'<span class="chip ok">Published</span>':full?'<span class="chip ok">Complete</span>':g.done?'<span class="chip">In progress</span>':'<span class="chip amb">Not started</span>'}</div>
     <div class="row" style="width:100%;align-items:baseline"><span class="big">${g.done}</span><span class="muted">of ${g.total} complete</span>${q?`<span class="chip crim" style="margin-left:auto">${q} sent back</span>`:gen?`<span class="small ${getGen(c,s)?'muted':'warnt'}" style="margin-left:auto">${getGen(c,s)?'General comment ✓':'No general comment yet'}</span>`:''}</div>
     <div class="bar" style="width:100%"><i style="width:${g.done/g.total*100}%"></i></div></button>`}
 function setCards(c,t){const own=setsIn(c,t),sh=sharedIn(c,t);if(!own.length&&!sh.length)return'<p class="muted">No groups to report on in this cycle.</p>';
@@ -631,47 +660,51 @@ function viewHome(){const t=state.teacher,c=CUR;const sets=setsIn(c,t);const tot
   const earlier=PAST.slice().reverse().filter(x=>mySets(x,t).length);
   return`<section class="wrap">${stack.length?backBtn():''}${adminBanner()}
   <div class="spread"><div><p class="sub" style="margin:0 0 6px">Open now${state.role==='admin'?` · ${tname(t)}`:''}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]} · ${tot[0]} of ${tot[1]} complete across your ${sets.length} group${sets.length===1?'':'s'}</p></div>
-  <div class="tools"><div class="deadline" style="margin:0 6px 0 0">Teacher deadline · ${c.due}</div><button class="btn" data-act="export" data-v="mine">Download all my classes</button>${importBtn()}</div></div><p class="small muted" style="margin:10px 0 0">One Excel file with a sheet for each class. Write in it, then import it back: as many times as you like.</p>${setCards(c,t)}
+  <div class="tools"><div class="deadline" style="margin:0 6px 0 0">Teacher deadline · ${c.due}</div><button class="btn" data-act="export" data-v="mine">Download all${t===ME?' my':''} classes</button>${state.role==='admin'||t===ME?importBtn():''}</div></div><p class="small muted" style="margin:10px 0 0">One Excel file with a sheet for each class. Write in it, then import it back: as many times as you like.</p>${setCards(c,t)}
   <div class="past"><h3>Earlier cycles</h3><ul>${earlier.map(x=>`<li><button class="pastbtn" data-act="opencycle" data-v="${x.id}"><span><b>${x.name}</b><span class="muted"> · ${KIND_LABEL[x.kind]} · ${mySets(x,t).length} group${mySets(x,t).length>1?'s':''}</span></span><span class="chip ok">Published ${x.pub}</span></button></li>`).join('')}</ul></div></section>`}
 function viewTeacherCycle(){const c=CYC(state.cycle),t=state.teacher;if(c.id===CUR.id&&isOpen(c)&&state.role==='teacher')return viewHome();
-  return`<section class="wrap">${backBtn()}${adminBanner()}<div class="spread"><div><p class="sub" style="margin:0 0 6px">${tname(t)}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}</p></div>${mySets(c,t).length?`<div class="tools"><button class="btn" data-act="export" data-v="mine">Download all${isOpen(c)?'':' (read-only copy)'}</button>${isOpen(c)?importBtn():''}</div>`:''}</div>${setCards(c,t)}</section>`}
+  return`<section class="wrap">${backBtn()}${adminBanner()}<div class="spread"><div><p class="sub" style="margin:0 0 6px">${tname(t)}</p><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}</p></div>${mySets(c,t).length?`<div class="tools"><button class="btn" data-act="export" data-v="mine">Download all${isOpen(c)?'':' (read-only copy)'}</button>${isOpen(c)&&(state.role==='admin'||t===ME)?importBtn():''}</div>`:''}</div>${setCards(c,t)}</section>`}
 
 /* ================= writing view ================= */
+const scaleOpts=f=>FIELD[f].type==='desc'?DESC.map(([c,n])=>({code:c,label:n})):['1','2','3','4','5'].map(n=>({code:n,label:n==='1'?'1 (best)':n}));
+const scaleShow=(f,v)=>!v?'':FIELD[f].type==='desc'?descName(v):String(v);
+function cbInput(f,v,o){return`<span class="cb${FIELD[f].type==='desc'?' cbw':''}"><input class="gin cbx${o.tin?' tin':''}" data-f="${f}" data-pid="${o.pid}" ${o.row!=null?`data-row="${o.row}"`:''} ${o.set?`data-set="${o.set}"`:''} data-code="${esc(v||'')}" value="${esc(scaleShow(f,v))}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" ${o.ro?'disabled':''} aria-label="${esc(o.label||FIELD[f].label)}">${o.ro?'':'<span class="caret" aria-hidden="true">▾</span>'}</span>`}
 const gridCols=fs=>fs.filter(f=>FIELD[f].type!=='long');
 const longCols=fs=>fs.filter(f=>FIELD[f].type==='long');
 const genCount=(c,v)=>{const n=chars(v),L=lim(c,'general');return`<span class="${n>L?'over':''}">${n} / ${L} characters</span>`};
 function rowHTML(c,set,p,i,ro){const r=rec(c,set,p.id),st=status(c,set,p.id),q=openQ(c,set,p.id).length;const fs=fieldsFor(c,set);const writer=set.writers?[...new Set(fs.map(f=>r.by&&r.by[f]).filter(Boolean))].map(x=>STAFF[x]).join(', '):'';
-  return`<tr data-pid="${p.id}" class="${state.sel===p.id?'on':''}"><td><button class="pname" data-act="sel" data-v="${p.id}">${esc(fullName(p))}</button>${q?'<span class="qflag" title="Sent back">⚑</span>':''}${writer?`<div class="small muted">by ${esc(writer)}</div>`:''}</td>${gridCols(fs).map(f=>`<td class="g"><input class="gin${FIELD[f].type==='text'?' wide':''}${r[f]&&!valid(f,r[f],c)?' bad':''}" data-f="${f}" data-pid="${p.id}" data-row="${i}" value="${esc(r[f]||'')}" autocomplete="off" ${ro?'disabled':''} aria-label="${esc(FIELD[f].label)} for ${esc(niceName(p))}"></td>`).join('')}<td class="st"><span class="dot ${st}" title="${STLABEL[st]}" role="img" aria-label="${STLABEL[st]}"></span></td></tr>`}
-function viewWrite(){const c=CYC(state.cycle),set=SET[state.set],fs=fieldsFor(c,set),ros=roster(set),ro=!isOpen(c);if(!state.sel||!set.ids.includes(state.sel))state.sel=ros[0].id;const cols=gridCols(fs);const gen=hasGeneral(c,set);
+  return`<tr data-pid="${p.id}" class="${state.sel===p.id?'on':''}"><td><button class="pname" data-act="sel" data-v="${p.id}">${esc(fullName(p))}</button>${q?'<span class="qflag" title="Sent back">⚑</span>':''}${writer?`<div class="small muted">by ${esc(writer)}</div>`:''}</td>${gridCols(fs).map(f=>`<td class="g">${SCALE_T.includes(FIELD[f].type)?cbInput(f,r[f],{pid:p.id,row:i,ro,label:`${FIELD[f].label} for ${niceName(p)}`}):`<input class="gin wide${r[f]&&!valid(f,r[f],c)?' bad':''}" data-f="${f}" data-pid="${p.id}" data-row="${i}" value="${esc(r[f]||'')}" autocomplete="off" ${ro?'disabled':''} aria-label="${esc(FIELD[f].label)} for ${esc(niceName(p))}">`}</td>`).join('')}<td class="st"><span class="dot ${st}" title="${STLABEL[st]}" role="img" aria-label="${STLABEL[st]}"></span></td></tr>`}
+function viewWrite(){const c=CYC(state.cycle),set=SET[state.set],fs=fieldsFor(c,set),ros=roster(set),ro=!canEdit(c,set);const locked=isOpen(c)&&ro;if(!state.sel||!set.ids.includes(state.sel))state.sel=ros[0].id;const cols=gridCols(fs);const gen=hasGeneral(c,set);
   const types=new Set(cols.map(f=>FIELD[f].type));
   return`<section class="wrap">${backBtn()}${adminBanner()}
   ${set.writers?`<div class="banner">Shared group owned by <b>${tname(set.teacher)}</b>. Any of these coaches can write for any pupil: ${set.writers.map(x=>STAFF[x]).join(', ')}. Each entry records who wrote it.</div>`:''}
-  <div class="whead"><div><h1 class="setname">${esc(set.name)}</h1><p class="sub">${c.name} · ${set.subject==='Tutor'?'Tutor comments':esc(set.subject)+' · '+cellLabel(c,set)}${c.due&&!ro?` · deadline ${c.due}`:''}${ro?' · published, read-only':''}</p></div>
-  ${ro?'':`<div class="tools"><span class="saved" id="saved">All changes saved</span><button class="btn" data-act="export" data-v="set">Download this class</button>${importBtn()}</div>`}</div>
+  <div class="whead"><div><h1 class="setname">${esc(set.name)}</h1><p class="sub">${c.name} · ${PASTORAL.includes(set.subject)?subjLabel(set):esc(set.subject)+' · '+cellLabel(c,set)}${c.due&&isOpen(c)?` · deadline ${c.due}`:''}${!isOpen(c)?' · published, read-only':''}</p></div>
+  <div class="tools">${ro?'':'<span class="saved" id="saved">All changes saved</span>'}${state.role==='admin'&&isOpen(c)?'<button class="btn" data-act="managepupils">Manage pupils</button>':''}<button class="btn" data-act="export" data-v="set">Download this class</button>${ro?'':importBtn()}${locked?`<button class="btn ink" data-act="unlock" data-v="${set.id}">Unlock to edit</button>`:''}</div></div>
+  ${locked?`<div class="banner">This is ${tname(set.teacher)}’s class. You can read everything here; press <b>Unlock to edit</b> if you need to change something. Any change you make is marked as yours.</div>`:''}
   ${gen?`<div class="card gc"><div class="spread"><label class="lbl" for="gen">General comment for the whole class</label><span class="small muted">Appears at the top of every report in ${esc(set.name)} · <span id="gwc">${genCount(c,getGen(c,set))}</span></span></div>${ro?`<p class="gtext">${esc(getGen(c,set))}</p>`:`<textarea id="gen" rows="3" spellcheck="true" lang="en-GB" placeholder="What the class has covered this term…">${esc(getGen(c,set))}</textarea>`}</div>`:''}
   <div class="wgrid"><div class="card tablecard"><div class="scroll"><table class="roster"><thead><tr><th>Pupil</th>${cols.map(f=>`<th class="g" title="${esc(FIELD[f].label)}${HINT[FIELD[f].type]?` (${HINT[FIELD[f].type]})`:''}">${esc(FIELD[f].short)}</th>`).join('')}<th class="st">Status</th></tr></thead><tbody id="rows">${ros.map((p,i)=>rowHTML(c,set,p,i,ro)).join('')}</tbody></table></div>
-  ${cols.length?`<p class="hint">${types.has('num')?'Grades 1–5: 1 is best. ':''}${types.has('desc')?'E = Emerging, WT = Working towards, M = Meeting, EX = Exceeding, GD = Greater depth (typing the full word works too). ':''}${ro?'':'Paste columns straight from your markbook and they fill downwards. Arrow keys and Enter move between cells.'}</p>`:''}</div>
+  ${cols.length?`<p class="hint">${ro?'':`Click a grade to pick from the list, or start typing and press Enter. ${types.has('num')?'For 1–5, 1 is best. ':''}Paste columns straight from your markbook and they fill downwards. Arrow keys and Enter move between cells.`}</p>`:''}</div>
   <div class="card editor" id="editor"></div></div></section>`}
 function gradeChips(r,f){const g=f.filter(x=>SCALE_T.includes(FIELD[x].type)&&r[x]);const e=f.filter(x=>FIELD[x].type==='text'&&r[x]);if(!g.length&&!e.length)return f.some(x=>SCALE_T.includes(FIELD[x].type))?'<p class="muted small" style="margin:4px 0 0">No grades yet.</p>':'';
   return`<div class="minigrades">${g.map(x=>`<span class="mg">${esc(FIELD[x].short)}: <b>${esc(FIELD[x].type==='desc'?descName(r[x]):r[x])}</b></span>`).join('')}${e.map(x=>`<span class="mg">${esc(FIELD[x].short)} <b>${esc(r[x])}</b></span>`).join('')}</div>`}
 const commentsHTML=(r,f)=>longCols(f).filter(x=>r[x]).map(x=>`<p><b>${esc(FIELD[x].short)}</b> ${esc(r[x])}</p>`).join('');
 function tutorBlock(c,s,p){const f=fieldsFor(c,s),r=rec(c,s,p.id),ro=!isOpen(c),editing=state.tedit===s.id,q=openQ(c,s,p.id);const edited=Object.entries(r.by||{}).filter(([k,v])=>v&&f.includes(k)&&v!==s.teacher&&!(s.writers||[]).includes(v));
   let body;
-  if(editing)body=`<div class="tedit">${f.map(x=>FIELD[x].type==='long'?`<label class="lbl small">${esc(FIELD[x].label)}</label><textarea class="tin" data-set="${s.id}" data-f="${x}" data-pid="${p.id}" rows="3">${esc(r[x]||'')}</textarea>`:`<label class="tinrow"><span>${esc(FIELD[x].label)}</span><input class="tin gin${FIELD[x].type==='text'?' wide':''}" data-set="${s.id}" data-f="${x}" data-pid="${p.id}" value="${esc(r[x]||'')}"></label>`).join('')}<div class="row" style="margin-top:8px"><button class="btn pop" data-act="tdone">Done editing</button><span class="small muted">Saves as you type. ${STAFF[s.teacher]} will see that you edited it.</span></div></div>`;
+  if(editing)body=`<div class="tedit">${f.map(x=>FIELD[x].type==='long'?`<label class="lbl small">${esc(FIELD[x].label)}</label><textarea class="tin" data-set="${s.id}" data-f="${x}" data-pid="${p.id}" rows="3">${esc(r[x]||'')}</textarea>`:`<label class="tinrow"><span>${esc(FIELD[x].label)}</span>${SCALE_T.includes(FIELD[x].type)?cbInput(x,r[x],{pid:p.id,set:s.id,tin:true}):`<input class="tin gin wide" data-set="${s.id}" data-f="${x}" data-pid="${p.id}" value="${esc(r[x]||'')}">`}</label>`).join('')}<div class="row" style="margin-top:8px"><button class="btn pop" data-act="tdone">Done editing</button><span class="small muted">Saves as you type. ${STAFF[s.teacher]} will see that you edited it.</span></div></div>`;
   else body=`${gradeChips(r,f)}${f.some(x=>FIELD[x].type==='long')?(commentsHTML(r,f)||'<p class="muted small">Report not written yet.</p>'):''}`;
   return`<div class="ctx"><div class="spread"><b>${esc(s.subject)}</b><span class="small muted">${tname(s.teacher)}</span></div>${body}
     ${edited.length&&!editing?`<p class="small muted" style="margin:4px 0 0">Edited by ${[...new Set(edited.map(e=>STAFF[e[1]]))].join(', ')}</p>`:''}
     ${q.length?`<p class="small" style="margin:6px 0 0;color:var(--crim)">⚑ Sent back: “${esc(q[q.length-1].msg)}”</p>`:''}
     ${ro||editing?'':`<div class="row" style="margin-top:8px"><button class="mini2" data-act="tedit" data-v="${s.id}">Edit</button><button class="mini2" data-act="sendback" data-v="${s.id}" data-p="${p.id}">Send back</button></div>`}</div>`}
 function contextHTML(c,set,p){
-  if(set.subject==='Tutor'){const subs=pupilSets(p,c.ay).filter(s=>s.subject!=='Tutor'&&fieldsFor(c,s).length);
+  if(set.subject==='Tutor'){const subs=pupilSets(p,c.ay).filter(s=>!PASTORAL.includes(s.subject)&&fieldsFor(c,s).length);
     return`<h3>${esc(call(p))}’s reports this cycle</h3><p class="small muted" style="margin:0 0 8px">Live from each teacher. Edit a report yourself, or send it back to the teacher with a note.</p>${subs.map(s=>tutorBlock(c,s,p)).join('')||'<p class="muted">No other reports this cycle.</p>'}`}
   const prev=PAST.filter(x=>x.ay<=c.ay&&x!==c).slice().reverse();let lastRep=null,lastGr=null;
   for(const x of prev){const s=pupilSets(p,x.ay).find(s=>s.subject===set.subject&&fieldsFor(x,s).length);if(!s)continue;const r=(DATA[x.id][s.id]||{})[p.id];if(!r)continue;const f=fieldsFor(x,s);if(!lastGr&&f.some(k=>SCALE_T.includes(FIELD[k].type)))lastGr={x,s,r,f};if(!lastRep&&f.some(k=>FIELD[k].type==='long'))lastRep={x,s,r,f};if(lastGr&&lastRep)break}
   return`<h3>Last time in ${SUBJ_TEXT[set.subject]||esc(set.subject)}</h3>${lastGr?`<p class="small muted" style="margin:0">${lastGr.x.name} · ${STAFF[lastGr.s.teacher]}</p>${gradeChips(lastGr.r,lastGr.f.filter(k=>SCALE_T.includes(FIELD[k].type)))}`:''}${lastRep?`<p class="small muted" style="margin:8px 0 0">${lastRep.x.name} · ${STAFF[lastRep.s.teacher]}</p>${gradeChips(lastRep.r,lastRep.f.filter(k=>FIELD[k].type==='text'))}${commentsHTML(lastRep.r,lastRep.f)}`:'<p class="muted">No earlier report in this subject.</p>'}`}
 function editorHTML(){const c=CYC(state.cycle),set=SET[state.set],p=PUP[state.sel],fs=fieldsFor(c,set),r=rec(c,set,p.id),idx=set.ids.indexOf(p.id),ro=!isOpen(c);const qs=openQ(c,set,p.id);
   const ed=Object.entries(r.by||{}).filter(([k,v])=>v&&fs.includes(k)&&v!==set.teacher&&!(set.writers||[]).includes(v));
-  return`<div class="ehead"><div><h2>${esc(niceName(p))}</h2><p class="sub">${p.first!==call(p)?`Legal first name ${esc(p.first)} · `:''}${formAt(p,c.ay)} · ${p.id}</p></div><button class="btn ghost" data-act="pupil" data-v="${p.id}">Full history →</button></div>
+  return`<div class="ehead"><div><h2>${esc(niceName(p))}</h2><p class="sub">${p.first!==call(p)?`Legal first name ${esc(p.first)} · `:''}${formAt(p,c.ay)} · ${p.id}</p></div><div class="row">${isOpen(c)&&set.teacher!==actor()&&!(set.writers||[]).includes(actor())?`<button class="btn ghost" data-act="sendback" data-v="${set.id}" data-p="${p.id}" data-role="${state.role==='admin'?'proofreading':'proofreading'}">Send back</button>`:''}<button class="btn ghost" data-act="pupil" data-v="${p.id}">Full history →</button></div></div>
   ${qs.map(q=>`<div class="query"><b>⚑ Sent back by ${tname(q.from)}${q.fromRole?` (${q.fromRole})`:''}</b><p>${esc(q.msg)}</p>${ro?'':`<button class="mini2" data-act="resolveq" data-v="${q.id}">Mark as dealt with</button>`}</div>`).join('')}
   ${ed.length?`<p class="small muted" style="margin:0">Some of this was edited by ${[...new Set(ed.map(e=>STAFF[e[1]]))].join(', ')}.</p>`:''}
   ${longCols(fs).map(f=>`<div class="lf"><div class="spread"><label class="lbl" for="f-${f}">${esc(FIELD[f].label)}${f!=='tutor'?` (${esc(FIELD[f].short)})`:''}</label><span class="small muted" id="wc-${f}"></span></div>${ro?`<p class="gtext">${esc(r[f]||'—')}</p>`:`<textarea id="f-${f}" class="lt-in" data-f="${f}" data-pid="${p.id}" rows="${f==='tutor'?8:4}" spellcheck="true" lang="en-GB" placeholder="${esc(FIELD[f].label)}…">${esc(r[f]||'')}</textarea>`}</div>`).join('')}
@@ -682,10 +715,10 @@ function updateEditor(){$('#editor').innerHTML=editorHTML();updateChecks()}
 function updateChecks(){const c=CYC(state.cycle),set=SET[state.set],p=PUP[state.sel],fs=fieldsFor(c,set),r=rec(c,set,p.id);
   longCols(fs).forEach(f=>{const el=$('#wc-'+f);if(el){const n=chars(r[f]),L=lim(c,f);el.innerHTML=`<span class="${n>L?'over':''}">${n} / ${L} characters</span>`}});
   const ul=$('#checks');if(!ul)return;const ck=checks(c,set,p,r,fs);const any=longCols(fs).some(f=>(r[f]||'').trim());ul.innerHTML=ck.length?ck.map(([k,m])=>`<li class="${k==='warn'?'warn':''}">${esc(m)}</li>`).join(''):(any?'<li class="good">No problems spotted</li>':'')}
-function updateRow(pid){const c=CYC(state.cycle),set=SET[state.set],tr=document.querySelector(`#rows tr[data-pid="${pid}"]`);if(!tr)return;const st=status(c,set,pid),d=tr.querySelector('.dot');d.className='dot '+st;d.title=STLABEL[st];d.setAttribute('aria-label',STLABEL[st]);tr.querySelectorAll('.gin').forEach(inp=>inp.classList.toggle('bad',!!inp.value&&!valid(inp.dataset.f,inp.value,c)))}
+function updateRow(pid){const c=CYC(state.cycle),set=SET[state.set],tr=document.querySelector(`#rows tr[data-pid="${pid}"]`);if(!tr)return;const st=status(c,set,pid),d=tr.querySelector('.dot');d.className='dot '+st;d.title=STLABEL[st];d.setAttribute('aria-label',STLABEL[st]);tr.querySelectorAll('.gin:not(.cbx)').forEach(inp=>inp.classList.toggle('bad',!!inp.value&&!valid(inp.dataset.f,inp.value,c)))}
 function selectPupil(pid,keepFocus){state.sel=pid;state.tedit=null;document.querySelectorAll('#rows tr').forEach(tr=>tr.classList.toggle('on',tr.dataset.pid===pid));updateEditor();if(!keepFocus){const ta=document.querySelector('.lt-in');if(ta)ta.focus()}}
-function sendBackModal(sid,pid){const c=CYC(state.cycle),s=SET[sid],p=PUP[pid];
-  openModal(`<h2>Send back to ${tname(s.teacher)}</h2><p class="sub">${esc(s.subject)} report for ${esc(niceName(p))}. They’ll get an email and the report is flagged for them until they mark it as dealt with.</p><label class="lbl" for="qmsg">Your note</label><textarea id="qmsg" rows="4" placeholder="e.g. Could you check the EBI? It reads as quite negative for a pupil who has worked so hard."></textarea><div class="mfoot"><button class="btn" data-act="close">Cancel</button><button class="btn pop" data-act="sendq" data-v="${sid}" data-p="${pid}">Send back</button></div>`);setTimeout(()=>{const t=$('#qmsg');if(t)t.focus()},30)}
+function sendBackModal(sid,pid,role){const c=CYC(state.cycle),s=SET[sid],p=PUP[pid];
+  openModal(`<h2>Send back to ${tname(s.teacher)}</h2><p class="sub">${esc(subjLabel(s))} report for ${esc(niceName(p))}. They’ll get an email and the report is flagged for them until they mark it as dealt with.</p><label class="lbl" for="qmsg">Your note</label><textarea id="qmsg" rows="4" placeholder="e.g. Could you check the EBI? It reads as quite negative for a pupil who has worked so hard."></textarea><div class="mfoot"><button class="btn" data-act="close">Cancel</button><button class="btn pop" data-act="sendq" data-v="${sid}" data-p="${pid}" data-role="${role||'tutor'}">Send back</button></div>`);setTimeout(()=>{const t=$('#qmsg');if(t)t.focus()},30)}
 
 /* ================= pupils ================= */
 function viewPupils(){return`<section class="wrap"><h1>Pupils</h1><p class="sub">Every pupil’s grades and reports, every cycle, one click away.</p>
@@ -693,10 +726,9 @@ function viewPupils(){return`<section class="wrap"><h1>Pupils</h1><p class="sub"
 function pupilList(){const q=state.q.toLowerCase().trim();const list=PUPILS.filter(p=>!q||`${p.first} ${p.pref||''} ${p.last} ${formAt(p,2027)} ${p.id}`.toLowerCase().includes(q)).sort((a,b)=>formAt(a,2027).localeCompare(formAt(b,2027))||a.last.localeCompare(b.last));
   return list.length?list.map(p=>`<button class="card pitem" data-act="pupil" data-v="${p.id}"><span class="av">${call(p)[0]}${p.last[0]}</span><span><b>${esc(fullName(p))}</b><br><span class="muted small">${formAt(p,2027)} · Year ${p.year}</span></span></button>`).join(''):'<p class="muted">No pupils match.</p>'}
 function pupilCycles(p){return PAST.filter(c=>pupilSets(p,c.ay).some(s=>fieldsFor(c,s).length))}
-function gradeBoxes(r,fs){return fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]).map(f=>FIELD[f].type==='desc'?`<div class="gbox d ${r[f]}" title="${esc(FIELD[f].label)}: ${descName(r[f])}"><b>${esc(r[f])}</b><small>${esc(FIELD[f].short)}</small></div>`:`<div class="gbox" title="${esc(FIELD[f].label)}"><b>${esc(r[f])}</b><small>${esc(FIELD[f].short)}</small></div>`).join('')}
+function gradeBoxes(r,fs){return fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]).map(f=>FIELD[f].type==='desc'?`<div class="gbox d ${r[f]}" title="${esc(FIELD[f].label)}: ${descName(r[f])}"><b class="w">${esc(descName(r[f]))}</b><small>${esc(FIELD[f].short)}</small></div>`:`<div class="gbox" title="${esc(FIELD[f].label)}"><b>${esc(r[f])}</b><small>${esc(FIELD[f].short)}</small></div>`).join('')}
 function subjCard(c,s,p,showCycle){const r=(DATA[c.id][s.id]||{})[p.id]||{};const g=getGen(c,s),fs=fieldsFor(c,s);const desc=fs.filter(f=>FIELD[f].type==='desc'&&r[f]),texts=fs.filter(f=>FIELD[f].type==='text'&&r[f]);
   return`<article class="card subj"><header><div>${showCycle?`<b>${c.name}</b>`:`<button class="linkish" data-act="subj" data-v="${esc(s.subject)}">${esc(s.subject)}</button>`}<div class="muted small">${STAFF[s.teacher]} · ${esc(s.name)}</div></div><div class="grades">${gradeBoxes(r,fs)}</div></header>
-  ${desc.length?`<p class="small muted">${desc.map(f=>`${esc(FIELD[f].short)}: ${descName(r[f])}`).join(' · ')}</p>`:''}
   ${texts.length?`<p class="exam">${texts.map(f=>`<b>${esc(FIELD[f].short)}</b> ${esc(r[f])}`).join(' &nbsp;·&nbsp; ')}</p>`:''}
   ${g?`<details class="gcd"><summary>Class comment</summary><p>${esc(g)}</p></details>`:''}
   ${commentsHTML(r,fs)||(!texts.length?'<p class="muted small">Grades only this cycle.</p>':'')}</article>`}
@@ -710,13 +742,15 @@ function viewPupil(){const p=PUP[state.pupil],cyc=pupilCycles(p);if(state.pcyc==
   if(state.subj){const s=state.subj;const items=cyc.slice().reverse().map(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s&&fieldsFor(x,q).length);return st?subjCard(x,st,p,true):''}).join('');
     body=`<div class="spread" style="margin-top:24px"><h2>${esc(s)} across every cycle</h2><button class="btn" data-act="subj" data-v="">Show all subjects</button></div><div class="timeline">${items}</div>`}
   else{const sets=pupilSets(p,c.ay).filter(s=>fieldsFor(c,s).length);const tut=sets.find(s=>s.subject==='Tutor');const tr=tut?(DATA[c.id][tut.id]||{})[p.id]:null;
-    body=`${tr&&tr.tutor?`<div class="card tutorc"><div class="spread"><b>Tutor comment</b><span class="small muted">${STAFF[tut.teacher]} · ${tut.form}</span></div><p>${esc(tr.tutor)}</p></div>`:''}<div class="subjects">${sets.filter(s=>s.subject!=='Tutor').map(s=>subjCard(c,s,p,false)).join('')}</div>`}
+    const hd=sets.find(s=>s.subject==='Head'),hr=hd?(DATA[c.id][hd.id]||{})[p.id]:null;
+    body=`${hr&&hr.head?`<div class="card tutorc"><div class="spread"><b>Headmaster’s comment</b><span class="small muted">The Headmaster</span></div><p>${esc(hr.head)}</p></div>`:''}${tr&&tr.tutor?`<div class="card tutorc"><div class="spread"><b>Tutor comment</b><span class="small muted">${STAFF[tut.teacher]} · ${tut.form}</span></div><p>${esc(tr.tutor)}</p></div>`:''}<div class="subjects">${sets.filter(s=>!PASTORAL.includes(s.subject)).map(s=>subjCard(c,s,p,false)).join('')}</div>`}
   const M=[['achY','Achievement in year'],['achS','Achievement in set'],['atl','AtL'],['org','Organisation']];
   const gc=cyc.filter(x=>x.kind!=='Y8');
-  const ot=`<div class="card overtime"><div class="spread" style="padding:0 16px"><h3 style="padding:0">Over time</h3><div class="depts" style="margin:0">${M.map(([k,l])=>`<button class="${state.measure===k?'on':''}" data-act="measure" data-v="${k}">${l}</button>`).join('')}</div></div><p class="sub small" style="padding:4px 16px 8px">Click a subject to read all its reports in order.</p><div class="scroll"><table class="ot"><thead><tr><th>Subject</th>${gc.map(x=>`<th class="${x===c?'cur':''}">${x.short}</th>`).join('')}</tr></thead><tbody>${[...ACAD,'Games'].filter(s=>gc.some(x=>pupilSets(p,x.ay).some(q=>q.subject===s&&fieldsFor(x,q).length))).map(s=>`<tr><td><button class="linkish" style="font-size:14px" data-act="subj" data-v="${esc(s)}">${esc(s)}</button></td>${gc.map(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);const v=st?((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]:'';return`<td class="${x===c?'cur':''}">${v?`<span class="lt ${FIELD[state.measure].type==='desc'?v:'n'+v}">${esc(v)}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  const ot=`<div class="card overtime"><div class="spread" style="padding:0 16px"><h3 style="padding:0">Over time</h3><div class="depts" style="margin:0">${M.map(([k,l])=>`<button class="${state.measure===k?'on':''}" data-act="measure" data-v="${k}">${l}</button>`).join('')}</div></div><p class="sub small" style="padding:4px 16px 8px">Click a subject to read all its reports in order.</p><div class="scroll"><table class="ot"><thead><tr><th>Subject</th>${gc.map(x=>`<th class="${x===c?'cur':''}">${x.short}</th>`).join('')}</tr></thead><tbody>${[...ACAD,'Games'].filter(s=>gc.some(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);return st&&((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]})).map(s=>`<tr><td><button class="linkish" style="font-size:14px" data-act="subj" data-v="${esc(s)}">${esc(s)}</button></td>${gc.map(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);const v=st?((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]:'';return`<td class="${x===c?'cur':''}">${v?`<span class="lt ${FIELD[state.measure].type==='desc'?v+' w':'n'+v}">${esc(scaleShow(state.measure,v))}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`;
   return`<section class="wrap">${top}${sw}${body}${ot}</section>`}
 function reportHTML(p,c){const sets=pupilSets(p,c.ay).filter(s=>fieldsFor(c,s).length);const tut=sets.find(s=>s.subject==='Tutor');const tr=tut?(DATA[c.id][tut.id]||{})[p.id]:null;
-  return`<div class="report"><div class="rh"><b>mySAMS</b><span>${esc(niceName(p))} · ${formAt(p,c.ay)}<br>${c.name}</span></div>${tr&&tr.tutor?`<div class="rs"><h4><span>Tutor</span><span>${STAFF[tut.teacher]}</span></h4><p>${esc(tr.tutor)}</p></div>`:''}${sets.filter(s=>s.subject!=='Tutor').map(s=>{const r=(DATA[c.id][s.id]||{})[p.id]||{},fs=fieldsFor(c,s),g=getGen(c,s);const gr=fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]),tx=fs.filter(f=>FIELD[f].type==='text'&&r[f]);
+  const hd=sets.find(s=>s.subject==='Head'),hr=hd?(DATA[c.id][hd.id]||{})[p.id]:null;
+  return`<div class="report"><div class="rh"><b>mySAMS</b><span>${esc(niceName(p))} · ${formAt(p,c.ay)}<br>${c.name}</span></div>${hr&&hr.head?`<div class="rs"><h4><span>Headmaster</span><span>The Headmaster</span></h4><p>${esc(hr.head)}</p></div>`:''}${tr&&tr.tutor?`<div class="rs"><h4><span>Tutor</span><span>${STAFF[tut.teacher]}</span></h4><p>${esc(tr.tutor)}</p></div>`:''}${sets.filter(s=>!PASTORAL.includes(s.subject)).map(s=>{const r=(DATA[c.id][s.id]||{})[p.id]||{},fs=fieldsFor(c,s),g=getGen(c,s);const gr=fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]),tx=fs.filter(f=>FIELD[f].type==='text'&&r[f]);
     return`<div class="rs"><h4><span>${esc(s.subject)}</span><span>${STAFF[s.teacher]}</span></h4>${g?`<p class="muted"><i>${esc(g)}</i></p>`:''}${gr.length?`<p class="small">${gr.map(f=>`${esc(FIELD[f].label)} <b>${esc(FIELD[f].type==='desc'?descName(r[f]):r[f])}</b>`).join(' · ')}</p>`:''}${tx.length?`<p class="small">${tx.map(f=>`${esc(FIELD[f].label)} <b>${esc(r[f])}</b>`).join(' · ')}</p>`:''}${longCols(fs).filter(f=>r[f]).map(f=>`<p><b>${esc(FIELD[f].label)}:</b> ${esc(r[f])}</p>`).join('')}</div>`}).join('')}</div>`}
 
 /* ================= admin: cycles ================= */
@@ -733,7 +767,7 @@ function viewCycles(){const tt=cycleTotals(CUR),pct=Math.round(tt.d/tt.t*100);
 /* ================= setup grid (wizard + after launch) ================= */
 function setupGrid(cfg,ro,c){const dis=ro?'disabled':'';const tpl=r=>(c&&c.tpl?c.tpl:TEMPLATES)[((c&&c.smap)||SUBJ_CFG)[r].template];
   const commentFields=new Set();ROWS.forEach(r=>{const t=tpl(r);MYEARS.forEach(y=>t.chunks.filter(ch=>cfg.cells[r][y].includes(ch.id)).forEach(ch=>ch.fields.forEach(f=>{if(FIELD[f]&&FIELD[f].type==='long')commentFields.add(f)})))});
-  if(MYEARS.some(y=>cfg.tutor[y]))commentFields.add('tutor');if(ROWS.some(r=>cfg.gen[r]))commentFields.add('general');
+  if(MYEARS.some(y=>cfg.tutor[y]))commentFields.add('tutor');if(MYEARS.some(y=>(cfg.head||{})[y]))commentFields.add('head');if(ROWS.some(r=>cfg.gen[r]))commentFields.add('general');
   const limVal=f=>(cfg.limits||{})[f]??DEF_LIM[f]??800;
   return`<div class="card scroll"><table class="matrix2"><thead><tr><th>Subject</th>${MYEARS.map(y=>`<th>Year ${y}${y>3&&!ro?`<br><button class="mini" data-act="copycol" data-v="${y}">copy Year ${y-1}</button>`:''}</th>`).join('')}</tr></thead><tbody>
   ${ROWS.map(r=>{const t=tpl(r);const sc=SUBJ_CFG[r];return`<tr><td class="subjcell"><b>${esc(r)}</b><div class="small muted">${esc(t.name)} template${sc.source==='peri'?' · lesson lists':sc.source==='chosen'?' · shared groups':''}</div>
@@ -741,6 +775,7 @@ function setupGrid(cfg,ro,c){const dis=ro?'disabled':'';const tpl=r=>(c&&c.tpl?c
     <label class="gswitch"><input type="checkbox" data-gen="${esc(r)}" ${cfg.gen[r]?'checked':''} ${dis}>General comment</label></td>
     ${MYEARS.map(y=>`<td>${avail(r,y)?t.chunks.map(ch=>{const on=cfg.cells[r][y].includes(ch.id);return`<button class="chunk ${on?'on':''}" data-act="cell" data-r="${esc(r)}" data-y="${y}" data-v="${ch.id}" aria-pressed="${on}" ${dis}>${esc(ch.label)}</button>`}).join(''):'<span class="small muted">n/a</span>'}</td>`).join('')}</tr>`}).join('')}
   <tr class="tutorrow"><td class="subjcell"><b>Tutor comment</b><div class="small muted">On or off for each year group</div></td>${MYEARS.map(y=>`<td><button class="chunk ${cfg.tutor[y]?'on':''}" data-act="tutor" data-y="${y}" aria-pressed="${!!cfg.tutor[y]}" ${dis}>${cfg.tutor[y]?'On':'Off'}</button></td>`).join('')}</tr>
+  <tr class="tutorrow"><td class="subjcell"><b>Headmaster’s comment</b><div class="small muted">On or off for each year group</div></td>${MYEARS.map(y=>{const on=!!(cfg.head||{})[y];return`<td><button class="chunk ${on?'on':''}" data-act="headtog" data-y="${y}" aria-pressed="${on}" ${dis}>${on?'On':'Off'}</button></td>`}).join('')}</tr>
   </tbody></table></div>
   <div class="card settings" style="padding:18px;margin-top:16px"><h3>Character limits</h3><p class="sub small" style="margin-bottom:10px">For the comment boxes switched on above.</p><div class="fgrid">${[...commentFields].map(f=>`<label class="field">${f==='general'?'General comment':esc(FIELD[f].label)}<span class="inline"><input type="number" min="50" max="5000" step="50" data-climit="${f}" value="${limVal(f)}" ${dis}><span class="muted small">characters</span></span></label>`).join('')||'<p class="muted small">No comment boxes switched on.</p>'}</div></div>`}
 const draft=()=>state.view==='wizard'?W.cfg:state.draft;
@@ -784,7 +819,7 @@ const STAFFN={English:5,Maths:6,Science:4,French:3,History:3,Geography:3,Latin:2
 function dateIssues(o,iss){if(o.deadline<o.opens)iss.push(['err','The teacher deadline is before the cycle opens.']);if(o.proof<o.deadline)iss.push(['err','Proofreading finishes before the teacher deadline.']);if(o.publish<o.proof)iss.push(['err','The publish date is before proofreading finishes.'])}
 function preflight(){const cf=W.cfg,iss=[];let slots=0,staff=0,subj=0;const yrs=new Set();
   for(const r of ROWS){let any=false;for(const y of MYEARS){if(!cf.cells[r][y].length)continue;any=true;yrs.add(y);slots+=Math.round(PUPN[y]*(r==='Music (peri)'?.45:r==='LAMDA'?.2:1))}if(any){subj++;staff+=STAFFN[r]}}
-  MYEARS.forEach(y=>{if(cf.tutor[y]){yrs.add(y);slots+=PUPN[y]}});if(MYEARS.some(y=>cf.tutor[y]))staff+=24;
+  MYEARS.forEach(y=>{if(cf.tutor[y]){yrs.add(y);slots+=PUPN[y]}if((cf.head||{})[y]){yrs.add(y);slots+=PUPN[y]}});if(MYEARS.some(y=>cf.tutor[y]))staff+=24;
   if(W.type!=='Y8')for(const y of MYEARS)if(!yrs.has(y))iss.push(['warn',`Year ${y} has nothing to report. Intended?`]);
   if(MYEARS.some(y=>cf.cells.Latin[y].length))iss.push(['warn','Set 27 8B Lat has no teacher in iSAMS, so its 10 reports would have no writer. Assign one in iSAMS, then re-sync.']);
   if(MYEARS.some(y=>cf.cells.Games[y].length))iss.push(['fine',`Games uses one chosen iSAMS set per year group (set on the Subjects page). ${ISAMS_GAMES[2027].filter(x=>!x.head).length} games sets on coaches’ own timetables are ignored.`]);
@@ -806,17 +841,25 @@ function saveSetup(){const c=CYC(state.scycle),d=state.draft,iss=[];dateIssues(s
   confirmImpact([{c,items:imp.items}],()=>{c.cfg=clone(d);Object.assign(c,state.ddates);if(c.deadline)c.due=fmtDate(c.deadline);save();closeModal();state.draft=null;toast(`Setup saved.${imp.added?` ${imp.added} group${imp.added>1?'s have':' has'} new fields; those teachers would be notified (prototype: no emails sent).`:''}`);back()})}
 
 /* ================= admin: progress ================= */
-function teacherRows(c){const by={};setsIn(c).forEach(s=>{const g=progress(c,s);const t=by[s.teacher]=by[s.teacher]||{ini:s.teacher,done:0,total:0,depts:new Set(),shared:0};t.done+=g.done;t.total+=g.total;t.depts.add(s.subject==='Tutor'?'Tutors':s.subject);if(s.writers)t.shared=Math.max(t.shared,s.writers.length)});return Object.values(by).map(t=>({...t,depts:[...t.depts]}))}
+function teacherRows(c){const by={};setsIn(c).forEach(s=>{const g=progress(c,s);const t=by[s.teacher]=by[s.teacher]||{ini:s.teacher,done:0,total:0,depts:new Set(),shared:0};t.done+=g.done;t.total+=g.total;t.depts.add(s.subject==='Tutor'?'Tutors':s.subject==='Head'?'Headmaster':s.subject);if(s.writers)t.shared=Math.max(t.shared,s.writers.length)});return Object.values(by).map(t=>({...t,depts:[...t.depts]}))}
 function viewProgress(){const c=CYC(state.pcycle)||CUR;const rows=teacherRows(c),depts=['All',...new Set(rows.flatMap(r=>r.depts))].sort((a,b)=>a==='All'?-1:b==='All'?1:a.localeCompare(b));if(!depts.includes(state.dept))state.dept='All';
   const shown=rows.filter(r=>state.dept==='All'||r.depts.includes(state.dept));const d=rows.reduce((a,r)=>a+r.done,0),t=rows.reduce((a,r)=>a+r.total,0);const open=isOpen(c);const nq=QUERIES.filter(q=>!q.resolved&&q.cycle===c.id).length;
   return`<section class="wrap"><div class="spread"><div><h1>${c.name}</h1><p class="sub">${KIND_LABEL[c.kind]}${c.pub?` · published ${c.pub}`:c.due?` · teacher deadline ${c.due}`:''}. Click a teacher to open their reports${open?' and edit them':''}.</p></div>
   <label class="field" style="min-width:260px">Cycle<select id="pcycle">${allCycles().slice().reverse().map(x=>`<option value="${x.id}" ${x.id===c.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label></div>
   <div class="card hero"><div><div class="bignum">${t?Math.round(d/t*100):0}%</div><div class="muted">${d.toLocaleString('en-GB')} of ${t.toLocaleString('en-GB')} complete${nq?` · ${nq} report${nq>1?'s':''} sent back by tutors`:''}</div><div class="bar" style="margin-top:14px"><i style="width:${t?d/t*100:0}%"></i></div></div>
-  <div class="row">${open?'<button class="btn" data-act="nudgeall">Nudge everyone under 50%</button>':'<span class="chip ok">Published</span>'}<button class="btn" data-act="setup" data-v="${c.id}">${open?'Edit setup':'View setup'}</button><button class="btn" data-act="export" data-v="all">Download all classes</button>${open?importBtn():''}</div></div>
+  <div class="row">${open?'':'<span class="chip ok">Published</span>'}<button class="btn" data-act="setup" data-v="${c.id}">${open?'Edit setup':'View setup'}</button><button class="btn" data-act="export" data-v="all">Download all classes</button>${open?importBtn():''}</div></div>
   <div class="depts">${depts.map(x=>`<button class="${state.dept===x?'on':''}" data-act="dept" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>
   ${rows.length?`<div class="card scroll"><table class="tbl clickrows"><thead><tr><th>Teacher</th><th class="hide-s">Teaching</th><th style="width:38%">Progress</th><th></th></tr></thead><tbody>
-  ${shown.sort((a,b)=>a.done/a.total-b.done/b.total||STAFF[a.ini].localeCompare(STAFF[b.ini])).map(r=>{const p=r.total?r.done/r.total:0;return`<tr data-act="teacher" data-v="${r.ini}" data-c="${c.id}" tabindex="0"><td><b>${STAFF[r.ini]}</b> <span class="muted small">${r.ini}</span>${ROLE_NOTE[r.ini]?`<div class="small muted">${ROLE_NOTE[r.ini]}</div>`:''}</td><td class="hide-s muted">${r.depts.join(', ')}${r.shared?` <span class="small">(shared with ${r.shared} coaches)</span>`:''}</td><td><div class="row" style="flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${p*100}%"></i></div><span class="small" style="white-space:nowrap">${r.done}/${r.total}</span></div></td><td style="text-align:right">${p>=1?'<span class="chip ok">Done</span>':!open?'':state.nudged[r.ini]?'<span class="chip">Nudged ✓</span>':`<button class="btn" style="min-height:38px" data-act="nudge" data-v="${r.ini}">Nudge</button>`}</td></tr>`}).join('')}
+  ${shown.sort((a,b)=>a.done/a.total-b.done/b.total||STAFF[a.ini].localeCompare(STAFF[b.ini])).map(r=>{const p=r.total?r.done/r.total:0;return`<tr data-act="teacher" data-v="${r.ini}" data-c="${c.id}" tabindex="0"><td><b>${STAFF[r.ini]}</b> <span class="muted small">${r.ini}</span>${ROLE_NOTE[r.ini]?`<div class="small muted">${ROLE_NOTE[r.ini]}</div>`:''}</td><td class="hide-s muted">${r.depts.join(', ')}${r.shared?` <span class="small">(shared with ${r.shared} coaches)</span>`:''}</td><td><div class="row" style="flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${p*100}%"></i></div><span class="small" style="white-space:nowrap">${r.done}/${r.total}</span></div></td><td style="text-align:right">${p>=1?'<span class="chip ok">Done</span>':''}</td></tr>`}).join('')}
   </tbody></table></div>`:'<p class="muted">Nothing to report in this cycle yet.</p>'}</section>`}
+
+/* ================= teacher: all reports ================= */
+function viewStaff(){const c=CYC(state.pcycle)||CUR;const rows=teacherRows(c).sort((a,b)=>STAFF[a.ini].localeCompare(STAFF[b.ini]));
+  return`<section class="wrap"><div class="spread"><div><h1>All reports</h1><p class="sub">Anyone can read anyone’s reports, including ones still being written, so you can see how colleagues are getting on or borrow a general comment. To change one, open the class and unlock it.</p></div>
+  <label class="field" style="min-width:260px">Cycle<select id="pcycle">${allCycles().filter(x=>x.status!=='Scheduled').slice().reverse().map(x=>`<option value="${x.id}" ${x.id===c.id?'selected':''}>${esc(x.name)}</option>`).join('')}</select></label></div>
+  <input class="search" id="sq" placeholder="Find a teacher" value="${esc(state.sq||'')}" aria-label="Find a teacher">
+  <div class="card scroll" style="margin-top:14px"><table class="tbl clickrows"><thead><tr><th>Teacher</th><th class="hide-s">Teaching</th><th style="width:34%">Progress</th></tr></thead><tbody id="staffrows">${staffRowsHTML(c,rows)}</tbody></table></div></section>`}
+function staffRowsHTML(c,rows){const q=(state.sq||'').toLowerCase();return rows.filter(r=>!q||(STAFF[r.ini]+' '+r.ini+' '+r.depts.join(' ')).toLowerCase().includes(q)).map(r=>{const p=r.total?r.done/r.total:0;return`<tr data-act="teacher" data-v="${r.ini}" data-c="${c.id}" tabindex="0"><td><b>${STAFF[r.ini]}</b> <span class="muted small">${r.ini}</span>${r.ini===ME?' <span class="chip">You</span>':''}</td><td class="hide-s muted">${r.depts.join(', ')}</td><td><div class="row" style="flex-wrap:nowrap"><div class="bar" style="flex:1"><i style="width:${p*100}%"></i></div><span class="small" style="white-space:nowrap">${r.done}/${r.total}</span></div></td></tr>`}).join('')}
 
 /* ================= admin: subjects ================= */
 function viewSubjects(){const ign=ISAMS_GAMES[2027].filter(x=>!x.head);
@@ -866,20 +909,35 @@ function pdfFor(p,c){const{jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',form
     d.setFillColor(0,189,255);d.rect(14,y-5.5,182,8,'F');d.setTextColor(0,2,55);d.setFont('helvetica','bold');d.setFontSize(11);d.text(clean(title),16,y);d.setFont('helvetica','normal');d.setFontSize(9);d.text(clean(right),194,y,{align:'right'});y+=8;d.setFontSize(10);
     L.forEach(([l,it])=>{d.setFont('helvetica',it?'italic':'normal');d.text(l,14,y);y+=4.8});y+=6};
   const sets=pupilSets(p,c.ay).filter(s=>fieldsFor(c,s).length);const tut=sets.find(s=>s.subject==='Tutor');const tr=tut?(DATA[c.id][tut.id]||{})[p.id]:null;
+  const hd=sets.find(s=>s.subject==='Head'),hr=hd?(DATA[c.id][hd.id]||{})[p.id]:null;if(hr&&hr.head)block('Headmaster','The Headmaster',[[hr.head]]);
   if(tr&&tr.tutor)block('Tutor',STAFF[tut.teacher],[[tr.tutor]]);
-  sets.filter(s=>s.subject!=='Tutor').forEach(s=>{const r=(DATA[c.id][s.id]||{})[p.id]||{},fs=fieldsFor(c,s),g=getGen(c,s),paras=[];if(g)paras.push([g,true]);const gr=fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]);if(gr.length)paras.push([gr.map(f=>`${FIELD[f].label}: ${FIELD[f].type==='desc'?descName(r[f]):r[f]}`).join(' | ')]);const tx=fs.filter(f=>FIELD[f].type==='text'&&r[f]);if(tx.length)paras.push([tx.map(f=>`${FIELD[f].label}: ${r[f]}`).join(' | ')]);longCols(fs).filter(f=>r[f]).forEach(f=>paras.push([`${FIELD[f].label}: ${r[f]}`]));block(s.subject,STAFF[s.teacher],paras)});
+  sets.filter(s=>!PASTORAL.includes(s.subject)).forEach(s=>{const r=(DATA[c.id][s.id]||{})[p.id]||{},fs=fieldsFor(c,s),g=getGen(c,s),paras=[];if(g)paras.push([g,true]);const gr=fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]);if(gr.length)paras.push([gr.map(f=>`${FIELD[f].label}: ${FIELD[f].type==='desc'?descName(r[f]):r[f]}`).join(' | ')]);const tx=fs.filter(f=>FIELD[f].type==='text'&&r[f]);if(tx.length)paras.push([tx.map(f=>`${FIELD[f].label}: ${r[f]}`).join(' | ')]);longCols(fs).filter(f=>r[f]).forEach(f=>paras.push([`${FIELD[f].label}: ${r[f]}`]));block(s.subject,STAFF[s.teacher],paras)});
   return d.output('arraybuffer')}
 async function mspZip(){if(!window.JSZip||!window.jspdf)return toast('Still loading the PDF tools. Try again in a moment.');const c=CYC(PUB.cyc),list=pubPupils(c);toast(`Building ${list.length} PDFs…`);
   await new Promise(r=>setTimeout(r,30));const z=new JSZip();list.forEach(p=>z.file(`${p.id} ${c.name}.pdf`,pdfFor(p,c)));await offerFile(`MSP pack - ${c.name}.zip`,await z.generateAsync({type:'blob'}),'MSP pack')}
 
+/* ================= grade dropdowns ================= */
+let CB=null;
+function cbOpen(inp,filter){const f=inp.dataset.f;let opts=scaleOpts(f);const q=String(filter||'').toLowerCase().trim();
+  if(q)opts=opts.filter(o=>o.label.toLowerCase().startsWith(q)||o.code.toLowerCase()===q||o.label.toLowerCase().split(/\s+/).some(w=>w.startsWith(q)));
+  CB={inp,opts,hi:q?0:Math.max(0,opts.findIndex(o=>o.code===inp.dataset.code))};cbDraw()}
+function cbDraw(){const el=$('#cblist');if(!CB)return;if(!CB.opts.length){el.innerHTML='<li class="none">No match</li>';}else el.innerHTML=CB.opts.map((o,i)=>`<li role="option" data-code="${esc(o.code)}" class="${i===CB.hi?'hi':''}${o.code===CB.inp.dataset.code?' cur':''}" aria-selected="${i===CB.hi}">${esc(o.label)}</li>`).join('');
+  const r=CB.inp.getBoundingClientRect();el.style.left=Math.min(r.left,window.innerWidth-200)+'px';el.style.top=(r.bottom+4)+'px';el.style.minWidth=Math.max(r.width,150)+'px';el.hidden=false;CB.inp.setAttribute('aria-expanded','true')}
+function cbClose(revert){if(!CB)return;if(revert)CB.inp.value=scaleShow(CB.inp.dataset.f,CB.inp.dataset.code);$('#cblist').hidden=true;CB.inp.setAttribute('aria-expanded','false');CB=null}
+function cbCommit(inp,code){const f=inp.dataset.f;inp.value=scaleShow(f,code);if(inp.dataset.code===code)return;inp.dataset.code=code;const c=CYC(state.cycle);const set=inp.dataset.set?SET[inp.dataset.set]:SET[state.set];setVal(c,set,inp.dataset.pid,f,code);save();if(!inp.dataset.set){updateRow(inp.dataset.pid);if(state.sel===inp.dataset.pid)updateChecks()}}
+function cbResolve(inp){const v=inp.value.trim().toLowerCase();if(!v)return'';const opts=scaleOpts(inp.dataset.f);const exact=opts.find(o=>o.label.toLowerCase()===v||o.code.toLowerCase()===v||o.label.toLowerCase().replace(' (best)','')===v);if(exact)return exact.code;if(CB&&CB.inp===inp&&CB.opts.length===1)return CB.opts[0].code;return null}
+$('#cblist').addEventListener('mousedown',e=>{const li=e.target.closest('li[data-code]');e.preventDefault();if(!li||!CB)return;const inp=CB.inp;cbCommit(inp,li.dataset.code);cbClose()});
+window.addEventListener('scroll',()=>{if(CB)cbDraw()},true);window.addEventListener('resize',()=>{if(CB)cbDraw()});
+
 /* ================= events ================= */
-document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
+document.addEventListener('click',e=>{const cb=e.target.closest('.cb');if(cb){const inp=cb.querySelector('.cbx');if(inp&&!inp.disabled){if(e.target!==inp)inp.focus();if(!CB||CB.inp!==inp)cbOpen(inp,'')}return}
+  const t=e.target.closest('[data-act]');if(!t)return;const a=t.dataset.act,v=t.dataset.v;
   if(a==='top'){top(v)}
   else if(a==='back')back();
   else if(a==='role'){state.role=v;state.teacher=v==='teacher'?ME:null;top(v==='teacher'?'home':'cycles')}
   else if(a==='openset'){nav('write',{set:v,cycle:t.dataset.c,sel:null})}
   else if(a==='opencycle'){nav('cycle',{cycle:v})}
-  else if(a==='teacher'){if(e.target.closest('[data-act="nudge"]'))return;const c=CYC(t.dataset.c);nav(c.id===CUR.id?'home':'cycle',{teacher:v,cycle:c.id})}
+  else if(a==='teacher'){const c=CYC(t.dataset.c);if(state.role==='teacher'&&v===ME&&c.id===CUR.id){top('home');return}nav(c.id===CUR.id?'home':'cycle',{teacher:v,cycle:c.id})}
   else if(a==='progressfor'){state.pcycle=v;state.dept='All';nav('progress')}
   else if(a==='setup'){state.draft=null;nav('setup',{scycle:v})}
   else if(a==='savesetup')saveSetup();
@@ -887,6 +945,13 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
   else if(a==='cell'){const d=draft(),r=t.dataset.r,y=t.dataset.y,arr=d.cells[r][y],i=arr.indexOf(v);if(i>=0)arr.splice(i,1);else arr.push(v);render()}
   else if(a==='rowchunk'){const d=draft(),r=t.dataset.r,ys=MYEARS.filter(y=>avail(r,y));const all=ys.every(y=>d.cells[r][y].includes(v));ys.forEach(y=>{const arr=d.cells[r][y];if(all){const i=arr.indexOf(v);if(i>=0)arr.splice(i,1)}else if(!arr.includes(v))arr.push(v)});render()}
   else if(a==='tutor'){const d=draft(),y=t.dataset.y;d.tutor[y]=!d.tutor[y];render()}
+  else if(a==='headtog'){const d=draft(),y=t.dataset.y;d.head=d.head||{};d.head[y]=!d.head[y];render()}
+  else if(a==='unlock'){const s=SET[v];openModal(`<h2>Edit ${esc(tname(s.teacher))}’s reports?</h2><p class="sub">You’re about to unlock ${esc(s.name)} for editing. Your changes save straight into their reports and are marked as yours, so they’ll be able to see what you changed.</p><div class="mfoot"><button class="btn" data-act="close">Cancel</button><button class="btn pop" data-act="unlockok" data-v="${v}">Unlock</button></div>`)}
+  else if(a==='unlockok'){state.unlocked[v]=true;closeModal();render();toast('Unlocked. Your edits are marked as yours.')}
+  else if(a==='managepupils')managePupils();
+  else if(a==='mprm'){setMod(state.set,v,'rm');managePupils()}
+  else if(a==='mpadd'){const sel=$('#mpaddsel');if(sel&&sel.value){setMod(state.set,sel.value,'add');managePupils()}}
+  else if(a==='mpdone'){closeModal();render()}
   else if(a==='copycol'){const d=draft(),y=Number(v);ROWS.forEach(r=>{if(avail(r,y)&&avail(r,y-1))d.cells[r][y]=[...d.cells[r][y-1]]});d.tutor[y]=d.tutor[y-1];render()}
   else if(a==='sel')selectPupil(v);
   else if(a==='step'){const set=SET[state.set],i=set.ids.indexOf(state.sel)+Number(v);if(set.ids[i])selectPupil(set.ids[i])}
@@ -896,8 +961,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
   else if(a==='measure'){state.measure=v;render()}
   else if(a==='tedit'){state.tedit=v;updateEditor()}
   else if(a==='tdone'){state.tedit=null;updateEditor()}
-  else if(a==='sendback')sendBackModal(v,t.dataset.p);
-  else if(a==='sendq'){const msg=($('#qmsg').value||'').trim();if(!msg)return toast('Add a note so the teacher knows what to look at.');const s=SET[v];QUERIES.push({id:'q'+Date.now(),cycle:state.cycle,set:v,pid:t.dataset.p,from:actor(),fromRole:'tutor',to:s.teacher,msg,at:Date.now(),resolved:false});save();closeModal();updateEditor();toast(`Sent back to ${STAFF[s.teacher]}. They’d get an email (prototype: nothing was sent).`)}
+  else if(a==='sendback')sendBackModal(v,t.dataset.p,t.dataset.role);
+  else if(a==='sendq'){const msg=($('#qmsg').value||'').trim();if(!msg)return toast('Add a note so the teacher knows what to look at.');const s=SET[v];QUERIES.push({id:'q'+Date.now(),cycle:state.cycle,set:v,pid:t.dataset.p,from:actor(),fromRole:t.dataset.role||'tutor',to:s.teacher,msg,at:Date.now(),resolved:false});save();closeModal();updateEditor();toast(`Sent back to ${STAFF[s.teacher]}. They’d get an email (prototype: nothing was sent).`)}
   else if(a==='resolveq'){const q=QUERIES.find(x=>x.id===v);if(q)q.resolved=true;save();render();toast('Marked as dealt with')}
   else if(a==='export')exportXlsx(v);
   else if(a==='apply')applyPending();
@@ -918,13 +983,15 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
   else if(a==='newtpl'){TEMPLATES['t'+Date.now().toString(36)]={name:'New template',chunks:[{id:'c1',label:'Grades',fields:[]}]};save();render();window.scrollTo(0,document.body.scrollHeight)}
 });
 document.addEventListener('input',e=>{const t=e.target;
+  if(t.classList.contains('cbx')){cbOpen(t,t.value);return}
+  if(t.id==='sq'){state.sq=t.value;const c=CYC(state.pcycle)||CUR;$('#staffrows').innerHTML=staffRowsHTML(c,teacherRows(c).sort((a,b)=>STAFF[a.ini].localeCompare(STAFF[b.ini])));return}
   if(t.classList.contains('tin')){const c=CYC(state.cycle),s=SET[t.dataset.set],f=t.dataset.f;let v=t.value;if(FIELD[f].type==='num'||FIELD[f].type==='desc'){v=v.toUpperCase().trim();if(v!==t.value)t.value=v}setVal(c,s,t.dataset.pid,f,FIELD[f].type==='long'?v:v.trim());save()}
   else if(t.classList.contains('lt-in')){const c=CYC(state.cycle),set=SET[state.set];setVal(c,set,t.dataset.pid,t.dataset.f,t.value);save();updateChecks();updateRow(t.dataset.pid)}
   else if(t.id==='gen'){const c=CYC(state.cycle),set=SET[state.set];(GEN[c.id]=GEN[c.id]||{})[set.id]=t.value;$('#gwc').innerHTML=genCount(c,t.value);save()}
   else if(t.classList.contains('gin')){const c=CYC(state.cycle),set=SET[state.set],f=t.dataset.f;let v=t.value;if(FIELD[f].type!=='text')v=v.toUpperCase().trim();if(v!==t.value)t.value=v;setVal(c,set,t.dataset.pid,f,FIELD[f].type==='text'?v.trim():v);save();updateRow(t.dataset.pid);if(state.sel===t.dataset.pid)updateChecks()}
   else if(t.id==='q'){state.q=t.value;$('#plist').innerHTML=pupilList()}
 });
-document.addEventListener('focusout',e=>{const t=e.target;if(t.classList&&t.classList.contains('gin')&&FIELD[t.dataset.f]&&FIELD[t.dataset.f].type==='desc'){const v=normDesc(t.value);if(v!==t.value){t.value=v;const s=t.dataset.set?SET[t.dataset.set]:SET[state.set];setVal(CYC(state.cycle),s,t.dataset.pid,t.dataset.f,v);save();if(!t.dataset.set)updateRow(t.dataset.pid)}}});
+document.addEventListener('focusout',e=>{const t=e.target;if(!(t.classList&&t.classList.contains('cbx')))return;const code=cbResolve(t);if(code===null){cbClose(true);t.value=scaleShow(t.dataset.f,t.dataset.code)}else{cbClose();cbCommit(t,code)}});
 document.addEventListener('change',async e=>{const t=e.target;
   if(t.id==='imp'&&t.files[0]){const f=t.files[0];t.value='';if(!window.XLSX)return toast('The Excel library is still loading. Try again in a moment.');
     const c=state.view==='progress'?CYC(state.pcycle):state.view==='home'?CUR:CYC(state.cycle);const allowed=state.view==='progress'?setsIn(c):mySets(c,state.teacher);
@@ -950,6 +1017,12 @@ document.addEventListener('change',async e=>{const t=e.target;
 });
 document.addEventListener('focusin',e=>{const t=e.target;if(t.classList&&t.classList.contains('gin')&&!t.classList.contains('tin')&&t.dataset.pid!==state.sel)selectPupil(t.dataset.pid,true)});
 document.addEventListener('keydown',e=>{const t=e.target;
+  if(t.classList&&t.classList.contains('cbx')){
+    if(CB&&CB.inp===t){if(e.key==='ArrowDown'){e.preventDefault();CB.hi=Math.min(CB.opts.length-1,CB.hi+1);cbDraw();return}if(e.key==='ArrowUp'){e.preventDefault();CB.hi=Math.max(0,CB.hi-1);cbDraw();return}
+      if(e.key==='Enter'){e.preventDefault();const o=CB.opts[CB.hi];cbClose();if(o)cbCommit(t,o.code);if(!t.classList.contains('tin')){const n=document.querySelector(`.gin[data-row="${Number(t.dataset.row)+1}"][data-f="${t.dataset.f}"]`);if(n){n.focus();n.select()}}return}
+      if(e.key==='Escape'){e.preventDefault();cbClose(true);return}}
+    else if((e.altKey&&e.key==='ArrowDown')||e.key==='F4'){e.preventDefault();cbOpen(t,'');return}
+    if(t.classList.contains('tin'))return}
   if(e.key==='Escape'&&$('#modal').classList.contains('open')){closeModal();return}
   if(t.classList&&t.classList.contains('gin')&&!t.classList.contains('tin')){const c=CYC(state.cycle),cols=gridCols(fieldsFor(c,SET[state.set]));let r=Number(t.dataset.row),ci=cols.indexOf(t.dataset.f);const txt=FIELD[t.dataset.f].type==='text';
     if(e.key==='ArrowDown'||e.key==='Enter')r++;else if(e.key==='ArrowUp')r--;else if(e.key==='ArrowRight'&&(!txt||t.selectionStart===t.value.length))ci++;else if(e.key==='ArrowLeft'&&(!txt||t.selectionStart===0))ci--;else return;
@@ -958,10 +1031,23 @@ document.addEventListener('keydown',e=>{const t=e.target;
   if(t.tagName==='LABEL'&&(e.key==='Enter'||e.key===' ')&&t.querySelector('input[type=file]')){e.preventDefault();t.querySelector('input').click();return}
   if(state.view==='pupil'&&!/INPUT|TEXTAREA|SELECT/.test(t.tagName)&&!$('#modal').classList.contains('open')){const n=pupilCycles(PUP[state.pupil]).length;if(e.key==='ArrowLeft'&&state.pcyc>0){state.pcyc--;render()}else if(e.key==='ArrowRight'&&state.pcyc<n-1){state.pcyc++;render()}}
 });
-document.addEventListener('paste',e=>{const t=e.target;if(!(t.classList&&t.classList.contains('gin'))||t.classList.contains('tin'))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/[\t\n]/.test(txt.trim()))return;e.preventDefault();
+document.addEventListener('paste',e=>{const t=e.target;if(!(t.classList&&t.classList.contains('gin'))||t.classList.contains('tin'))return;const txt=(e.clipboardData||window.clipboardData).getData('text');if(!/[\t\n]/.test(txt.trim()))return;cbClose();e.preventDefault();
   const c=CYC(state.cycle),set=SET[state.set],cols=gridCols(fieldsFor(c,set)),lines=txt.replace(/\r/g,'').replace(/\n$/,'').split('\n');const r0=Number(t.dataset.row),c0=cols.indexOf(t.dataset.f);let n=0;
-  lines.forEach((ln,i)=>{const pid=set.ids[r0+i];if(!pid)return;ln.split('\t').forEach((cell,j)=>{const f=cols[c0+j];if(!f)return;const v=normField(f,cell);setVal(c,set,pid,f,v);const inp=document.querySelector(`.gin[data-pid="${pid}"][data-f="${f}"]`);if(inp)inp.value=v;n++});updateRow(pid)});
+  lines.forEach((ln,i)=>{const pid=set.ids[r0+i];if(!pid)return;ln.split('\t').forEach((cell,j)=>{const f=cols[c0+j];if(!f)return;const v=normField(f,cell);setVal(c,set,pid,f,v);const inp=document.querySelector(`.gin[data-pid="${pid}"][data-f="${f}"]`);if(inp){if(inp.classList.contains('cbx')){inp.dataset.code=v;inp.value=scaleShow(f,v)}else inp.value=v}n++});updateRow(pid)});
   save();toast(`Pasted ${n} value${n===1?'':'s'}`)});
+function setMod(sid,pid,kind){const m=SETMOD[sid]=SETMOD[sid]||{add:[],rm:[]};const set=SET[sid];
+  if(kind==='rm'){if(m.add.includes(pid))m.add=m.add.filter(x=>x!==pid);else if(!m.rm.includes(pid))m.rm.push(pid)}
+  else{if(m.rm.includes(pid))m.rm=m.rm.filter(x=>x!==pid);else if(!set.base.includes(pid)&&!m.add.includes(pid))m.add.push(pid)}
+  reindexSets();save()}
+function managePupils(){const set=SET[state.set],c=CYC(state.cycle);const d=(DATA[c.id]||{})[set.id]||{};const hasWork=pid=>{const r=d[pid];return r&&fieldsFor(c,set).some(f=>String(r[f]||'').trim())};
+  const removed=[...set.base,...((SETMOD[set.id]||{}).add||[])].filter(pid=>!set.ids.includes(pid));
+  const cand=PUPILS.filter(p=>yearAt(p,set.ay)===set.year&&!set.ids.includes(p.id)&&!removed.includes(p.id)).sort((a,b)=>a.last.localeCompare(b.last));
+  openModal(`<h2>Pupils in ${esc(set.name)}</h2><p class="sub">Changes here only affect mySAMS, not iSAMS. If you remove a pupil, anything already written for them is kept safely and comes back if you add them again.</p>
+  <ul class="dlist">${roster(set).map(p=>`<li class="spread" style="align-items:center"><span>${esc(fullName(p))}${hasWork(p.id)?' <span class="small muted">· has work</span>':''}</span><button class="mini2" data-act="mprm" data-v="${p.id}">Remove</button></li>`).join('')}</ul>
+  ${removed.length?`<h3>Removed (work kept safely)</h3><ul class="dlist">${removed.map(pid=>`<li class="spread" style="align-items:center"><span>${esc(fullName(PUP[pid]))}${hasWork(pid)?' <span class="small muted">· saved work kept</span>':''}</span><button class="mini2" data-act="mpadd2" data-v="${pid}">Put back</button></li>`).join('')}</ul>`:''}
+  <div class="row" style="margin-top:12px"><select id="mpaddsel" class="sel"><option value="">Add a Year ${set.year} pupil…</option>${cand.map(p=>`<option value="${p.id}">${esc(fullName(p))} (${formAt(p,set.ay)})</option>`).join('')}</select><button class="btn" data-act="mpadd">Add</button></div>
+  <div class="mfoot"><button class="btn pop" data-act="mpdone">Done</button></div>`)}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-act="mpadd2"]');if(t){setMod(state.set,t.dataset.v,'add');managePupils()}});
 $('#modal').addEventListener('click',e=>{if(e.target.id==='modal'){closeModal();if(['subjects','templates'].includes(state.view))render()}});
 $('#build').textContent='Last build: '+BUILD;
 render();
