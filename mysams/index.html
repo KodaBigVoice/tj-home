@@ -274,7 +274,7 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
 .cblist li.cur:not(.hi){background:var(--soft)}
 .cblist li.none{color:var(--mut);cursor:default}
 .gbox b.w{font-size:12px;line-height:1.15;white-space:nowrap}
-.gbox.d{min-width:64px;padding:5px 8px}
+.gbox.d{min-width:44px;padding:4px 6px}
 .lt.w{font-size:12px;font-weight:600;white-space:nowrap}
 .roster .g{width:auto}
 .subj header{flex-direction:column;align-items:stretch}
@@ -305,6 +305,8 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
 .gbox.d{min-width:40px}
 .gbox.GD{background:var(--pop);color:#000237}.gbox.EX{background:color-mix(in srgb,var(--pop) 55%,transparent)}.gbox.M{background:color-mix(in srgb,var(--pop) 22%,transparent)}.gbox.WT{background:var(--ambs);color:var(--amb)}.gbox.E{background:var(--crims);color:var(--crim)}
 .gbox.d small{color:inherit;opacity:.8}
+.gbox.n1{background:var(--pop);color:#000237}.gbox.n2{background:color-mix(in srgb,var(--pop) 55%,transparent)}.gbox.n3{background:color-mix(in srgb,var(--pop) 22%,transparent)}.gbox.n4{background:var(--ambs);color:var(--amb)}.gbox.n5{background:var(--crims);color:var(--crim)}
+.gbox.GD,.gbox.EX,.gbox.M,.gbox.WT,.gbox.E{min-width:44px}
 .lt{width:auto;min-width:30px;padding:0 6px}
 .lt.GD,.lt.n1{background:var(--pop);color:#000237}.lt.EX,.lt.n2{background:color-mix(in srgb,var(--pop) 55%,transparent)}.lt.M,.lt.n3{background:color-mix(in srgb,var(--pop) 22%,transparent)}.lt.WT,.lt.n4{background:var(--ambs);color:var(--amb)}.lt.E,.lt.n5{background:var(--crims);color:var(--crim)}
 .pastbtn{width:100%;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;background:none;border:0;padding:12px 8px;margin:0 -8px;cursor:pointer;text-align:left;border-radius:10px;min-height:48px}
@@ -326,7 +328,7 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
     <button id="r-admin" data-act="role" data-v="admin">Admin</button>
   </div>
 </div></header>
-<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 24 Nov 2026, 22:16</span><button data-act="reset">Reset sample data</button></span></div></div>
+<div class="proto"><div class="in"><span>Prototype: every pupil, member of staff and comment here is made up. Nothing is connected to iSAMS or My School Portal.</span><span class="row" style="gap:14px"><span id="build">Last build: 24 Nov 2026, 22:20</span><button data-act="reset">Reset sample data</button></span></div></div>
 <main id="main"></main>
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="mbox" id="mbox"></div></div>
 <div class="toast" id="toast" role="status"></div>
@@ -337,7 +339,7 @@ textarea:focus{border-color:var(--pop);outline:2px solid var(--pop);outline-offs
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 {
-const BUILD='24 Nov 2026, 22:16';
+const BUILD='24 Nov 2026, 22:20';
 const SCORE_LABEL='School score';
 const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -452,7 +454,7 @@ function cfgFor(kind){const cells={},gen={},tutor={};
     else if(t==='games'){if(kind==='ME'||kind==='SE')v=['gg','gebi']}
     else if(t==='peri'){if(kind==='ME'||kind==='SE')v=['pc']}}
     cells[r][y]=v}gen[r]=ACAD.includes(r)&&['ME','SE','Y8'].includes(kind)}
-  const head={};MYEARS.forEach(y=>{tutor[y]=['MH','ME','LE','SE'].includes(kind);head[y]=kind==='SE'&&y===8});return{cells,gen,tutor,head,limits:{}}}
+  const head={};MYEARS.forEach(y=>{tutor[y]=['MH','ME','LE','SE'].includes(kind);head[y]=kind==='SE'});return{cells,gen,tutor,head,limits:{}}}
 const CYCLES=[
   ['m25h','Michaelmas Half Term 2025','Mich HT 25','MH',2026,'17 Oct 2025'],['y8m25','Year 8 Exam Feedback, Michaelmas 2025','Y8 exams Nov 25','Y8',2026,'21 Nov 2025'],['m25e','Michaelmas End of Term 2025','Mich End 25','ME',2026,'12 Dec 2025'],
   ['l26h','Lent Half Term 2026','Lent HT 26','LH',2026,'13 Feb 2026'],['y8l26','Year 8 Exam Feedback, Lent 2026','Y8 exams Mar 26','Y8',2026,'6 Mar 2026'],['l26e','Lent End of Term 2026','Lent End 26','LE',2026,'27 Mar 2026'],
@@ -726,7 +728,7 @@ function viewPupils(){return`<section class="wrap"><h1>Pupils</h1><p class="sub"
 function pupilList(){const q=state.q.toLowerCase().trim();const list=PUPILS.filter(p=>!q||`${p.first} ${p.pref||''} ${p.last} ${formAt(p,2027)} ${p.id}`.toLowerCase().includes(q)).sort((a,b)=>formAt(a,2027).localeCompare(formAt(b,2027))||a.last.localeCompare(b.last));
   return list.length?list.map(p=>`<button class="card pitem" data-act="pupil" data-v="${p.id}"><span class="av">${call(p)[0]}${p.last[0]}</span><span><b>${esc(fullName(p))}</b><br><span class="muted small">${formAt(p,2027)} · Year ${p.year}</span></span></button>`).join(''):'<p class="muted">No pupils match.</p>'}
 function pupilCycles(p){return PAST.filter(c=>pupilSets(p,c.ay).some(s=>fieldsFor(c,s).length))}
-function gradeBoxes(r,fs){return fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]).map(f=>FIELD[f].type==='desc'?`<div class="gbox d ${r[f]}" title="${esc(FIELD[f].label)}: ${descName(r[f])}"><b class="w">${esc(descName(r[f]))}</b><small>${esc(FIELD[f].short)}</small></div>`:`<div class="gbox" title="${esc(FIELD[f].label)}"><b>${esc(r[f])}</b><small>${esc(FIELD[f].short)}</small></div>`).join('')}
+function gradeBoxes(r,fs){return fs.filter(f=>SCALE_T.includes(FIELD[f].type)&&r[f]).map(f=>FIELD[f].type==='desc'?`<div class="gbox d ${r[f]}" title="${esc(FIELD[f].label)}: ${descName(r[f])}"><b>${esc(r[f])}</b><small>${esc(FIELD[f].short)}</small></div>`:`<div class="gbox d n${esc(r[f])}" title="${esc(FIELD[f].label)}: ${esc(r[f])}"><b>${esc(r[f])}</b><small>${esc(FIELD[f].short)}</small></div>`).join('')}
 function subjCard(c,s,p,showCycle){const r=(DATA[c.id][s.id]||{})[p.id]||{};const g=getGen(c,s),fs=fieldsFor(c,s);const desc=fs.filter(f=>FIELD[f].type==='desc'&&r[f]),texts=fs.filter(f=>FIELD[f].type==='text'&&r[f]);
   return`<article class="card subj"><header><div>${showCycle?`<b>${c.name}</b>`:`<button class="linkish" data-act="subj" data-v="${esc(s.subject)}">${esc(s.subject)}</button>`}<div class="muted small">${STAFF[s.teacher]} · ${esc(s.name)}</div></div><div class="grades">${gradeBoxes(r,fs)}</div></header>
   ${texts.length?`<p class="exam">${texts.map(f=>`<b>${esc(FIELD[f].short)}</b> ${esc(r[f])}`).join(' &nbsp;·&nbsp; ')}</p>`:''}
@@ -746,7 +748,7 @@ function viewPupil(){const p=PUP[state.pupil],cyc=pupilCycles(p);if(state.pcyc==
     body=`${hr&&hr.head?`<div class="card tutorc"><div class="spread"><b>Headmaster’s comment</b><span class="small muted">The Headmaster</span></div><p>${esc(hr.head)}</p></div>`:''}${tr&&tr.tutor?`<div class="card tutorc"><div class="spread"><b>Tutor comment</b><span class="small muted">${STAFF[tut.teacher]} · ${tut.form}</span></div><p>${esc(tr.tutor)}</p></div>`:''}<div class="subjects">${sets.filter(s=>!PASTORAL.includes(s.subject)).map(s=>subjCard(c,s,p,false)).join('')}</div>`}
   const M=[['achY','Achievement in year'],['achS','Achievement in set'],['atl','AtL'],['org','Organisation']];
   const gc=cyc.filter(x=>x.kind!=='Y8');
-  const ot=`<div class="card overtime"><div class="spread" style="padding:0 16px"><h3 style="padding:0">Over time</h3><div class="depts" style="margin:0">${M.map(([k,l])=>`<button class="${state.measure===k?'on':''}" data-act="measure" data-v="${k}">${l}</button>`).join('')}</div></div><p class="sub small" style="padding:4px 16px 8px">Click a subject to read all its reports in order.</p><div class="scroll"><table class="ot"><thead><tr><th>Subject</th>${gc.map(x=>`<th class="${x===c?'cur':''}">${x.short}</th>`).join('')}</tr></thead><tbody>${[...ACAD,'Games'].filter(s=>gc.some(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);return st&&((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]})).map(s=>`<tr><td><button class="linkish" style="font-size:14px" data-act="subj" data-v="${esc(s)}">${esc(s)}</button></td>${gc.map(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);const v=st?((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]:'';return`<td class="${x===c?'cur':''}">${v?`<span class="lt ${FIELD[state.measure].type==='desc'?v+' w':'n'+v}">${esc(scaleShow(state.measure,v))}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  const ot=`<div class="card overtime"><div class="spread" style="padding:0 16px"><h3 style="padding:0">Over time</h3><div class="depts" style="margin:0">${M.map(([k,l])=>`<button class="${state.measure===k?'on':''}" data-act="measure" data-v="${k}">${l}</button>`).join('')}</div></div><p class="sub small" style="padding:4px 16px 8px">Click a subject to read all its reports in order. ${FIELD[state.measure].type==='desc'?DESC.map(([c,n])=>`<span class="lt ${c}" style="margin-left:6px">${c}</span> ${n}`).join(' '):'<span class="lt n1" style="margin-left:6px">1</span> best → <span class="lt n5">5</span>'}</p><div class="scroll"><table class="ot"><thead><tr><th>Subject</th>${gc.map(x=>`<th class="${x===c?'cur':''}">${x.short}</th>`).join('')}</tr></thead><tbody>${[...ACAD,'Games'].filter(s=>gc.some(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);return st&&((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]})).map(s=>`<tr><td><button class="linkish" style="font-size:14px" data-act="subj" data-v="${esc(s)}">${esc(s)}</button></td>${gc.map(x=>{const st=pupilSets(p,x.ay).find(q=>q.subject===s);const v=st?((DATA[x.id][st.id]||{})[p.id]||{})[state.measure]:'';return`<td class="${x===c?'cur':''}">${v?`<span class="lt ${FIELD[state.measure].type==='desc'?v:'n'+v}" title="${esc(scaleShow(state.measure,v))}">${esc(v)}</span>`:''}</td>`}).join('')}</tr>`).join('')}</tbody></table></div></div>`;
   return`<section class="wrap">${top}${sw}${body}${ot}</section>`}
 function reportHTML(p,c){const sets=pupilSets(p,c.ay).filter(s=>fieldsFor(c,s).length);const tut=sets.find(s=>s.subject==='Tutor');const tr=tut?(DATA[c.id][tut.id]||{})[p.id]:null;
   const hd=sets.find(s=>s.subject==='Head'),hr=hd?(DATA[c.id][hd.id]||{})[p.id]:null;
