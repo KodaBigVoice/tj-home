@@ -235,10 +235,11 @@ function fracAddSub(r, opts) {
   assert(new Fr(n, D).eq(op === '+' ? f1.add(f2) : f1.sub(f2)));
   const sym = op === '+' ? '+' : M;
   const { steps } = tidySteps(n, D);
+  const three = kind === 'coprime', mt = three ? 'M2' : 'M1';
   const work = steps.length
-    ? W(L(`${F(n1, D)} ${sym} ${F(n2, D)} = ${F(n, D)}`, 'M1'), ANS(steps.length === 1 ? steps[0] : `${steps[0]} = ${steps[steps.length - 1]}`, 'A1'))
-    : W(L(`${F(n1, D)} ${sym} ${F(n2, D)}`, 'M1'), ANS(F(n, D), 'A1'));
-  return { marks: 2, parts: [part(`Work out${calc(`${Ff(f1)} ${sym} ${Ff(f2)}`)}`, 24, work)] };
+    ? W(L(`${F(n1, D)} ${sym} ${F(n2, D)} = ${F(n, D)}`, mt), ANS(steps.length === 1 ? steps[0] : `${steps[0]} = ${steps[steps.length - 1]}`, 'A1'))
+    : W(L(`${F(n1, D)} ${sym} ${F(n2, D)}`, mt), ANS(F(n, D), 'A1'));
+  return { marks: three ? 3 : 2, parts: [part(`Work out${calc(`${Ff(f1)} ${sym} ${Ff(f2)}`)}`, 24, work)] };
 }
 
 function mixedSub(r) {
@@ -248,10 +249,11 @@ function mixedSub(r) {
   const D = lcm(f1.d, f2.d), n1 = f1.n * D / f1.d, n2 = f2.n * D / f2.d, fr = new Fr(n1 - n2, D);
   const ans = fr.add(new Fr(w1 - w2));
   assert(ans.eq(new Fr(w1).add(f1).sub(new Fr(w2).add(f2))));
-  let fline = `${Ff(f1)} ${M} ${Ff(f2)} = ${F(n1, D)} ${M} ${F(n2, D)} = ${F(n1 - n2, D)}`;
-  if (gcd(n1 - n2, D) > 1) fline += ` = ${show(fr)}`;
-  const work = W(L(`${w1} ${M} ${w2} = ${w1 - w2}`, 'M1'), L(fline, 'M1'), ANS(show(ans), 'A1'));
-  return { marks: 3, parts: [part(`Work out${calc(`${MX(w1, f1.n, f1.d)} ${M} ${MX(w2, f2.n, f2.d)}`)}`, 47, work)] };
+  let fline2 = `= ${F(n1 - n2, D)}`;
+  if (gcd(n1 - n2, D) > 1) fline2 += ` = ${show(fr)}`;
+  const work = W(L(`${w1} ${M} ${w2} = ${w1 - w2}`, 'M1'), L(`${Ff(f1)} ${M} ${Ff(f2)} = ${F(n1, D)} ${M} ${F(n2, D)}`, 'M1'),
+    L(fline2, 'M1'), ANS(show(ans), 'A1'));
+  return { marks: 4, parts: [part(`Work out${calc(`${MX(w1, f1.n, f1.d)} ${M} ${MX(w2, f2.n, f2.d)}`)}`, 47, work)] };
 }
 
 function fracXInt(r) {
@@ -267,8 +269,8 @@ function fracXInt(r) {
   let fl = `${F(n2, d2)} × ${k2} = ${F(n2 * k2, d2)}`;
   if (show(fpart) !== F(n2 * k2, d2)) fl += ` = ${show(fpart)}`;
   const pb = part(inl(`${MX(w, n2, d2)} × ${k2}`), 38,
-    W(L(`${w} × ${k2} = ${w * k2}`), L(fl, 'M1'), ANS(`${w * k2} + ${show(fpart)} = ${show(ans)}`, 'A1')), 'b');
-  return { marks: 4, parts: [part('Work out, giving your answers as mixed numbers'), pa, pb] };
+    W(L(`${w} × ${k2} = ${w * k2}`, 'M1'), L(fl, 'M1'), ANS(`${w * k2} + ${show(fpart)} = ${show(ans)}`, 'A1')), 'b');
+  return { marks: 5, parts: [part('Work out, giving your answers as mixed numbers'), pa, pb] };
 }
 
 function fracXFrac(r) {
@@ -375,11 +377,11 @@ function scale(r, opts) {
   let lo10 = r.randint(0, 12) * (gap10 >= 50 ? 5 : 2) * 10;
   if (gap10 >= 100) lo10 = r.randint(0, 10) * 100;
   const hi10 = lo10 + gaps * gap10, target = r.randint(1, gaps - 1), ans10 = lo10 + target * gap10;
-  const work = W(L(`${tidy(hi10, 1)} ${M} ${tidy(lo10, 1)} = ${tidy(hi10 - lo10, 1)}`),
+  const work = W(L(`${tidy(hi10, 1)} ${M} ${tidy(lo10, 1)} = ${tidy(hi10 - lo10, 1)}`, 'M1'),
     L(`${tidy(hi10 - lo10, 1)} ÷ ${gaps} = ${tidy(gap10, 1)}`, 'M1'), ANS(tidy(ans10, 1), 'A1'));
   const p = `<div class="withscale"><div>What number is the arrow pointing to?</div>${scaleSvg(lo10, gap10, ticks, target, false)}</div>`;
   const pa = `<div class="withscale"><div>What number is the arrow pointing to?<div class="work side">${work}</div></div>${scaleSvg(lo10, gap10, ticks, target, true)}</div>`;
-  return { marks: 2, parts: [part(p, 0, '', null, pa)] };
+  return { marks: 3, parts: [part(p, 0, '', null, pa)] };
 }
 
 /* ================================================================ time */
@@ -415,15 +417,15 @@ function timeEnd(r) {
     if ((start % 60) + m < 60) m = Math.min(60 - start % 60 + r.randint(1, 6) * 5, 55);
     const end = start + 60 * h + m;
     q = `${what} starts at ${hm(start)} and lasts ${h} hour${h > 1 ? 's' : ''} ${m} minutes. What time does it finish? Give your answer using the 12-hour clock.`;
-    work = W(L(`${hm(start)} + ${h} h = ${hm(start + 60 * h)}`), L(`${hm(start + 60 * h)} + ${m} min = ${hm(end)}`, 'M1'), ANS(twelve(end), 'A1'));
+    work = W(L(`${hm(start)} + ${h} h = ${hm(start + 60 * h)}`, 'M1'), L(`${hm(start + 60 * h)} + ${m} min = ${hm(end)}`, 'M1'), ANS(twelve(end), 'A1'));
   } else {
     const start = r.randint(8 * 12 + 1, 11 * 12 + 6) * 5;
     const dur = r.choice(range(13, 28).filter(x => x % 12).map(x => x * 5)), end = start + dur;
     q = `${what} starts at ${twelve(start)} and lasts ${dur} minutes. What time does it finish? Give your answer using the 24-hour clock.`;
-    work = W(L(`${dur} min = ${Math.floor(dur / 60)} h ${dur % 60} min`), L(`${twelve(start)} = ${hm(start)}`),
+    work = W(L(`${dur} min = ${Math.floor(dur / 60)} h ${dur % 60} min`, 'M1'), L(`${twelve(start)} = ${hm(start)}`),
       L(`${hm(start)} + ${Math.floor(dur / 60)} h ${dur % 60} min = ${hm(end)}`, 'M1'), ANS(hm(end), 'A1'));
   }
-  return { marks: 2, parts: [part(q, 28, work)] };
+  return { marks: 3, parts: [part(q, 28, work)] };
 }
 
 /* ================================================================ money */
