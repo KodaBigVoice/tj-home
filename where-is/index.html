@@ -75,12 +75,12 @@ main{padding:26px 48px 18px;display:grid;grid-template-columns:repeat(3,minmax(0
 .off .nb-who span{color:var(--soft)}
 .nb-now{color:var(--pop);font-weight:900;font-size:13px;letter-spacing:2.4px;text-transform:uppercase}
 .off .nb-now{color:var(--popd)}
-.nb-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.nb-subj{flex:0 1 auto;min-width:0;font-size:50px;font-weight:800;line-height:1;letter-spacing:-1px;overflow-wrap:anywhere}
-.roombox{flex:0 1 auto;max-width:58%;display:flex;align-items:baseline;gap:6px;background:var(--pop);color:var(--ink);border:0;text-decoration:none;padding:6px 14px 8px;line-height:1;text-align:left}
+.nb-row{display:flex;justify-content:space-between;align-items:center;gap:10px 12px;flex-wrap:wrap}
+.nb-subj{flex:0 1 auto;min-width:0;font-size:50px;font-weight:800;line-height:1.02;letter-spacing:-1px;overflow-wrap:break-word;hyphens:manual}
+.roombox{flex:0 0 auto;max-width:100%;margin-left:auto;display:flex;align-items:baseline;gap:6px;background:var(--pop);color:var(--ink);border:0;text-decoration:none;padding:6px 14px 8px;line-height:1;text-align:left}
 button.roombox:hover{background:#A9C7CA}
 .roombox i{font-size:20px;font-weight:500}
-.roombox b{font-weight:800;line-height:1.05;overflow-wrap:anywhere}
+.roombox b{font-weight:800;line-height:1.05;overflow-wrap:normal;word-break:normal}
 .nb-meta{font-size:17px;font-weight:700}
 .nb-meta .k{color:var(--onnavy);font-weight:600}
 .nb-meta .lk{text-decoration-color:var(--pop)}
@@ -184,7 +184,6 @@ table.tt input:focus{outline:none;border-color:var(--ink)}
   .col{display:none;border:0;padding:4px 0;background:none}
   .col.on{display:flex}
   .colhead{display:none}
-  .nb-subj{font-size:42px}
   footer{padding:8px 16px 18px}
   .asec{margin:14px 12px}
   .bells{grid-template-columns:1fr}
@@ -502,6 +501,7 @@ const boxSize=v=>{ const n=String(v).length; return n<=3?42:n<=4?38:n<=6?32:n<=9
 function boxHtml(b){ if(!b) return '';
   const inner=`<i class="fr">${b.k}</i><b class="fr" style="font-size:${boxSize(b.v)}px">${esc(b.v)}</b>`;
   return b.go?`<button class="roombox" data-go="${esc(b.go)}" title="Show this room">${inner}</button>`:`<span class="roombox">${inner}</span>`; }
+const subjSize=t=>{ const n=String(t).length; return n<=7?50:n<=10?42:n<=14?34:28; };
 const dur=m=>m<60?`${m} min`:`${Math.floor(m/60)} hr${m%60?` ${m%60} min`:''}`;
 
 function card(rec){
@@ -510,7 +510,7 @@ function card(rec){
   if(cur&&!isHalfDay(cur)){
     h+=`<div class="nowbox"><div class="nb-top">${who}<span class="nb-now">Now</span></div>`;
     cur.ents.forEach((e,i)=>{ const p=entParts(rec,e);
-      h+=`${i?'<div class="nb-sep"></div>':''}<div class="nb-row"><span class="nb-subj fr">${esc(p.title)}</span>${boxHtml(p.box)}</div>${p.meta.length?`<div class="nb-meta">${p.meta.join(' &nbsp; ')}</div>`:''}`; });
+      h+=`${i?'<div class="nb-sep"></div>':''}<div class="nb-row"><span class="nb-subj fr" style="font-size:${subjSize(p.title)}px">${esc(p.title)}</span>${boxHtml(p.box)}</div>${p.meta.length?`<div class="nb-meta">${p.meta.join(' &nbsp; ')}</div>`:''}`; });
     const pct=Math.max(0,Math.min(100,(at.m-cur.a)/(cur.b-cur.a)*100));
     h+=`<div class="prog"><div class="bar"><div style="width:${pct.toFixed(1)}%"></div></div><div class="lbl"><span>${fmt(cur.a)}</span><span><b>${dur(cur.b-at.m)} left</b> · until ${fmt(cur.b)}</span></div></div></div>`;
   } else {
