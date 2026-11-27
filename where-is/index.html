@@ -128,6 +128,7 @@ footer button{color:var(--mute)}
 .drop:hover,.drop.over{border-color:var(--ink);background:#D7E6E8}
 .drop small{display:block;color:var(--soft);font-weight:600;margin-top:4px}
 .pwrow{display:flex;gap:8px;margin-top:4px}
+.msbtn{display:inline-flex;align-items:center;gap:12px;font-size:17px;padding:13px 22px}
 .pwrow .in{flex:1;font-size:17px;padding:11px 14px}
 .err{color:var(--red);font-weight:700;margin-top:10px;font-size:14px}
 .remember{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:14px;color:var(--soft);font-weight:600;font-size:14px}
@@ -208,6 +209,13 @@ table.tt input:focus{outline:none;border-color:var(--ink)}
 <section class="gate" id="gate" hidden>
   <div class="gatebox">
     <h1 class="fr">Where <i style="font-weight:400;color:var(--popd)">is</i>…?</h1>
+    <div id="gateMs" hidden>
+      <p>Find where any pupil, teacher or room is right now.</p>
+      <button class="btn msbtn" id="msgo"><svg width="18" height="18" viewBox="0 0 23 23" aria-hidden="true"><path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/></svg>Sign in with your school account</button>
+      <div class="note" id="msnote" style="margin-top:12px">Staff only. Uses the Microsoft account you’re already signed in with.</div>
+      <div class="smalllinks" style="margin-top:14px"><button class="lk" id="msfile">Open a timetable file instead</button></div>
+    </div>
+    <div id="gateBusy" hidden><p id="gateBusyMsg">Signing you in…</p></div>
     <div id="gateLoad">
       <p>Find where any pupil, teacher or room is right now.<br>To start, open the school’s timetable file.</p>
       <div class="drop" id="drop">Choose timetable file<small>or drop it here (.json)</small></div>
@@ -227,7 +235,7 @@ table.tt input:focus{outline:none;border-color:var(--ink)}
 </section>
 
 <main id="app" hidden></main>
-<footer id="foot" hidden>Shows <b>timetabled</b> lessons only — not cover, trips, matches or room changes. The timetable stays on this device; nothing is uploaded. <button class="lk" id="forget">Close &amp; forget this file</button></footer>
+<footer id="foot" hidden>Shows <b>timetabled</b> lessons only — not cover, trips, matches or room changes.<span id="srcnote"> The timetable stays on this device; nothing is uploaded. </span><button class="lk" id="forget">Close &amp; forget this file</button></footer>
 
 <div class="admin" id="admin" hidden><div class="apanel" id="apanel"></div></div>
 <input type="file" id="ttfiles" accept=".zip,.xlsx" multiple hidden>
@@ -638,11 +646,15 @@ async function kv(op,key,val){ try{ const db=await idb(); return await new Promi
 let PENDING=null; // file text waiting for a password
 function showGate(mode,msg){
   $('#gate').hidden=false; $('#app').hidden=true; $('#foot').hidden=true; $('#adminbtn').hidden=true;
-  $('#gateLoad').hidden=mode!=='load'; $('#gatePw').hidden=mode!=='pw'; $('#gateOther').hidden=mode!=='pw';
+  $('#gateBusy').hidden=true; $('#gateMs').hidden=mode!=='ms';
+  $('#gateLoad').hidden=mode!=='load'; $('#gatePw').hidden=mode!=='pw'; $('#gateOther').hidden=mode!=='pw'&&!(mode==='load'&&MS_ON());
+  $('#gateOther').textContent=mode==='load'&&MS_ON()?'Sign in with your school account instead':'Use a different file';
   $('#gateErr').hidden=!msg; $('#gateErr').textContent=msg||'';
   if(mode==='pw') setTimeout(()=>$('#pw').focus(),50);
 }
-function enterApp(){ buildIndex(); $('#gate').hidden=true; $('#app').hidden=false; $('#foot').hidden=false; $('#adminbtn').hidden=false; buildMain(); tick();
+function enterApp(){ buildIndex();
+  const ft=$('#forget'); ft.textContent=FROM_MS?'Sign out':'Close & forget this file';
+  $('#srcnote').textContent=FROM_MS?` Loaded from SharePoint${FROM_MS.modified?' (updated '+new Date(FROM_MS.modified).toLocaleDateString('en-GB',{day:'numeric',month:'short'})+')':''}; nothing is stored on this device. `:' The timetable stays on this device; nothing is uploaded. '; $('#gate').hidden=true; $('#app').hidden=false; $('#foot').hidden=false; $('#adminbtn').hidden=false; buildMain(); tick();
   setTimeout(()=>$('#q-p')?.focus(),50); }
 async function tryOpen(text,pw,fromStore){
   try{ const {pack,enc}=await openFile(text,pw); PACK=pack;
@@ -658,8 +670,10 @@ $('#packfile').onchange=async e=>{ const f=e.target.files[0]; e.target.value='';
 ['dragleave','drop'].forEach(ev=>$('#drop').addEventListener(ev,e=>{ e.preventDefault(); $('#drop').classList.remove('over'); }));
 $('#drop').addEventListener('drop',async e=>{ const f=e.dataTransfer.files[0]; if(f) tryOpen(await f.text(),null,false); });
 $('#pwform').onsubmit=async e=>{ e.preventDefault(); const pw=$('#pw').value; if(!pw||!PENDING) return; const fromStore=PENDING===STORED; await tryOpen(PENDING,pw,fromStore); $('#pw').value=''; };
-$('#gateOther').onclick=()=>{ PENDING=null; showGate('load'); };
-$('#forget').onclick=async()=>{ await kv('del','file'); STORED=null; PACK=null; IDX=null; for(const k in SEL) SEL[k]=null; showGate('load'); toast('Closed. The file has been removed from this device.'); };
+$('#gateOther').onclick=()=>{ PENDING=null; showGate(MS_ON()&&$('#gateLoad').hidden===false?'ms':'load'); };
+$('#forget').onclick=async()=>{ await kv('del','file'); STORED=null; PACK=null; IDX=null; for(const k in SEL) SEL[k]=null;
+  const wasMs=!!FROM_MS; FROM_MS=null; ss.set('tok',null); ls.set('ms',null);
+  showGate(MS_ON()?'ms':'load'); toast(wasMs?'Signed out of Where is…? on this device.':'Closed. The file has been removed from this device.'); };
 let STORED=null;
 
 /* ========================== admin ========================== */
@@ -729,7 +743,7 @@ function renderAdmin(){
   $('#asave').onsubmit=async e=>{ e.preventDefault(); const a=$('#apw1').value, b=$('#apw2').value;
     if(!P.pupils.length&&!P.teachers.length&&!P.rooms.length){ toast('Add some timetables first'); return; }
     if(a!==b){ toast('The two passwords don’t match'); return; }
-    if(!a && !confirm('Save without a password? Anyone who gets the file could see every pupil’s timetable.')) return;
+    if(!a && !confirm(MS_ON()?'Save without a password? Fine for the SharePoint copy (SharePoint controls who can open it). Don’t email or share an unprotected copy.':'Save without a password? Anyone who gets the file could see every pupil’s timetable.')) return;
     if(a && a.length<8){ toast('Use at least 8 characters'); return; }
     const text=await makeFile(a); const d=new Date(); download(`where-is-timetable-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`,text);
     if(a){ await kv('put','file',text); STORED=text; }
@@ -768,8 +782,92 @@ async function pullTTM(pw){
   }catch(e){ msg.textContent='Couldn’t pull settings: '+e.message; }
 }
 
+/* =================== Microsoft sign-in (SharePoint) =================== */
+// Filled in once IT has registered the app. Leave tenant/clientId empty to switch sign-in off.
+// None of these values are secret: they only say which app and which SharePoint file to ask for.
+const MS={
+  tenant:'',        // Directory (tenant) ID from Entra
+  clientId:'',      // Application (client) ID from Entra
+  scope:'https://graph.microsoft.com/Sites.Selected', // read access to selected SharePoint sites only
+  siteUrl:'',       // e.g. https://lambrookschool.sharepoint.com/sites/StaffInfo
+  library:'',       // document library name if not the default "Documents", e.g. "Shared Documents"
+  filePath:''       // path inside the library, e.g. Where Is/where-is-timetable.json
+};
+const MS_ON=()=>!!(MS.tenant&&MS.clientId&&MS.siteUrl&&MS.filePath);
+const AUTH=`https://login.microsoftonline.com/${MS.tenant}/oauth2/v2.0`, REDIR=location.origin+location.pathname;
+const b64url=u8=>btoa(String.fromCharCode(...u8)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const ss={get:k=>{ try{ return JSON.parse(sessionStorage.getItem('wi.'+k)); }catch(e){ return null; } }, set:(k,v)=>{ try{ v==null?sessionStorage.removeItem('wi.'+k):sessionStorage.setItem('wi.'+k,JSON.stringify(v)); }catch(e){} }};
+const ls={get:k=>{ try{ return localStorage.getItem('wi.'+k); }catch(e){ return null; } }, set:(k,v)=>{ try{ v==null?localStorage.removeItem('wi.'+k):localStorage.setItem('wi.'+k,v); }catch(e){} }};
+async function msLogin(silent){
+  const verifier=b64url(crypto.getRandomValues(new Uint8Array(48))), state=b64url(crypto.getRandomValues(new Uint8Array(16)));
+  const challenge=b64url(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))));
+  ss.set('pkce',{verifier,state,silent:!!silent});
+  const q=new URLSearchParams({client_id:MS.clientId,response_type:'code',redirect_uri:REDIR,response_mode:'query',scope:`openid profile offline_access ${MS.scope}`,state,code_challenge:challenge,code_challenge_method:'S256'});
+  if(silent) q.set('prompt','none'); else q.set('prompt','select_account');
+  location.assign(`${AUTH}/authorize?${q}`);
+}
+async function tokenCall(body){
+  const r=await fetch(`${AUTH}/token`,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:MS.clientId,scope:`openid profile offline_access ${MS.scope}`,...body})});
+  const j=await r.json().catch(()=>({})); if(!r.ok||!j.access_token) throw new Error(j.error_description?.split('\r')[0]||j.error||'Sign-in failed');
+  ss.set('tok',{at:j.access_token,exp:Date.now()+(j.expires_in-120)*1000,rt:j.refresh_token||null}); return j.access_token;
+}
+// Returns 'redirected' if it handled a return from Microsoft, an error string, or null
+async function msHandleReturn(){
+  const u=new URL(location.href); if(!u.searchParams.has('state')) return null;
+  const pk=ss.get('pkce'); const code=u.searchParams.get('code'), err=u.searchParams.get('error'), st=u.searchParams.get('state');
+  history.replaceState(null,'',REDIR); ss.set('pkce',null);
+  if(!pk||st!==pk.state) return 'Sign-in didn’t complete. Please try again.';
+  if(err) return pk.silent?'silent-failed':(u.searchParams.get('error_description')||err).split('\r')[0];
+  try{ await tokenCall({grant_type:'authorization_code',code,redirect_uri:REDIR,code_verifier:pk.verifier}); ls.set('ms','1'); return 'ok'; }
+  catch(e){ return e.message; }
+}
+async function msToken(){
+  const t=ss.get('tok'); if(t&&t.exp>Date.now()) return t.at;
+  if(t&&t.rt){ try{ return await tokenCall({grant_type:'refresh_token',refresh_token:t.rt}); }catch(e){} }
+  return null;
+}
+async function graph(path,tok){
+  const r=await fetch('https://graph.microsoft.com/v1.0'+path,{headers:{Authorization:'Bearer '+tok}});
+  if(r.status===401){ ss.set('tok',null); throw Object.assign(new Error('Your sign-in has expired.'),{relogin:true}); }
+  if(r.status===403) throw new Error('Your account doesn’t have access to the timetable. It’s for staff only.');
+  if(r.status===404) throw new Error('The timetable file couldn’t be found on SharePoint. Please tell the person who manages it.');
+  if(!r.ok) throw new Error('SharePoint error ('+r.status+')');
+  return r.json();
+}
+async function msFetchPack(tok){
+  const su=new URL(MS.siteUrl); const site=await graph(`/sites/${su.hostname}:${su.pathname.replace(/\/$/,'')}?$select=id`,tok);
+  let drive;
+  if(MS.library){ const ds=await graph(`/sites/${site.id}/drives?$select=id,name`,tok); drive=(ds.value||[]).find(d=>d.name.toLowerCase()===MS.library.toLowerCase()); if(!drive) throw new Error(`No library called “${MS.library}” on that site.`); }
+  else drive=await graph(`/sites/${site.id}/drive?$select=id`,tok);
+  const path=MS.filePath.replace(/^\/+/,'').split('/').map(encodeURIComponent).join('/');
+  const item=await graph(`/drives/${drive.id}/root:/${path}?$select=id,lastModifiedDateTime,@microsoft.graph.downloadUrl`,tok);
+  const url=item['@microsoft.graph.downloadUrl']; if(!url) throw new Error('Couldn’t get a download link for the timetable.');
+  const r=await fetch(url); if(!r.ok) throw new Error('Couldn’t download the timetable ('+r.status+')');
+  return {text:await r.text(),modified:item.lastModifiedDateTime};
+}
+let FROM_MS=null; // when loaded from SharePoint: {modified}
+function busy(msg){ $('#gate').hidden=false; $('#app').hidden=true; $('#foot').hidden=true; for(const id of ['gateMs','gateLoad','gatePw']) $('#'+id).hidden=true; $('#gateBusy').hidden=false; $('#gateBusyMsg').textContent=msg; $('#gateErr').hidden=true; $('#gateOther').hidden=true; }
+async function msOpen(){
+  busy('Loading the timetable…');
+  try{ const tok=await msToken(); if(!tok){ await msLogin(ls.get('ms')==='1'); return; }
+    const {text,modified}=await msFetchPack(tok); FROM_MS={modified}; ss.set('relog',null);
+    $('#remember').checked=false; await tryOpen(text,null,true); }
+  catch(e){ if(e.relogin&&!ss.get('relog')){ ss.set('relog',1); await msLogin(true); return; } ss.set('relog',null);
+    showGate('ms',e.relogin?'Sign-in didn’t work. Please try again, or ask IT to check the app’s permissions.':e.message); }
+}
+$('#msgo').onclick=()=>msLogin(false);
+$('#msfile').onclick=()=>showGate('load');
+
 /* ========================== start ========================== */
-(async()=>{ tick(); STORED=await kv('get','file');
+(async()=>{ tick();
+  if(MS_ON()){
+    const ret=await msHandleReturn();
+    if(ret==='ok'){ await msOpen(); return; }
+    if(ret==='silent-failed'){ showGate('ms'); return; }
+    if(ret){ showGate('ms',ret); return; }
+    if(ss.get('tok')||ls.get('ms')==='1'){ await msOpen(); return; } // signed in before: no click needed
+    showGate('ms'); return; }
+  STORED=await kv('get','file');
   if(STORED){ PENDING=STORED; $('#gatePwMsg').textContent='Enter the password to open the timetable saved on this device.'; $('#remember').parentElement.hidden=true; showGate('pw'); }
   else showGate('load'); })();
 </script>
