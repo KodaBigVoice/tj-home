@@ -4,111 +4,128 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Where Is?</title>
+<title>Where is…?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#FAFAF7;--ink:#000237;--soft:#5A5E7A;--faint:#9A9DB2;--line:#E4E5EC;--card:#FFFFFF;--pop:#00BDFF;--popd:#0096CC;--popl:#E3F7FF;--red:#DC143C;--r:14px}
+:root{--bg:#FAFAF6;--ink:#041E42;--soft:#536173;--faint:#8D99A6;--mute:#66727F;--line:#D9E0E3;--card:#FFFFFF;--pop:#94B7BB;--popd:#48777C;--popl:#E4EEEF;--red:#A6192E;--navy2:#23406A;--onnavy:#A9B8C8;--r:0px}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,"Segoe UI",sans-serif;font-size:16px}
 button,input,select{font:inherit;color:inherit}
 button{cursor:pointer}
 [hidden]{display:none!important}
-a.lk,button.lk{background:none;border:0;padding:0;color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--pop);text-decoration-thickness:2px;text-underline-offset:3px;cursor:pointer}
+.fr{font-family:Fraunces,Georgia,serif;font-variation-settings:'SOFT' 100,'WONK' 0}
+a.lk,button.lk{background:none;border:0;padding:0;color:inherit;font-weight:700;text-decoration:underline;text-decoration-color:var(--pop);text-decoration-thickness:2px;text-underline-offset:4px;cursor:pointer}
 a.lk:hover,button.lk:hover{color:var(--popd)}
 
 /* header */
-header{display:flex;align-items:center;gap:16px;padding:14px 28px;border-bottom:1px solid var(--line);background:var(--card)}
-.brand{font-weight:900;font-size:24px;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
-.brand .dot{width:30px;height:30px;border-radius:50%;background:var(--pop);display:grid;place-items:center;color:var(--bg);font-size:17px}
-.clock{margin-left:auto;display:flex;align-items:center;gap:10px}
-.clockbtn{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:7px 16px;font-weight:800;font-size:17px;display:flex;gap:8px;align-items:center}
-.clockbtn small{font-weight:600;color:var(--soft);font-size:14px}
-.clockbtn.pretend{background:#FFF1F4;border-color:#F5B8C4}
-.clockbtn.pretend small{color:var(--red)}
-.hbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 12px;font-weight:700;font-size:14px;color:var(--soft)}
-.hbtn:hover{border-color:var(--pop);color:var(--ink)}
-.pop{position:absolute;right:28px;top:64px;z-index:20;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 12px 40px rgba(0,2,55,.14);padding:16px;width:290px}
-.pop h4{margin:0 0 10px;font-size:15px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:26px 48px 16px;border-bottom:2px solid var(--ink);flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+.brand h1{margin:0;font-size:50px;font-weight:800;letter-spacing:-1.3px;line-height:1}
+.brand h1 i{font-weight:400;color:var(--popd)}
+.brand .tag{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--soft)}
+.clock{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ctime{font-size:38px;font-weight:600;font-variant-numeric:lining-nums tabular-nums;line-height:1}
+.cday{font-size:15px;font-weight:700;color:var(--soft)}
+.cday.pretend,.ctime.pretend{color:var(--red)}
+.obtn{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;color:var(--ink);background:var(--bg);border:2px solid var(--ink);padding:9px 14px;min-height:44px}
+.obtn:hover{background:var(--ink);color:var(--bg)}
+.obtn:hover svg{stroke:var(--bg)}
+.hbtn{border:0;background:none;font-weight:700;font-size:14px;color:var(--faint);padding:8px 4px;text-decoration:underline;text-underline-offset:3px}
+.hbtn:hover{color:var(--ink)}
+.pop{position:absolute;right:48px;top:84px;z-index:20;background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--popl);padding:16px;width:300px}
+.pop h4{margin:0 0 10px;font-size:20px;font-weight:700}
 .pop .row{display:flex;gap:8px;margin-bottom:10px}
-.in{border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--card);min-width:0}
-.in:focus{outline:none;border-color:var(--pop)}
-.btn{border:0;border-radius:10px;padding:9px 16px;font-weight:800;background:var(--pop);color:#fff}
-.btn:hover{background:var(--popd)}
-.btn.ghost{background:var(--bg);color:var(--ink);border:1.5px solid var(--line)}
-.btn.ghost:hover{border-color:var(--pop)}
-.btn.danger{background:#fff;color:var(--red);border:1.5px solid #F2C2CC}
+.in{border:2px solid var(--line);border-radius:0;padding:8px 10px;background:var(--card);min-width:0}
+.in:focus{outline:none;border-color:var(--ink)}
+.btn{border:2px solid var(--ink);border-radius:0;padding:9px 16px;font-weight:800;background:var(--ink);color:var(--bg)}
+.btn:hover{background:var(--popd);border-color:var(--popd)}
+.btn.ghost{background:var(--bg);color:var(--ink)}
+.btn.ghost:hover{background:var(--popl)}
 
 /* main grid */
-main{padding:24px 28px 18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;max-width:1800px;margin:0 auto}
-.col h2{margin:0 0 10px;font-size:15px;text-transform:uppercase;letter-spacing:1.4px;color:var(--soft);font-weight:800;display:flex;align-items:center;gap:8px}
-.col h2 .n{background:var(--line);color:var(--soft);border-radius:999px;padding:1px 8px;font-size:12px;letter-spacing:0}
+main{padding:26px 48px 18px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;max-width:1800px;margin:0 auto;align-items:start}
+.tabs{display:none}
+.col{background:var(--card);border:2px solid var(--ink);padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.colhead{display:flex;align-items:center;justify-content:space-between}
+.colhead h2{margin:0;background:var(--ink);color:var(--bg);padding:6px 16px 8px;font-weight:700;font-size:24px;line-height:1.1}
+.colhead .n{font-size:13px;font-weight:700;color:var(--faint)}
 .search{position:relative}
-.search input{width:100%;font-size:20px;font-weight:700;padding:13px 16px 13px 46px;border:2px solid var(--line);border-radius:var(--r);background:var(--card)}
-.search input:focus{outline:none;border-color:var(--pop);box-shadow:0 0 0 4px var(--popl)}
-.search input::placeholder{color:var(--faint);font-weight:600}
-.search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--faint)}
-.search .clr{position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:none;font-size:22px;color:var(--faint);padding:4px 8px}
-.sugs{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:10;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 12px 40px rgba(0,2,55,.12);overflow:hidden}
-.sug{display:flex;justify-content:space-between;gap:10px;padding:10px 16px;cursor:pointer;font-weight:700}
+.search label{display:flex;align-items:center;gap:12px;border-bottom:3px solid var(--pop);padding:4px 2px 9px}
+.search input{border:0;background:none;width:100%;outline:none;font-size:23px;font-weight:600;color:var(--ink);padding:0}
+.search input::placeholder{color:var(--faint);font-weight:400;font-style:italic}
+.search label:focus-within{border-bottom-color:var(--ink)}
+.search .clr{border:0;background:none;font-size:24px;line-height:1;color:var(--faint);padding:0 4px}
+.search .clr:hover{color:var(--ink)}
+.sugs{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:10;background:var(--card);border:2px solid var(--ink);box-shadow:6px 6px 0 var(--popl)}
+.sug{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;cursor:pointer;font-weight:700}
 .sug small{color:var(--soft);font-weight:600;white-space:nowrap}
 .sug.on,.sug:hover{background:var(--popl)}
-.sug mark{background:none;color:var(--popd)}
-.nores{padding:12px 16px;color:var(--soft)}
+.sug mark{background:none;color:var(--popd);text-decoration:underline;text-underline-offset:3px}
+.nores{padding:12px 14px;color:var(--soft)}
 
-/* result card */
-.card{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.who{padding:14px 20px 12px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.who b{font-size:20px;font-weight:900}
-.who span{color:var(--soft);font-weight:600;font-size:15px}
-.now{padding:18px 20px 20px}
-.now .tag{display:inline-block;background:var(--pop);color:var(--bg);border-radius:999px;padding:3px 12px;font-weight:900;font-size:13px;letter-spacing:1.2px;text-transform:uppercase}
-.now .tag.off{background:var(--line);color:var(--soft)}
-.now .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.until{text-align:right;line-height:1.05}
-.until b{font-size:34px;font-weight:900;letter-spacing:-.5px;display:block}
-.until small{color:var(--soft);font-weight:700;font-size:13px}
-.subj{font-size:30px;font-weight:900;line-height:1.1;margin:10px 0 8px;letter-spacing:-.3px}
-.subj.off{color:var(--soft);font-size:26px}
-.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:17px;font-weight:600;color:var(--soft)}
-.meta .k{color:var(--faint);font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.8px;margin-right:6px}
-.meta>div{display:flex;align-items:baseline}
-.started{margin-top:10px;color:var(--faint);font-weight:700;font-size:13px}
-.multi{border-top:1px dashed var(--line);margin-top:12px;padding-top:12px}
-.next{padding:13px 20px;border-top:1px solid var(--line);background:#FBFCFE;display:flex;gap:14px;align-items:baseline}
-.next .k{font-weight:900;font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--popd);min-width:40px}
-.next .t{font-weight:800;white-space:nowrap}
-.next .w{color:var(--soft);font-weight:600}
-.next .w b{color:var(--ink)}
-details.today{border-top:1px solid var(--line)}
-details.today summary{padding:12px 20px;font-weight:800;font-size:14px;color:var(--soft);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
+/* result */
+.res{display:flex;flex-direction:column;gap:16px}
+.nowbox{background:var(--ink);color:var(--bg);padding:18px 20px 16px;display:flex;flex-direction:column;gap:12px}
+.nowbox.off{background:var(--card);color:var(--ink);border:2px solid var(--ink)}
+.nb-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.nb-who{font-size:15px;font-weight:800;min-width:0}
+.nb-who span{color:var(--onnavy);font-weight:700}
+.off .nb-who span{color:var(--soft)}
+.nb-now{color:var(--pop);font-weight:900;font-size:13px;letter-spacing:2.4px;text-transform:uppercase}
+.off .nb-now{color:var(--popd)}
+.nb-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.nb-subj{flex:0 1 auto;min-width:0;font-size:50px;font-weight:800;line-height:1;letter-spacing:-1px;overflow-wrap:anywhere}
+.roombox{flex:0 1 auto;max-width:58%;display:flex;align-items:baseline;gap:6px;background:var(--pop);color:var(--ink);border:0;text-decoration:none;padding:6px 14px 8px;line-height:1;text-align:left}
+button.roombox:hover{background:#A9C7CA}
+.roombox i{font-size:20px;font-weight:500}
+.roombox b{font-weight:800;line-height:1.05;overflow-wrap:anywhere}
+.nb-meta{font-size:17px;font-weight:700}
+.nb-meta .k{color:var(--onnavy);font-weight:600}
+.nb-meta .lk{text-decoration-color:var(--pop)}
+.nb-sep{border-top:1px solid var(--navy2);margin:2px 0}
+.prog{display:flex;flex-direction:column;gap:6px;margin-top:2px}
+.prog .bar{height:6px;background:var(--navy2)}
+.prog .bar div{height:100%;background:var(--pop)}
+.prog .lbl{display:flex;justify-content:space-between;font-size:13px;font-weight:800;color:var(--onnavy)}
+.prog .lbl b{color:var(--bg)}
+.nb-free{font-size:44px;font-weight:400;font-style:italic;color:var(--soft);line-height:1.05}
+.nb-sub{font-size:15px;font-weight:700;color:var(--mute)}
+.next{display:flex;gap:12px;align-items:baseline;padding:2px 0 10px;border-bottom:1px solid var(--line)}
+.next .k{font-style:italic;font-size:18px;color:var(--popd);font-weight:600}
+.next .t{font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.next .w{font-weight:600;color:var(--soft);min-width:0}
+.next .w b,.tl .w b{color:var(--ink);font-weight:800}
+details.today summary{font-weight:800;font-size:14px;color:var(--soft);cursor:pointer;list-style:none;user-select:none;padding:2px 0;min-height:28px}
 details.today summary::-webkit-details-marker{display:none}
-details.today summary::before{content:'';width:8px;height:8px;border-right:2.5px solid var(--faint);border-bottom:2.5px solid var(--faint);transform:rotate(-45deg);transition:transform .15s;margin-right:4px}
-details.today[open] summary::before{transform:rotate(45deg)}
+details.today summary::after{content:' ▾'}
+details.today[open] summary::after{content:' ▴'}
 details.today summary:hover{color:var(--ink)}
-.tl{list-style:none;margin:0;padding:0 12px 12px}
-.tl li{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:7px 8px;border-radius:9px;font-size:15px}
+.tl{list-style:none;margin:10px 0 0;padding:0}
+.tl li{display:grid;grid-template-columns:96px 1fr;gap:10px;padding:6px 8px;font-size:15px}
 .tl li .t{font-weight:800;color:var(--soft);font-variant-numeric:tabular-nums}
 .tl li .w{font-weight:600;color:var(--soft)}
-.tl li .w b{color:var(--ink);font-weight:800}
-.tl li.past{opacity:.42}
+.tl li.past{opacity:.45}
 .tl li.cur{background:var(--popl)}
 .tl li.cur .t{color:var(--popd)}
-.tl li.gap{padding:2px 8px;font-size:12px}
-.tl li.gap .t,.tl li.gap .w{color:var(--faint);font-weight:700}
-.empty{margin-top:16px;border:2px dashed var(--line);border-radius:var(--r);padding:26px 20px;text-align:center;color:var(--faint);font-weight:700}
+.tl li.gap{padding:2px 8px;font-size:13px}
+.tl li.gap .t,.tl li.gap .w{color:var(--faint);font-weight:700;font-style:italic}
+.empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:26px 10px 30px;text-align:center}
+.empty .q{font-size:96px;font-weight:300;font-style:italic;color:#E3E9EB;line-height:1}
+.empty .h{font-size:22px;font-style:italic;color:var(--soft)}
+.empty .s{font-size:14px;font-weight:600;color:var(--faint)}
 
-footer{text-align:center;color:var(--faint);font-size:13px;font-weight:600;padding:8px 20px 22px}
-footer button{color:var(--faint)}
+footer{max-width:1800px;margin:0 auto;padding:10px 48px 22px;color:var(--mute);font-size:12px;font-weight:600}
+footer button{color:var(--mute)}
 
 /* load screen */
-.gate{min-height:calc(100vh - 70px);display:grid;place-items:center;padding:30px}
-.gatebox{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:34px 36px;width:min(520px,100%);text-align:center}
-.gatebox h1{margin:0 0 6px;font-size:28px;font-weight:900}
+.gate{min-height:calc(100vh - 100px);display:grid;place-items:center;padding:30px}
+.gatebox{background:var(--card);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--popl);padding:34px 36px;width:min(520px,100%);text-align:center}
+.gatebox h1{margin:0 0 8px;font-size:30px;font-weight:700}
 .gatebox p{color:var(--soft);font-weight:600;margin:0 0 20px;line-height:1.45}
-.drop{border:2.5px dashed #BFE9FA;background:var(--popl);border-radius:16px;padding:26px 16px;cursor:pointer;font-weight:800;color:var(--popd);transition:.15s}
-.drop:hover,.drop.over{border-color:var(--pop);background:#D2F2FF}
+.drop{border:2.5px dashed var(--pop);background:var(--popl);padding:26px 16px;cursor:pointer;font-weight:800;color:var(--ink);transition:.15s}
+.drop:hover,.drop.over{border-color:var(--ink);background:#D7E6E8}
 .drop small{display:block;color:var(--soft);font-weight:600;margin-top:4px}
 .pwrow{display:flex;gap:8px;margin-top:4px}
 .pwrow .in{flex:1;font-size:17px;padding:11px 14px}
@@ -118,46 +135,57 @@ footer button{color:var(--faint)}
 .smalllinks button{color:var(--soft)}
 
 /* admin */
-.admin{position:fixed;inset:0;z-index:50;background:rgba(0,2,55,.35);display:flex;justify-content:flex-end}
-.apanel{width:min(820px,100%);height:100%;background:var(--bg);overflow:auto;box-shadow:-10px 0 40px rgba(0,2,55,.2)}
-.ahead{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:16px 24px;display:flex;align-items:center;gap:12px;z-index:2}
-.ahead h3{margin:0;font-size:20px;font-weight:900}
+.admin{position:fixed;inset:0;z-index:50;background:rgba(4,30,66,.35);display:flex;justify-content:flex-end}
+.apanel{width:min(820px,100%);height:100%;background:var(--bg);overflow:auto;box-shadow:-10px 0 40px rgba(4,30,66,.2)}
+.ahead{position:sticky;top:0;background:var(--card);border-bottom:2px solid var(--ink);padding:16px 24px;display:flex;align-items:center;gap:12px;z-index:2}
+.ahead h3{margin:0;font-size:24px;font-weight:700;font-family:Fraunces,Georgia,serif;font-variation-settings:'SOFT' 100,'WONK' 0}
 .ahead .x{margin-left:auto}
-.asec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin:18px 24px;padding:18px 20px}
+.asec{background:var(--card);border:2px solid var(--ink);margin:18px 24px;padding:18px 20px}
 .asec h4{margin:0 0 4px;font-size:17px;font-weight:900;display:flex;align-items:center;gap:10px}
-.asec h4 .num{width:24px;height:24px;border-radius:50%;background:var(--pop);color:var(--bg);display:grid;place-items:center;font-size:13px}
+.asec h4 .num{width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--bg);display:grid;place-items:center;font-size:13px}
 .asec p{margin:0 0 12px;color:var(--soft);font-weight:600;font-size:14px;line-height:1.45}
 .counts{display:flex;gap:10px;margin:14px 0 4px;flex-wrap:wrap}
-.cnt{flex:1;min-width:140px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cnt{flex:1;min-width:140px;border:1.5px solid var(--line);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .cnt b{font-size:24px;font-weight:900}
 .cnt span{color:var(--soft);font-weight:700;font-size:14px}
 .cnt button{border:0;background:none;color:var(--faint);font-size:12px;font-weight:700;text-decoration:underline}
 .checks{margin-top:10px;font-size:14px}
 .checks summary{cursor:pointer;font-weight:800;color:var(--soft)}
 .checks ul{margin:8px 0 0;padding-left:20px;color:var(--soft);font-weight:600;line-height:1.5}
-.ok{color:#1E8A4C;font-weight:800}
-.warn{color:#B4580C;font-weight:800}
+.ok{color:#2F6B4A;font-weight:800}
+.warn{color:#9A4A0C;font-weight:800}
 table.tt{border-collapse:collapse;width:100%;font-size:14px}
 table.tt th{text-align:left;color:var(--soft);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.8px;padding:6px 6px}
 table.tt td{padding:3px 6px;border-top:1px solid var(--line)}
 table.tt td b{font-weight:800}
-table.tt input{width:72px;border:1.5px solid var(--line);border-radius:7px;padding:4px 6px;font-variant-numeric:tabular-nums}
-table.tt input:focus{outline:none;border-color:var(--pop)}
+table.tt input{width:72px;border:1.5px solid var(--line);padding:4px 6px;font-variant-numeric:tabular-nums}
+table.tt input:focus{outline:none;border-color:var(--ink)}
 .bells{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .secTabs{display:flex;gap:6px;margin:4px 0 10px}
-.secTabs button{border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:5px 14px;font-weight:800;font-size:14px}
-.secTabs button.on{background:var(--pop);border-color:var(--pop);color:#fff}
+.secTabs button{border:2px solid var(--line);background:var(--bg);padding:5px 14px;font-weight:800;font-size:14px}
+.secTabs button.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.note{font-size:13px;color:var(--faint);font-weight:600}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;opacity:0;transition:.2s;z-index:99;pointer-events:none}
+.note{font-size:13px;color:var(--mute);font-weight:600}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 18px;font-weight:700;opacity:0;transition:.2s;z-index:99;pointer-events:none}
 .toast.on{opacity:1;transform:translateX(-50%)}
 
 @media (max-width:1000px){
-  main{grid-template-columns:1fr;padding:16px}
-  header{padding:12px 16px;flex-wrap:wrap}
-  .pop{right:12px;left:12px;width:auto}
-  .brand{font-size:21px}
-  .hbtn.hide-sm{display:none}
+  header{padding:16px 16px 12px;align-items:center}
+  .brand h1{font-size:34px}
+  .brand .tag{display:none}
+  .ctime{font-size:26px}
+  .cday,.hbtn,.obtn .lab{display:none}
+  .obtn{padding:8px 10px}
+  .pop{right:12px;left:12px;top:70px;width:auto}
+  main{grid-template-columns:1fr;padding:12px 16px 16px;gap:12px}
+  .tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .tabs button{font-size:18px;font-weight:600;border:2px solid var(--line);background:var(--card);color:var(--ink);padding:8px 0;min-height:44px}
+  .tabs button.on{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:700}
+  .col{display:none;border:0;padding:4px 0;background:none}
+  .col.on{display:flex}
+  .colhead{display:none}
+  .nb-subj{font-size:42px}
+  footer{padding:8px 16px 18px}
   .asec{margin:14px 12px}
   .bells{grid-template-columns:1fr}
 }
@@ -165,21 +193,22 @@ table.tt input:focus{outline:none;border-color:var(--pop)}
 </head>
 <body>
 <header>
-  <div class="brand"><span class="dot">?</span>Where Is?</div>
+  <div class="brand"><h1 class="fr">Where <i>is</i>…?</h1><span class="tag">Live timetable</span></div>
   <div class="clock">
-    <button class="clockbtn" id="clockbtn" title="Look at a different day or time"><span id="clocktime">–</span><small id="clockday"></small></button>
-    <button class="hbtn hide-sm" id="adminbtn" hidden>Admin</button>
+    <span class="ctime fr" id="clocktime">–</span><span class="cday" id="clockday"></span>
+    <button class="obtn" id="clockbtn" title="Look at a different day or time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="lab" id="clocklab">See another time</span></button>
+    <button class="hbtn" id="adminbtn" hidden>Admin</button>
   </div>
 </header>
 <div class="pop" id="timepop" hidden>
-  <h4>See a different time</h4>
+  <h4 class="fr">See another time</h4>
   <div class="row"><select class="in" id="tpday" style="flex:1"></select><input class="in" type="time" id="tptime" style="width:120px"></div>
   <div class="row"><button class="btn" id="tpgo" style="flex:1">Show</button><button class="btn ghost" id="tpnow">Back to now</button></div>
 </div>
 
 <section class="gate" id="gate" hidden>
   <div class="gatebox">
-    <h1>Where Is?</h1>
+    <h1 class="fr">Where <i style="font-weight:400;color:var(--popd)">is</i>…?</h1>
     <div id="gateLoad">
       <p>Find where any pupil, teacher or room is right now.<br>To start, open the school’s timetable file.</p>
       <div class="drop" id="drop">Choose timetable file<small>or drop it here (.json)</small></div>
@@ -439,8 +468,10 @@ function status(rec){
 }
 
 /* ========================== rendering ========================== */
-const COLS=[{k:'p',title:'Pupils',ph:'Type a pupil’s name'},{k:'t',title:'Staff',ph:'Type a teacher’s name or initials'},{k:'r',title:'Rooms',ph:'Type a room'}];
-const SEL={p:null,t:null,r:null};
+const COLS=[{k:'p',title:'Pupils',ph:'Type a pupil’s name',eh:'Who are you looking for?',es:'Type a name and press Enter'},
+  {k:'t',title:'Staff',ph:'Name or initials',eh:'Which teacher?',es:'Search by name or initials, e.g. MDA'},
+  {k:'r',title:'Rooms',ph:'Type a room',eh:'Which room?',es:'Type a room code, e.g. LH2'}];
+const SEL={p:null,t:null,r:null}; let TAB='p';
 const listOf=k=>k==='p'?PACK.pupils:k==='t'?PACK.teachers:PACK.rooms;
 function recSub(rec){ const k=rec.id[0];
   if(k==='p') return [rec._form||(rec.year?'Year '+rec.year:''),rec._form&&rec.year?'Year '+rec.year:''].filter(Boolean).join(' · ');
@@ -451,57 +482,74 @@ const recLabel=rec=>rec.id[0]==='r'?(rec.name||rec.code):rec.name;
 function teacherLink(name){ const t=IDX.teacherByName.get(String(name).trim().toLowerCase()); return t?`<button class="lk" data-go="${esc(t.id)}">${esc(name)}</button>`:esc(name); }
 function teacherCodeLink(code){ const c=String(code).trim(); if(!c) return ''; const t=IDX.teacherByCode.get(c.toLowerCase());
   if(t) return `<button class="lk" data-go="${esc(t.id)}">${esc(t.name)}</button>`; const n=IDX.staffName.get(c.toLowerCase()); return esc(n||c); }
-function roomLink(r){ const c=String(r).trim(); if(!c) return ''; const x=IDX.roomByKey.get(c.toLowerCase()); return x?`<button class="lk" data-go="${esc(x.id)}">${esc(c)}</button>`:esc(c); }
-// What to show about one entry, depending on whose timetable it is
-function entInfo(rec,e){
+const roomRec=r=>{ const c=String(r||'').trim(); return c?IDX.roomByKey.get(c.toLowerCase())||null:null; };
+function roomLink(r){ const c=String(r).trim(); if(!c) return ''; const x=roomRec(c); return x?`<button class="lk" data-go="${esc(x.id)}">${esc(c)}</button>`:esc(c); }
+// One entry, from the point of view of whose timetable it is: the big box on the right, and the line underneath
+function entParts(rec,e){
   const k=rec.id[0], s=subjName(e.s);
-  if(/^half\s*day$/i.test(e.s)) return {title:'Half day',bits:[]};
-  if(k==='p') return {title:s,bits:[e.t?['With',teacherLink(e.t)]:null,e.r?['Room',roomLink(e.r)]:null].filter(Boolean)};
+  if(/^half\s*day$/i.test(e.s)) return {title:'Half day',box:null,meta:[],line:[]};
+  if(k==='p') return {title:s,box:e.r?{k:'in',v:e.r.trim(),go:roomRec(e.r)?.id}:null,
+    meta:e.t?[`<span class="k">with</span> ${teacherLink(e.t)}`]:[], line:[e.t?teacherLink(e.t):'',e.r?`<b>${roomLink(e.r)}</b>`:''].filter(Boolean)};
   const cls=cleanCode(e.c,k==='t'?rec.code:e.t).split(/\s+/)[0];
-  if(k==='t') return {title:s,bits:[cls?['Class',esc(cls)]:null,e.r?['Room',roomLink(e.r)]:null].filter(Boolean)};
-  return {title:s,bits:[e.t?['With',teacherCodeLink(e.t)]:null,cls?['Class',esc(cls)]:null].filter(Boolean)};
+  if(k==='t') return {title:s,box:e.r?{k:'in',v:e.r.trim(),go:roomRec(e.r)?.id}:null,
+    meta:cls?[`<span class="k">class</span> ${esc(cls)}`]:[], line:[cls?esc(cls):'',e.r?`<b>${roomLink(e.r)}</b>`:''].filter(Boolean)};
+  return {title:s,box:cls?{k:'class',v:cls}:null,
+    meta:e.t?[`<span class="k">with</span> ${teacherCodeLink(e.t)}`]:[], line:[e.t?teacherCodeLink(e.t):'',cls?esc(cls):''].filter(Boolean)};
 }
-const shortLine=(rec,b)=>b.ents.map(e=>{ const i=entInfo(rec,e); return `<b>${esc(i.title)}</b>${i.bits.length?' · '+i.bits.map(x=>x[1]).join(' · '):''}`; }).join(' &nbsp;/&nbsp; ');
+const shortLine=(rec,b)=>b.ents.map(e=>{ const i=entParts(rec,e); return `<b>${esc(i.title)}</b>${i.line.length?' · '+i.line.join(' · '):''}`; }).join(' &nbsp;/&nbsp; ');
+// Long room names shrink so they never push the lesson name over
+const boxSize=v=>{ const n=String(v).length; return n<=3?42:n<=4?38:n<=6?32:n<=9?26:n<=12?22:18; };
+function boxHtml(b){ if(!b) return '';
+  const inner=`<i class="fr">${b.k}</i><b class="fr" style="font-size:${boxSize(b.v)}px">${esc(b.v)}</b>`;
+  return b.go?`<button class="roombox" data-go="${esc(b.go)}" title="Show this room">${inner}</button>`:`<span class="roombox">${inner}</span>`; }
+const dur=m=>m<60?`${m} min`:`${Math.floor(m/60)} hr${m%60?` ${m%60} min`:''}`;
 
 function card(rec){
-  const st=status(rec), {cur,next,at}=st;
-  let h=`<div class="card"><div class="who"><b>${esc(recLabel(rec))}</b><span>${esc(recSub(rec))}</span></div><div class="now">`;
+  const st=status(rec), {cur,next,at}=st, who=`<span class="nb-who">${esc(recLabel(rec))}${recSub(rec)?` <span>· ${esc(recSub(rec))}</span>`:''}</span>`;
+  let h='<div class="res">';
   if(cur&&!isHalfDay(cur)){
-    h+=`<div class="top"><span class="tag">Now</span><div class="until"><small>until</small><b>${fmt(cur.b)}</b></div></div>`;
-    cur.ents.forEach((e,i)=>{ const inf=entInfo(rec,e);
-      h+=`<div class="${i?'multi':''}"><div class="subj">${esc(inf.title)}</div><div class="meta">${inf.bits.map(([k,v])=>`<div><span class="k">${k}</span>${v}</div>`).join('')}</div></div>`; });
-    h+=`<div class="started">Started ${fmt(cur.a)}</div>`;
+    h+=`<div class="nowbox"><div class="nb-top">${who}<span class="nb-now">Now</span></div>`;
+    cur.ents.forEach((e,i)=>{ const p=entParts(rec,e);
+      h+=`${i?'<div class="nb-sep"></div>':''}<div class="nb-row"><span class="nb-subj fr">${esc(p.title)}</span>${boxHtml(p.box)}</div>${p.meta.length?`<div class="nb-meta">${p.meta.join(' &nbsp; ')}</div>`:''}`; });
+    const pct=Math.max(0,Math.min(100,(at.m-cur.a)/(cur.b-cur.a)*100));
+    h+=`<div class="prog"><div class="bar"><div style="width:${pct.toFixed(1)}%"></div></div><div class="lbl"><span>${fmt(cur.a)}</span><span><b>${dur(cur.b-at.m)} left</b> · until ${fmt(cur.b)}</span></div></div></div>`;
   } else {
-    const lab=cur?'Half day':st.free;
-    h+=`<div class="top"><span class="tag off">Now</span></div><div class="subj off">${esc(lab)}</div>`;
+    const lab=cur?'Half day':st.free; let until='';
+    if(!cur&&next&&!st.nextDay&&st.blocks.length&&at.m>=st.blocks[0].a){ let end=next.a; const B=PACK.settings.bells;
+      if(lab==='Break') end=Math.min(end,T(B.P7[0]));
+      else if(lab==='Lunch'){ const L=(PACK.settings.sections[rec._sec]?.lunch||{})[at.d]; if(L&&L[1]) end=Math.min(end,T(L[1])); }
+      else if(lab==='Sandwich break') end=Math.min(end,T(B.P20[1])+10);
+      until=`Until ${fmt(end)}`; }
+    h+=`<div class="nowbox off"><div class="nb-top">${who}<span class="nb-now">Now</span></div><span class="nb-free fr">${esc(lab)}</span>${until?`<span class="nb-sub">${until}</span>`:''}</div>`;
   }
-  h+=`</div>`;
   if(next){ const tmrw=st.nextDay&&(JSDAY.indexOf(at.d)+1)%7===JSDAY.indexOf(st.nextDay);
-    const when=st.nextDay?`${tmrw?'Tomorrow':DAYNAME[st.nextDay].slice(0,3)} ${fmt(next.a)}`:`${fmt(next.a)}–${fmt(next.b)}`;
-    h+=`<div class="next"><span class="k">Next</span><span class="t">${when}</span><span class="w">${shortLine(rec,next)}</span></div>`; }
+    const when=st.nextDay?`${tmrw?'Tomorrow':DAYNAME[st.nextDay].slice(0,3)} ${fmt(next.a)}`:fmt(next.a);
+    h+=`<div class="next"><span class="k fr">Next</span><span class="t">${when}</span><span class="w">${shortLine(rec,next)}</span></div>`; }
   if(st.blocks.length){
-    h+=`<details class="today"${OPEN.has(rec.id)?' open':''} data-id="${esc(rec.id)}"><summary>${DAYS.includes(at.d)?DAYNAME[at.d]+'’s':'Today’s'} timetable</summary><ul class="tl">`;
+    h+=`<details class="today"${OPEN.has(rec.id)?' open':''} data-id="${esc(rec.id)}"><summary>${PRETEND?'All of':'Rest of'} ${DAYNAME[at.d]}</summary><ul class="tl">`;
     let last=null;
     for(const b of st.blocks){
       if(last!==null&&b.a-last>=10) h+=`<li class="gap${b.a<=at.m?' past':''}"><span class="t">${fmt(last)}–${fmt(b.a)}</span><span class="w">${gapLabel(rec,at.d,last,b.a)}</span></li>`;
       const c=at.m>=b.a&&at.m<b.b?'cur':at.m>=b.b?'past':'';
       h+=`<li class="${c}"><span class="t">${fmt(b.a)}–${fmt(b.b)}</span><span class="w">${shortLine(rec,b)}</span></li>`; last=b.b; }
     h+=`</ul></details>`; }
-  return h+`</div>`;
+  return h+'</div>';
 }
 const OPEN=new Set();
 function renderCol(k){
-  const el=document.getElementById('res-'+k); if(!el) return; const rec=SEL[k]&&IDX.byId.get(SEL[k]);
-  el.innerHTML=rec?card(rec):`<div class="empty">${k==='p'?'Type a name and press Enter':k==='t'?'Search by name or initials':'Search by room code'}</div>`;
+  const el=document.getElementById('res-'+k); if(!el) return; const rec=SEL[k]&&IDX.byId.get(SEL[k]), c=COLS.find(x=>x.k===k);
+  el.innerHTML=rec?card(rec):`<div class="empty"><span class="q fr">?</span><span class="h fr">${c.eh}</span><span class="s">${c.es}</span></div>`;
 }
 function renderAll(){ for(const c of COLS) renderCol(c.k); }
+function setTab(k){ TAB=k; document.querySelectorAll('.col').forEach(el=>el.classList.toggle('on',el.dataset.k===k)); document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===k)); }
 function buildMain(){
-  $('#app').innerHTML=COLS.map(c=>`<section class="col"><h2>${c.title}<span class="n">${listOf(c.k).length}</span></h2>
-    <div class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="q-${c.k}" data-k="${c.k}" placeholder="${c.ph}" autocomplete="off" spellcheck="false"><button class="clr" data-clr="${c.k}" hidden aria-label="Clear">×</button>
+  $('#app').innerHTML=`<nav class="tabs">${COLS.map(c=>`<button class="fr" data-tab="${c.k}">${c.title}</button>`).join('')}</nav>`+COLS.map(c=>`<section class="col" data-k="${c.k}"><div class="colhead"><h2 class="fr">${c.title}</h2><span class="n">${listOf(c.k).length} on file</span></div>
+    <div class="search"><label><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input class="fr" id="q-${c.k}" data-k="${c.k}" placeholder="${c.ph}" aria-label="${c.title}" autocomplete="off" spellcheck="false"><button class="clr" data-clr="${c.k}" hidden aria-label="Clear">×</button></label>
     <div class="sugs" id="s-${c.k}" hidden></div></div><div id="res-${c.k}"></div></section>`).join('');
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{ setTab(b.dataset.tab); $('#q-'+b.dataset.tab).focus(); });
   for(const c of COLS){ wireSearch(c.k); if(SEL[c.k]&&IDX.byId.has(SEL[c.k])) choose(c.k,SEL[c.k]); else SEL[c.k]=null; }
-  renderAll();
+  setTab(TAB); renderAll();
 }
 
 /* ========================== search ========================== */
@@ -535,13 +583,14 @@ function wireSearch(k){
   clr.addEventListener('click',()=>{ inp.value=''; SEL[k]=null; clr.hidden=true; renderCol(k); inp.focus(); });
 }
 function choose(k,id){ SEL[k]=id; const rec=IDX.byId.get(id), inp=$('#q-'+k); inp.value=recLabel(rec); $('#s-'+k).hidden=true; document.querySelector(`[data-clr="${k}"]`).hidden=false; renderCol(k); }
-document.addEventListener('click',e=>{ const g=e.target.closest('[data-go]'); if(g){ const id=g.dataset.go; choose(id[0],id);
-  if(innerWidth<1000) document.getElementById('res-'+id[0]).scrollIntoView({behavior:'smooth',block:'center'}); } });
+document.addEventListener('click',e=>{ const g=e.target.closest('[data-go]'); if(g){ const id=g.dataset.go; choose(id[0],id); setTab(id[0]);
+  if(innerWidth<1000) scrollTo({top:0,behavior:'smooth'}); } });
 document.addEventListener('toggle',e=>{ const d=e.target; if(d.matches&&d.matches('details.today')){ d.open?OPEN.add(d.dataset.id):OPEN.delete(d.dataset.id); } },true);
 
 /* ========================== clock ========================== */
-function tick(){ const at=nowAt(); $('#clocktime').textContent=fmt(at.m); $('#clockday').textContent=PRETEND?`${DAYNAME[at.d]} · pretend`:DAYNAME[at.d];
-  $('#clockbtn').classList.toggle('pretend',!!PRETEND); }
+function tick(){ const at=nowAt(); $('#clocktime').textContent=fmt(at.m);
+  const d=new Date(); $('#clockday').textContent=PRETEND?`${DAYNAME[at.d]} · pretend time`:`${DAYNAME[at.d]} ${d.getDate()} ${d.toLocaleString('en-GB',{month:'long'})}`;
+  $('#clockday').classList.toggle('pretend',!!PRETEND); $('#clocktime').classList.toggle('pretend',!!PRETEND); $('#clocklab').textContent=PRETEND?'Change time':'See another time'; }
 let lastMin=-1;
 setInterval(()=>{ const at=nowAt(); if(at.m!==lastMin){ lastMin=at.m; tick(); if(PACK&&!$('#app').hidden) renderAll(); } },5000);
 $('#tpday').innerHTML=DAYS.map(d=>`<option value="${d}">${DAYNAME[d]}</option>`).join('');
