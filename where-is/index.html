@@ -367,7 +367,8 @@ function buildIndex(){
       const f=cleanCode(e.c,t.code).split(/\s+/)[0]; if(/^\d[A-Za-z]/.test(f)&&!tutorForm.has(t.name.toLowerCase())) tutorForm.set(t.name.toLowerCase(),{form:f.toUpperCase()}); } }
   for(const p of P.pupils){ ix.byId.set(p.id,p);
     const c=new Map(); for(const d in p.grid) for(const id of ['REG','P0']) for(const e of p.grid[d][id]||[]) if(/^registration$/i.test(e.s)&&e.t) c.set(e.t,(c.get(e.t)||0)+1);
-    const tutor=[...c.entries()].sort((a,b)=>b[1]-a[1])[0]?.[0]||''; const f=tutorForm.get(tutor.toLowerCase());
+    const not=new Set((S.notTutors||[]).map(x=>String(x).toLowerCase()));
+    const tutor=[...c.entries()].filter(([t])=>!not.has(t.toLowerCase())).sort((a,b)=>b[1]-a[1])[0]?.[0]||''; const f=tutorForm.get(tutor.toLowerCase());
     p._form=f?.form||''; p._sec=f?.section||(p.year?secForYear(p.year):(p._form?secForYear(parseInt(p._form,10)):'MS')); p._tutor=tutor; }
   IDX=ix;
 }
@@ -712,6 +713,7 @@ async function pullTTM(pw){
       if(src.prep?.[0]) dst.prep=[fmt(T(src.prep[0])),fmt(T(src.prep[1]))]; }
     if(Array.isArray(d.forms)) S.forms=d.forms.filter(f=>f&&f.form).map(f=>({form:f.form,tutor:f.tutor||'',section:f.section||''}));
     if(d.staff&&typeof d.staff==='object') S.staff={...d.staff};
+    if(Array.isArray(d.notTutors)) S.notTutors=[...d.notTutors];
     if(d.aliases) S.aliases={...d.aliases};
     renderAdmin(); $('#ttmmsg').textContent=`Pulled: bell times, lunch, prep, ${S.forms.length} forms, ${Object.keys(S.staff).length} staff initials.`;
   }catch(e){ msg.textContent='Couldn’t pull settings: '+e.message; }
