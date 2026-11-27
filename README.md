@@ -18,6 +18,7 @@ Small pages without their own site live here in their own folders:
 | `timetable-maker/` | Timetable Maker |
 | `mysams/` | mySAMS (prototype; `reportbook/` redirects here) |
 | `prep-generator/` | Prep Generator (weekly retrieval preps + answer copy) |
+| `where-is/` | Where Is? (live pupil/staff/room lookup; holds no data itself, staff open a password-protected timetable file) |
 
 Apps with their own site (PMU, Morning Slide, Crooket, MusicLAMDA, Simple Track Builder, Vobiscum Configurator) are only linked.
 
